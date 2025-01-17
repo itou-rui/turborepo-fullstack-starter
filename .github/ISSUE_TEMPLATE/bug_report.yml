@@ -22,6 +22,8 @@ body:
         - Android
         - Linux
         - Other
+    validations:
+      required: true
 
   - type: input
     id: os_version
@@ -29,6 +31,8 @@ body:
       label: Operation System Version
       description: Please specify the exact version of the operating system you are using.
       placeholder: Sequoia 15.2
+    validations:
+      required: true
 
   - type: dropdown
     id: package
@@ -46,6 +50,8 @@ body:
         - tailwindcss
         - tsconfig
         - ui
+    validations:
+      required: true
 
   - type: input
     id: package_version
@@ -53,6 +59,8 @@ body:
       label: Package Version
       description: "Please specify the exact version of the selected package."
       placeholder: v1.2.3
+    validations:
+      required: true
 
   - type: dropdown
     id: browser
