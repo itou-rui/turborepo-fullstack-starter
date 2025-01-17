@@ -1,0 +1,39 @@
+{
+	"name": "web",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "CRITTERS_RUNTIME=1 NODE_ENV=production node server",
+		"lint": "next lint",
+		"test": "jest",
+		"test:watch": "jest --watch",
+		"test:ci": "jest --ci"
+	},
+	"dependencies": {
+		"@reduxjs/toolkit": "^1.9.5",
+		"next": "14.0.3",
+		"react": "18.2.0",
+		"react-dom": "18.2.0",
+		"react-redux": "^8.1.2",
+		"@packages/ui": "*",
+		"@packages/critters": "*"
+	},
+	"devDependencies": {
+		"@testing-library/jest-dom": "^5.17.0",
+		"@testing-library/react": "^14.0.0",
+		"@testing-library/user-event": "14.4.3",
+		"@types/node": "^20.4.5",
+		"@types/react": "18.2.18",
+		"autoprefixer": "^10.4.14",
+		"copy-webpack-plugin": "^12.0.2",
+		"jest-environment-jsdom": "^29.6.2",
+		"next-transpile-modules": "10.0.1",
+		"@packages/jest": "*",
+		"@packages/tailwindcss": "*",
+		"@packages/tsconfig": "*",
+		"@packages/eslint": "*",
+		"@packages/prettier": "*"
+	}
+}

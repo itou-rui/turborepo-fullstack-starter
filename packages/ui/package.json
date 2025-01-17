@@ -1,0 +1,14 @@
+{
+  "name": "@packages/ui",
+  "version": "0.0.0",
+  "main": "./index.tsx",
+  "types": "./index.tsx",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.2.18",
+    "@types/react-dom": "^18.2.7",
+    "config": "*",
+    "tsconfig": "*",
+    "typescript": "^5.1.6"
+  }
+}

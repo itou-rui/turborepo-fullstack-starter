@@ -1,0 +1,95 @@
+name: 🐞 Bug report
+description: Create a report to help us improve
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is to report bugs. Before opening a new issue, please do a [search](https://github.com/itou-rui/turborepo-fullstack-starter/issues) of existing issues and :+1: upvote the existing issue instead. This will result in a quicker resolution.
+
+        If you need help with your own project, you can:
+        - Start a discussion in the ["Help" section](https://github.com/itou-rui/turborepo-fullstack-starter/discussions/categories/q-a).
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - MacOS
+        - iOS
+        - Windows
+        - Android
+        - Linux
+        - Other
+
+  - type: input
+    id: os_version
+    attributes:
+      label: Operation System Version
+      description: Please specify the exact version of the operating system you are using.
+      placeholder: Sequoia 15.2
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - web
+        - api
+        - proxy
+        - critters
+        - esbuild
+        - eslint
+        - jest
+        - prettier
+        - tailwindcss
+        - tsconfig
+        - ui
+
+  - type: input
+    id: package_version
+    attributes:
+      label: Package Version
+      description: "Please specify the exact version of the selected package."
+      placeholder: v1.2.3
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Brave
+        - Firefox
+        - Safari
+        - Edge
+        - Metamask WebPreview
+        - Discord WebPreview
+        - LINE WebPreview
+        - Other
+
+  - type: input
+    id: browser_version
+    attributes:
+      label: Browser Version
+      description: "Please specify the exact version of the selected browser. (For WebPreview, please specify the app version.)"
+      placeholder: 1.74.48 (Chromium 132.0.6834.83)
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: Please briefly describe the expected behavior.
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Behavior
+      description: Please briefly describe the actual behavior using screenshots, MP4, or Gif.
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Please describe the steps to reproduce this issue in detail.

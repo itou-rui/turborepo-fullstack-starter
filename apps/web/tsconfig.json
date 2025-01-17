@@ -1,0 +1,10 @@
+{
+	"extends": "@packages/tsconfig/nextjs.json",
+	"compilerOptions": {
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "jest.setup.js", ".next/types/**/*.ts"],
+	"exclude": ["node_modules"]
+}

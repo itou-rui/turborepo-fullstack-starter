@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Extension Development
+    url: https://github.com/itou-rui/turborepo-fullstack-starter/discussions
+    about: Please use this for extension development questions and ideas.

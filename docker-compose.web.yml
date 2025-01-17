@@ -1,0 +1,16 @@
+services:
+  web:
+    container_name: nextjs-web
+    image: web:latest
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    env_file:
+      - ./apps/web/.env
+    # environment:
+    #     BASE_URL: ${BASE_URL}
+    stop_signal: SIGINT
+    ports:
+      - 3000:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

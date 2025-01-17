@@ -1,0 +1,18 @@
+services:
+  api:
+    container_name: nestjs-api
+    image: api:latest
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+    env_file:
+      - ./apps/api/.env
+    # environment:
+    #   MONGODB_USER_NAME: ${MONGODB_USER_NAME}
+    #   MONGODB_USER_PASSWORD: ${MONGODB_USER_PASSWORD}
+    #   MONGODB_HOST_NAME: ${MONGODB_HOST_NAME}
+    stop_signal: SIGINT
+    ports:
+      - 5002:5002
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

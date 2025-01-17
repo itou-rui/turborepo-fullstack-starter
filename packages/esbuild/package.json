@@ -1,0 +1,11 @@
+{
+  "name": "@packages/esbuild",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "index.js"
+  ],
+  "devDependencies": {
+    "esbuild": "0.21.4"
+  }
+}

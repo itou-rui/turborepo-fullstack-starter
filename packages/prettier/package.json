@@ -1,0 +1,8 @@
+{
+  "name": "@packages/prettier",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "index.js"
+  ]
+}
