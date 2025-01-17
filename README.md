@@ -4,7 +4,7 @@ This is a starter project for a full-stack application using Turborepo.
 
 The following applications are included:
 
-### `apps`
+## Included in this project
 
 | Web (Next.js)   | Description                                       | Support |
 | --------------- | ------------------------------------------------- | ------- |
