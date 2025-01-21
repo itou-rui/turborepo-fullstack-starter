@@ -1,104 +1,150 @@
-import { type PageProps } from '@/types';
-import Image from 'next/image';
+import { Button } from '@workspace/ui/components/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@workspace/ui/components/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { Badge } from '@workspace/ui/components/badge';
+import { Server, Layout, Code2, Package, Layers, FileJson, Paintbrush } from 'lucide-react';
+import { SwitchModeButton } from '@/components/Button';
 
-export default async function RootPage(props: PageProps) {
+export default function RootPage() {
 	return (
-		<main className='flex min-h-screen flex-col items-center justify-between p-24'>
-			<div className='z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex'>
-				<p className='fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30'>
-					Get started by editing&nbsp;
-					<code className='font-mono font-bold'>app/page.tsx</code>
-				</p>
-				<div className='fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none'>
-					<a
-						className='pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0'
-						href='https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app'
-						target='_blank'
-						rel='noopener noreferrer'
-					>
-						By <Image src='/vercel.svg' alt='Vercel Logo' className='dark:invert' width={100} height={24} priority />
-					</a>
+		<div className='min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800'>
+			{/* Theme Toggle Button */}
+			<div className='fixed top-4 right-4'>
+				<SwitchModeButton />
+			</div>
+
+			{/* Hero Section */}
+			<div className='container mx-auto px-4 py-16'>
+				<div className='text-center max-w-3xl mx-auto'>
+					<Badge className='mb-4' variant='secondary'>
+						Turborepo Powered
+					</Badge>
+					<h1 className='text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-6xl'>
+						Modern <span className='text-blue-600 dark:text-blue-400'>Monorepo</span>
+						<br />
+						Full Stack Development Environment
+					</h1>
+					<p className='mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300'>
+						A high-performance application platform combining Next.js, Nest.js, and Nginx. Start scalable projects
+						with a well-maintained development environment.
+					</p>
+					<div className='mt-10 flex items-center justify-center gap-x-6'>
+						<Button size='lg'>
+							View Documentation
+							<Layout className='ml-2 h-4 w-4' />
+						</Button>
+						<Button variant='outline' size='lg'>
+							Check GitHub
+							<Code2 className='ml-2 h-4 w-4' />
+						</Button>
+					</div>
 				</div>
 			</div>
 
-			<div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-				<Image
-					className='relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert'
-					src='/next.svg'
-					alt='Next.js Logo'
-					width={180}
-					height={37}
-					priority
-				/>
+			{/* Architecture Tabs */}
+			<div className='container mx-auto px-4 py-8'>
+				<Tabs defaultValue='apps' className='w-full'>
+					<TabsList className='grid w-full grid-cols-2'>
+						<TabsTrigger value='apps'>Applications</TabsTrigger>
+						<TabsTrigger value='packages'>Packages</TabsTrigger>
+					</TabsList>
+					<TabsContent value='apps'>
+						<div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-6'>
+							<Card>
+								<CardHeader>
+									<Layout className='h-8 w-8 text-blue-500' />
+									<CardTitle className='mt-4'>Next.js</CardTitle>
+									<CardDescription>
+										React-based frontend. Achieves fast SSR and static generation.
+									</CardDescription>
+								</CardHeader>
+							</Card>
+
+							<Card>
+								<CardHeader>
+									<Server className='h-8 w-8 text-green-500' />
+									<CardTitle className='mt-4'>Nest.js</CardTitle>
+									<CardDescription>
+										TypeScript-first backend. Provides robust API design and DI.
+									</CardDescription>
+								</CardHeader>
+							</Card>
+
+							<Card>
+								<CardHeader>
+									<Layers className='h-8 w-8 text-orange-500' />
+									<CardTitle className='mt-4'>Nginx</CardTitle>
+									<CardDescription>
+										High-performance reverse proxy. Achieves efficient load balancing.
+									</CardDescription>
+								</CardHeader>
+							</Card>
+						</div>
+					</TabsContent>
+
+					<TabsContent value='packages'>
+						<div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-6'>
+							<Card>
+								<CardHeader>
+									<Package className='h-8 w-8 text-purple-500' />
+									<CardTitle className='mt-4'>Shared Packages</CardTitle>
+									<CardDescription>
+										<ul className='list-disc list-inside'>
+											<li>ESLint Config</li>
+											<li>Prettier Config</li>
+											<li>Jest Config</li>
+										</ul>
+									</CardDescription>
+								</CardHeader>
+							</Card>
+
+							<Card>
+								<CardHeader>
+									<FileJson className='h-8 w-8 text-yellow-500' />
+									<CardTitle className='mt-4'>TypeScript Config</CardTitle>
+									<CardDescription>
+										Provides a shared tsconfig for a type-safe development environment. Optimization with
+										Critters is also introduced.
+									</CardDescription>
+								</CardHeader>
+							</Card>
+
+							<Card>
+								<CardHeader>
+									<Paintbrush className='h-8 w-8 text-pink-500' />
+									<CardTitle className='mt-4'>UI Components</CardTitle>
+									<CardDescription>
+										Reusable components based on shadcn/ui. Achieves a consistent design system.
+									</CardDescription>
+								</CardHeader>
+							</Card>
+						</div>
+					</TabsContent>
+				</Tabs>
 			</div>
 
-			<div className='mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left'>
-				<a
-					href='https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app'
-					className='group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30'
-					target='_blank'
-					rel='noopener noreferrer'
-				>
-					<h2 className='mb-3 text-2xl font-semibold'>
-						Docs{' '}
-						<span className='inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none'>
-							-&gt;
-						</span>
-					</h2>
-					<p className='m-0 max-w-[30ch] text-sm opacity-50'>
-						Find in-depth information about Next.js features and API.
-					</p>
-				</a>
-
-				<a
-					href='https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-					className='group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30'
-					target='_blank'
-					rel='noopener noreferrer'
-				>
-					<h2 className='mb-3 text-2xl font-semibold'>
-						Learn{' '}
-						<span className='inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none'>
-							-&gt;
-						</span>
-					</h2>
-					<p className='m-0 max-w-[30ch] text-sm opacity-50'>
-						Learn about Next.js in an interactive course with&nbsp;quizzes!
-					</p>
-				</a>
-
-				<a
-					href='https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app'
-					className='group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30'
-					target='_blank'
-					rel='noopener noreferrer'
-				>
-					<h2 className='mb-3 text-2xl font-semibold'>
-						Templates{' '}
-						<span className='inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none'>
-							-&gt;
-						</span>
-					</h2>
-					<p className='m-0 max-w-[30ch] text-sm opacity-50'>Explore starter templates for Next.js.</p>
-				</a>
-
-				<a
-					href='https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app'
-					className='group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30'
-					target='_blank'
-					rel='noopener noreferrer'
-				>
-					<h2 className='mb-3 text-2xl font-semibold'>
-						Deploy{' '}
-						<span className='inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none'>
-							-&gt;
-						</span>
-					</h2>
-					<p className='m-0 max-w-[30ch] text-balance text-sm opacity-50'>
-						Instantly deploy your Next.js site to a shareable URL with Vercel.
-					</p>
-				</a>
+			{/* Feature Section */}
+			<div className='container mx-auto px-4 py-16'>
+				<Card className='bg-gray-900 dark:bg-gray-800 text-white'>
+					<CardContent className='p-8'>
+						<div className='text-center'>
+							<h2 className='text-3xl font-bold'>You are ready to start development</h2>
+							<p className='mt-4 text-gray-300'>
+								With a well-maintained development environment, you can start your project right away.
+								Comprehensive development tools and the latest technologies support you.
+							</p>
+							<div className='mt-6 flex justify-center gap-4'>
+								<Button variant='secondary' size='lg'>
+									Quick Start
+								</Button>
+								<Button variant='outline' size='lg' className='text-white border-white hover:text-white'>
+									Setup Guide
+								</Button>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
-		</main>
+		</div>
 	);
 }
