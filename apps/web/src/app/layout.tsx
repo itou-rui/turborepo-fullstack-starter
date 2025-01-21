@@ -1,13 +1,11 @@
 import { join } from 'path';
 import fs from 'fs';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
+import { Toaster } from '@workspace/ui/components/sonner';
 import { type LayoutProps } from '@/types';
-import { ReduxProvider } from '@/components/Providers/ReduxProvider';
+import { ReduxProvider, ThemeProvider } from '@/components/Providers';
 import '../../styles/globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
 
 /**
  * Get the paths to the CSS files based on the page.
@@ -54,7 +52,7 @@ export const metadata: Metadata = {
  */
 export default async function RootLayout(props: LayoutProps): Promise<JSX.Element> {
 	const headersList = headers();
-	const pathName = headersList.get('x-pathname');
+	const pathName = (await headersList).get('x-pathname');
 	const criticalCSS = await getCriticalCSS(pathName);
 	const isCriticalCSSMode = process.env.CRITTERS_RUNTIME && criticalCSS;
 
@@ -63,11 +61,14 @@ export default async function RootLayout(props: LayoutProps): Promise<JSX.Elemen
 	return (
 		<html lang='en' suppressHydrationWarning>
 			<head>{isCriticalCSSMode ? criticalCSS : cssLinks}</head>
-			<body className={inter.className}>
-				<ReduxProvider>
-					{props.children}
-					{isCriticalCSSMode && cssLinks}
-				</ReduxProvider>
+			<body>
+				<ThemeProvider>
+					<ReduxProvider>
+						{props.children}
+						{isCriticalCSSMode && cssLinks}
+						<Toaster />
+					</ReduxProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

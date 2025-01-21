@@ -1,10 +1,13 @@
-/** @type {import('next').NextConfig} */
+import { writeFileSync } from 'fs';
+import { join } from 'path';
+import type { NextConfig } from 'next';
+import initializeBundleAnalyzer from '@next/bundle-analyzer';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { processHTMLFile, getFiles } from '@workspace/critters';
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { writeFileSync } = require('fs');
-const { join } = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const { processHTMLFile, getFiles } = require('@packages/critters');
+const withBundleAnalyzer = initializeBundleAnalyzer({
+	enabled: process.env.BUNDLE_ANALYZER_ENABLED === 'true',
+});
 
 class CrittersPlugin {
 	apply(compiler) {
@@ -47,9 +50,26 @@ class CrittersPlugin {
 	}
 }
 
-const nextConfig = {
+const nextConfig: NextConfig = {
 	reactStrictMode: true,
-	transpilePackages: ['ui'],
+	transpilePackages: ['@workspace/ui'],
+
+	images: {
+		remotePatterns: [
+			{
+				protocol: 'https',
+				hostname: 'avatars.githubusercontent.com',
+			},
+			{
+				protocol: 'https',
+				hostname: 'images.unsplash.com',
+			},
+			{
+				protocol: 'https',
+				hostname: 'ui.shadcn.com',
+			},
+		],
+	},
 
 	webpack: (config, { isServer }) => {
 		config.plugins.push(
@@ -68,4 +88,4 @@ const nextConfig = {
 	},
 };
 
-module.exports = nextConfig;
+export default withBundleAnalyzer(nextConfig);
