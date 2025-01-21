@@ -13,23 +13,23 @@
 		"test:ci": "jest --ci"
 	},
 	"dependencies": {
-		"@reduxjs/toolkit": "^1.9.5",
+		"@reduxjs/toolkit": "^2.4.0",
 		"@workspace/critters": "*",
 		"@workspace/ui": "*",
 		"next": "15.1.5",
 		"next-themes": "^0.4.4",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
-		"react-redux": "^8.1.2"
+		"react-redux": "^9.1.2"
 	},
 	"devDependencies": {
 		"@next/bundle-analyzer": "^15.1.5",
-		"@testing-library/jest-dom": "^5.17.0",
-		"@testing-library/react": "^14.0.0",
-		"@testing-library/user-event": "14.4.3",
+		"@testing-library/jest-dom": "^6.6.3",
+		"@testing-library/react": "^16.2.0",
+		"@testing-library/user-event": "^14.6.0",
 		"@types/node": "^20.4.5",
-		"@types/react": "^18.2.18",
-		"@types/react-dom": "^18.2.7",
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
 		"@workspace/eslint": "*",
 		"@workspace/jest": "*",
 		"@workspace/prettier": "*",
