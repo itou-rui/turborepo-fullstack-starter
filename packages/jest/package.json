@@ -1,5 +1,5 @@
 {
-  "name": "@packages/jest",
+  "name": "@workspace/jest",
   "version": "1.0.0",
   "private": true,
   "files": [

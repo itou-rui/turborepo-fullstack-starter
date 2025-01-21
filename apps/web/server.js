@@ -6,7 +6,7 @@ const next = require('next');
 const fs = require('fs');
 const zlib = require('zlib');
 const { join } = require('path');
-const { processHTMLFile } = require('@packages/critters');
+const { processHTMLFile } = require('@workspace/critters');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = dev ? 'localhost' : 'example.com';
