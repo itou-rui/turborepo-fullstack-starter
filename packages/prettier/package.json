@@ -4,5 +4,8 @@
   "private": true,
   "files": [
     "index.js"
-  ]
+  ],
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
 }
