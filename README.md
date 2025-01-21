@@ -33,3 +33,42 @@ The following applications are included:
 | tailwind | A utility-first CSS framework for rapid UI development.         |
 | tsconfig | Shared TypeScript configurations.                               |
 | ui       | A collection of reusable UI components.                         |
+
+## Requirements
+
+1. [Yarn](https://classic.yarnpkg.com/en/)
+
+```sh
+npm install --global yarn
+```
+
+2. [Nps](https://github.com/sezna/nps)
+
+```sh
+npm install --global nps
+```
+
+3. [Docker](https://www.docker.com)
+
+You can [install](https://docs.docker.com/desktop/) it any way you like.
+
+## Run Project
+
+1. Develop Mode
+
+```sh
+nps prepare.api && nps dev
+```
+
+2. Production Mode
+
+> [!WARNING]
+> Run it in a separate terminal.
+
+```sh
+nps start.web
+```
+
+```sh
+nps start.api
+```
