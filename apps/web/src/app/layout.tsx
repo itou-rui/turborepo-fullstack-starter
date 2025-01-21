@@ -2,6 +2,7 @@ import { join } from 'path';
 import fs from 'fs';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { type JSX } from 'react';
 import { Toaster } from '@workspace/ui/components/sonner';
 import { type LayoutProps } from '@/types';
 import { ReduxProvider, ThemeProvider } from '@/components/Providers';
