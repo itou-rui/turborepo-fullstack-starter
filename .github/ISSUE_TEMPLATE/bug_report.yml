@@ -47,7 +47,6 @@ body:
         - eslint
         - jest
         - prettier
-        - tailwindcss
         - tsconfig
         - ui
     validations:
