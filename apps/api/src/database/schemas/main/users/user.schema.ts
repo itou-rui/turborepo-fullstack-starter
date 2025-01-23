@@ -7,11 +7,11 @@ export type UserDocument = HydratedDocument<User>;
 
 @Schema()
 export class User extends BaseDocument {
-	@Prop({ type: ProfileSchema, required: true, unique: true })
-	profile!: Profile;
+  @Prop({ type: ProfileSchema, required: true, unique: true })
+  profile!: Profile;
 
-	@Prop({ unique: true })
-	discordId!: string;
+  @Prop({ unique: true })
+  discordId!: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

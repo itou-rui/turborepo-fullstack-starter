@@ -12,7 +12,7 @@ export type MiddlewareFactory = (middleware: NextMiddleware) => NextMiddleware;
  * @returns {NextMiddleware} - The chained middleware.
  */
 export function chain(functions: MiddlewareFactory[], index = 0): NextMiddleware {
-	if (!functions[index]) return () => NextResponse.next();
-	const next = chain(functions, index + 1);
-	return functions[index](next);
+  if (!functions[index]) return () => NextResponse.next();
+  const next = chain(functions, index + 1);
+  return functions[index](next);
 }

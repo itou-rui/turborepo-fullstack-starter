@@ -14,15 +14,15 @@ import { chain, inlineCss } from './middlewares';
  *   - `value` (optional): The expected value of the header.
  */
 export const config = {
-	matcher: [
-		{
-			source: '/:path*',
-			missing: [
-				{ type: 'header', key: 'next-router-prefetch' },
-				{ type: 'header', key: 'purpose', value: 'prefetch' },
-			],
-		},
-	],
+  matcher: [
+    {
+      source: '/:path*',
+      missing: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
+  ],
 };
 
 export default chain([inlineCss]);

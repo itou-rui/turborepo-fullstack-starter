@@ -8,8 +8,8 @@ import { CrittersError } from './errors';
  * Interface representing path patterns for CSS files.
  */
 interface PathPatterns {
-	real: string;
-	original: string;
+  real: string;
+  original: string;
 }
 
 /**
@@ -21,62 +21,62 @@ interface PathPatterns {
  * @returns {Promise<string | undefined>} The inlined CSS as a string, or undefined if an error occurs.
  */
 export async function processHTMLFile(file: string, htmlString: string, runtime?: string): Promise<string | undefined> {
-	try {
-		const critters = new Critters({});
-		const html = htmlString || (file && fs.readFileSync(file, 'utf-8'));
+  try {
+    const critters = new Critters({});
+    const html = htmlString || (file && fs.readFileSync(file, 'utf-8'));
 
-		const pathPatterns: PathPatterns = {
-			real: '/.next/static/css',
-			original: '/_next/static/css',
-		};
+    const pathPatterns: PathPatterns = {
+      real: '/.next/static/css',
+      original: '/_next/static/css',
+    };
 
-		const changedToRealPath = html.replace(new RegExp(pathPatterns.original, 'g'), pathPatterns.real);
+    const changedToRealPath = html.replace(new RegExp(pathPatterns.original, 'g'), pathPatterns.real);
 
-		const inlined = await critters.process(changedToRealPath);
+    const inlined = await critters.process(changedToRealPath);
 
-		const restoredNextJSPath = inlined.replace(new RegExp(pathPatterns.real, 'g'), pathPatterns.original);
+    const restoredNextJSPath = inlined.replace(new RegExp(pathPatterns.real, 'g'), pathPatterns.original);
 
-		const DOMAfterCritters = parse(restoredNextJSPath);
-		const head = DOMAfterCritters.querySelector('head');
+    const DOMAfterCritters = parse(restoredNextJSPath);
+    const head = DOMAfterCritters.querySelector('head');
 
-		head?.querySelectorAll('link[rel="stylesheet"], link[as="style"]').forEach((link) => link.remove());
+    head?.querySelectorAll('link[rel="stylesheet"], link[as="style"]').forEach((link) => link.remove());
 
-		/**
-		 * save HTML file in runtime, only for ISR
-		 * source: https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration
-		 */
-		if (runtime === 'ISR') {
-			const filePath = join(process.cwd(), '.next', 'server', 'pages', `${file}.html`);
+    /**
+     * save HTML file in runtime, only for ISR
+     * source: https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration
+     */
+    if (runtime === 'ISR') {
+      const filePath = join(process.cwd(), '.next', 'server', 'pages', `${file}.html`);
 
-			fs.writeFile(filePath, DOMAfterCritters.toString(), (err) => {
-				if (err) {
-					console.error(
-						new CrittersError('ProcessHTMLFile', 'FAILED_WRITE_FILE', 'Failed save the html file.', {
-							error: err,
-						}).toObject(),
-					);
-				} else {
-					console.log('The HTML file has been saved: ', filePath);
-				}
-			});
+      fs.writeFile(filePath, DOMAfterCritters.toString(), (err) => {
+        if (err) {
+          console.error(
+            new CrittersError('ProcessHTMLFile', 'FAILED_WRITE_FILE', 'Failed save the html file.', {
+              error: err,
+            }).toObject(),
+          );
+        } else {
+          console.log('The HTML file has been saved: ', filePath);
+        }
+      });
 
-			// we don't save file in SSR
-		} else if (runtime !== 'SSR') {
-			fs.writeFileSync(file, DOMAfterCritters.toString());
-		}
+      // we don't save file in SSR
+    } else if (runtime !== 'SSR') {
+      fs.writeFileSync(file, DOMAfterCritters.toString());
+    }
 
-		return DOMAfterCritters.querySelector('style')?.text;
-	} catch (e) {
-		if (e instanceof Error) {
-			throw CrittersError.toCrittersError('ProcessHTMLFile', 'CONVERTED_FROM_ERROR', {
-				error: e,
-				message: 'Error processing the HTML file.',
-			});
-		}
+    return DOMAfterCritters.querySelector('style')?.text;
+  } catch (e) {
+    if (e instanceof Error) {
+      throw CrittersError.toCrittersError('ProcessHTMLFile', 'CONVERTED_FROM_ERROR', {
+        error: e,
+        message: 'Error processing the HTML file.',
+      });
+    }
 
-		throw CrittersError.toCrittersError('ProcessHTMLFile', 'CONVERTED_FROM_UNKNOW_ERROR', {
-			error: e,
-			message: 'Error processing the HTML file.',
-		});
-	}
+    throw CrittersError.toCrittersError('ProcessHTMLFile', 'CONVERTED_FROM_UNKNOW_ERROR', {
+      error: e,
+      message: 'Error processing the HTML file.',
+    });
+  }
 }

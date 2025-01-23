@@ -9,13 +9,13 @@ import { ReduxProvider, ThemeProvider } from '@/components/Providers';
 import '../../styles/globals.css';
 
 const fontSans = Geist({
-	subsets: ['latin'],
-	variable: '--font-sans',
+  subsets: ['latin'],
+  variable: '--font-sans',
 });
 
 const fontMono = Geist_Mono({
-	subsets: ['latin'],
-	variable: '--font-mono',
+  subsets: ['latin'],
+  variable: '--font-mono',
 });
 
 /**
@@ -24,12 +24,12 @@ const fontMono = Geist_Mono({
  * @returns {string[]} - An array of CSS file paths.
  */
 function getCSSPaths(page: string | null): string[] {
-	const basePath = join('/_next', 'static', 'css');
-	const globalCSS = join(basePath, 'globals.css');
-	if (page?.startsWith('/dynamic')) {
-		return [join(basePath, 'dynamic.css'), globalCSS];
-	}
-	return [globalCSS];
+  const basePath = join('/_next', 'static', 'css');
+  const globalCSS = join(basePath, 'globals.css');
+  if (page?.startsWith('/dynamic')) {
+    return [join(basePath, 'dynamic.css'), globalCSS];
+  }
+  return [globalCSS];
 }
 
 /**
@@ -38,17 +38,17 @@ function getCSSPaths(page: string | null): string[] {
  * @returns {Promise<JSX.Element | false>} - A promise that resolves to a style element with the critical CSS or false if not found.
  */
 async function getCriticalCSS(page: string | null): Promise<JSX.Element | false> {
-	if (!page) return false;
+  if (!page) return false;
 
-	const withoutQuery = page.split('?')[0];
-	const cssPath = join(process.cwd(), 'critters', withoutQuery, 'styles.css');
+  const withoutQuery = page.split('?')[0];
+  const cssPath = join(process.cwd(), 'critters', withoutQuery, 'styles.css');
 
-	try {
-		const cssContent = await fs.promises.readFile(cssPath, 'utf-8');
-		return <style dangerouslySetInnerHTML={{ __html: cssContent }} />;
-	} catch {
-		return false;
-	}
+  try {
+    const cssContent = await fs.promises.readFile(cssPath, 'utf-8');
+    return <style dangerouslySetInnerHTML={{ __html: cssContent }} />;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -57,25 +57,25 @@ async function getCriticalCSS(page: string | null): Promise<JSX.Element | false>
  * @returns {JSX.Element} - The root layout component.
  */
 export default async function RootLayout(props: LayoutProps): Promise<JSX.Element> {
-	const headersList = headers();
-	const pathName = (await headersList).get('x-pathname');
-	const criticalCSS = await getCriticalCSS(pathName);
-	const isCriticalCSSMode = process.env.CRITTERS_RUNTIME && criticalCSS;
+  const headersList = headers();
+  const pathName = (await headersList).get('x-pathname');
+  const criticalCSS = await getCriticalCSS(pathName);
+  const isCriticalCSSMode = process.env.CRITTERS_RUNTIME && criticalCSS;
 
-	const cssLinks = getCSSPaths(pathName).map((link) => <link key={link} rel='stylesheet' href={link} />);
+  const cssLinks = getCSSPaths(pathName).map((link) => <link key={link} rel='stylesheet' href={link} />);
 
-	return (
-		<html lang='en' suppressHydrationWarning>
-			<head>{isCriticalCSSMode ? criticalCSS : cssLinks}</head>
-			<body className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}>
-				<ThemeProvider>
-					<ReduxProvider>
-						{props.children}
-						{isCriticalCSSMode && cssLinks}
-						<Toaster />
-					</ReduxProvider>
-				</ThemeProvider>
-			</body>
-		</html>
-	);
+  return (
+    <html lang='en' suppressHydrationWarning>
+      <head>{isCriticalCSSMode ? criticalCSS : cssLinks}</head>
+      <body className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}>
+        <ThemeProvider>
+          <ReduxProvider>
+            {props.children}
+            {isCriticalCSSMode && cssLinks}
+            <Toaster />
+          </ReduxProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
 }
