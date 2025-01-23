@@ -1,43 +1,27 @@
-/* eslint-disable no-undef, @typescript-eslint/no-empty-function */
+/* eslint-disable no-undef */
 
 import { render } from '@testing-library/react';
-import * as ResizeObserverModule from 'resize-observer-polyfill';
-import { ReduxProvider } from '../components/Providers/ReduxProvider';
+import { ReduxProvider, ThemeProvider } from '../components/Providers';
 
-import '@testing-library/jest-dom/extend-expect';
-
-/* Resize */
-global.ResizeObserver = ResizeObserverModule.default;
-
-/* MatchMadia */
-window.matchMedia = jest.fn().mockImplementation((query) => {
-	return {
-		matches: false,
-		media: query,
-		onchange: null,
-		addListener: jest.fn(),
-		removeListener: jest.fn(),
-		addEventListener: jest.fn(),
-		removeEventListener: jest.fn(),
-		dispatchEvent: jest.fn(),
+global.matchMedia =
+	global.matchMedia ||
+	function () {
+		return {
+			matches: false,
+			addListener: function () {},
+			removeListener: function () {},
+		};
 	};
-});
 
-/* Intersection */
-global.IntersectionObserver = class IntersectionObserver {
-	constructor(callback, options = {}) {
-		this.callback = callback;
-		this.options = options;
-	}
-	observe(target) {
-		this.callback([{ isIntersecting: true, target }]);
-	}
-	unobserve() {}
-	disconnect() {}
-};
-
-const customRender = (ui, options) => render(<ReduxProvider>{ui}</ReduxProvider>, options);
+const customRender = (ui, options) =>
+	render(
+		<ReduxProvider>
+			<ThemeProvider>{ui}</ThemeProvider>
+		</ReduxProvider>,
+		options,
+	);
 
 export * from '@testing-library/react';
+export * from '@testing-library/user-event';
 
 export { customRender as render };
