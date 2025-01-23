@@ -1,5 +1,8 @@
 /* eslint-disable no-undef */
 
+import 'whatwg-fetch';
+import '@testing-library/jest-dom';
+
 import { render } from '@testing-library/react';
 import { ReduxProvider, ThemeProvider } from '../components/Providers';
 
@@ -16,7 +19,9 @@ global.matchMedia =
 const customRender = (ui, options) =>
 	render(
 		<ReduxProvider>
-			<ThemeProvider>{ui}</ThemeProvider>
+			<ThemeProvider defaultTheme='light' enableSystem={false}>
+				{ui}
+			</ThemeProvider>
 		</ReduxProvider>,
 		options,
 	);
