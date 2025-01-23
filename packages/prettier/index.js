@@ -1,7 +1,5 @@
 module.exports = {
   endOfLine: "lf",
-  useTabs: true,
-  tabWidth: 4,
   singleQuote: true,
   bracketSpacing: true,
   jsxSingleQuote: true,
