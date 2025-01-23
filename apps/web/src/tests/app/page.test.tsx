@@ -3,6 +3,9 @@ import '@testing-library/jest-dom';
 import RootPage from '@/app/(RootPage)/page';
 
 describe('RootPage', () => {
+	/**
+	 * Test to check if the hero section renders correctly.
+	 */
 	it('renders hero section correctly', () => {
 		render(<RootPage />);
 		expect(screen.getByText('Turborepo Powered')).toBeInTheDocument();
@@ -27,6 +30,9 @@ describe('RootPage', () => {
 		).toBeInTheDocument();
 	});
 
+	/**
+	 * Test to check if all application cards render correctly.
+	 */
 	it('renders all application cards', () => {
 		render(<RootPage />);
 		expect(screen.getByText('Next.js')).toBeInTheDocument();
@@ -34,6 +40,9 @@ describe('RootPage', () => {
 		expect(screen.getByText('Nginx')).toBeInTheDocument();
 	});
 
+	/**
+	 * Test to check if all package cards render correctly when the packages tab is selected.
+	 */
 	it('renders all package cards when packages tab is selected', async () => {
 		render(<RootPage />);
 		await userEvent.click(screen.getByRole('tab', { name: /Packages/i }));
@@ -45,12 +54,18 @@ describe('RootPage', () => {
 		});
 	});
 
+	/**
+	 * Test to check if action buttons in the feature section render correctly.
+	 */
 	it('renders action buttons in feature section', () => {
 		render(<RootPage />);
 		expect(screen.getByText('Quick Start')).toBeInTheDocument();
 		expect(screen.getByText('Setup Guide')).toBeInTheDocument();
 	});
 
+	/**
+	 * Test to check if tabs switch correctly.
+	 */
 	it('switches tabs correctly', async () => {
 		render(<RootPage />);
 		const appsTab = screen.getByRole('tab', { name: /Applications/i });
