@@ -1,21 +1,21 @@
 {
-	"extends": "@workspace/tsconfig/nextjs.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"],
-			"@workspace/ui/*": ["../../packages/ui/src/*"]
-		}
-	},
-	"include": [
-		"next-env.d.ts",
-		"next.config.ts",
-		"**/*.ts",
-		"**/*.tsx",
-		"jest.setup.js",
-		".next/types/**/*.ts",
-		"tailwind.config.ts",
-		"jest.config.js"
-	],
-	"exclude": ["node_modules"]
+  "extends": "@workspace/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@workspace/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "jest.setup.js",
+    ".next/types/**/*.ts",
+    "tailwind.config.ts",
+    "jest.config.js"
+  ],
+  "exclude": ["node_modules"]
 }

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
@@ -19,95 +17,94 @@ const routes = {};
 const cachingTime = 5 * 60 * 1000; // 5 min
 
 try {
-	console.time('Critters: runtime prepare');
+  console.time('Critters: runtime prepare');
 
-	fs.rmSync(DIR, { recursive: true, force: true });
+  fs.rmSync(DIR, { recursive: true, force: true });
 
-	fs.cpSync('pages', DIR, {
-		recursive: true,
-		// overwrite: true,
-		filter: function (source) {
-			if (source.includes('.')) {
-				return false;
-			}
+  fs.cpSync('pages', DIR, {
+    recursive: true,
+    // overwrite: true,
+    filter: function (source) {
+      if (source.includes('.')) {
+        return false;
+      }
 
-			return true;
-		},
-	});
+      return true;
+    },
+  });
 
-	const processedHTMLFiles = fs.readFileSync(join(process.cwd(), 'processedRoutes.json'), 'utf-8');
+  const processedHTMLFiles = fs.readFileSync(join(process.cwd(), 'processedRoutes.json'), 'utf-8');
 
-	JSON.parse(processedHTMLFiles).forEach((file) => processedRoutes.add(file));
+  JSON.parse(processedHTMLFiles).forEach((file) => processedRoutes.add(file));
 
-	console.timeEnd('Critters: runtime prepare');
+  console.timeEnd('Critters: runtime prepare');
 } catch (error) {
-	/* empty */
+  /* empty */
 }
 
 async function saveStylesToFile(html, path) {
-	const folder = DIR + path;
-	const styles = await processHTMLFile(path, html, 'SSR');
+  const folder = DIR + path;
+  const styles = await processHTMLFile(path, html, 'SSR');
 
-	fs.mkdirSync(folder, { recursive: true });
+  fs.mkdirSync(folder, { recursive: true });
 
-	const filePath = join(folder, 'styles.css');
+  const filePath = join(folder, 'styles.css');
 
-	fs.writeFile(filePath, styles, (err) => {
-		if (err) {
-			console.error('Error saving styles to file:', err);
-		} else {
-			console.log('styles saved to file:', filePath);
-		}
-	});
-	console.timeEnd('Critters: runtime');
+  fs.writeFile(filePath, styles, (err) => {
+    if (err) {
+      console.error('Error saving styles to file:', err);
+    } else {
+      console.log('styles saved to file:', filePath);
+    }
+  });
+  console.timeEnd('Critters: runtime');
 }
 
 app.prepare().then(() => {
-	createServer((req, res) => {
-		const parsedUrl = parse(req.url, true);
-		const pathname = parsedUrl.pathname;
+  createServer((req, res) => {
+    const parsedUrl = parse(req.url, true);
+    const pathname = parsedUrl.pathname;
 
-		if (!processedRoutes.has(pathname) || Date.now() - routes[pathname] > cachingTime) {
-			const originalWrite = res.write;
-			const chunks = [];
+    if (!processedRoutes.has(pathname) || Date.now() - routes[pathname] > cachingTime) {
+      const originalWrite = res.write;
+      const chunks = [];
 
-			res.write = function (chunk) {
-				if (res.statusCode === 200 && res.getHeader('content-type')?.includes('text/html')) {
-					chunks.push(chunk);
-				}
+      res.write = function (chunk) {
+        if (res.statusCode === 200 && res.getHeader('content-type')?.includes('text/html')) {
+          chunks.push(chunk);
+        }
 
-				// eslint-disable-next-line prefer-rest-params
-				originalWrite.apply(res, arguments);
+        originalWrite.apply(res, arguments);
 
-				return true;
-			};
+        return true;
+      };
 
-			res.on('finish', () => {
-				if (res.statusCode === 200 && res.getHeader('content-type')?.includes('text/html')) {
-					processedRoutes.add(pathname);
+      res.on('finish', () => {
+        if (res.statusCode === 200 && res.getHeader('content-type')?.includes('text/html')) {
+          processedRoutes.add(pathname);
 
-					setTimeout(() => {
-						console.time('Critters: runtime');
+          setTimeout(() => {
+            console.time('Critters: runtime');
 
-						const html = Buffer.concat(chunks);
+            const html = Buffer.concat(chunks);
 
-						zlib.unzip(html, (err, decompressedData) => {
-							if (err) {
-								console.error('Error decompressing data:', err);
-								return;
-							}
+            zlib.unzip(html, (err, decompressedData) => {
+              if (err) {
+                console.error('Error decompressing data:', err);
+                return;
+              }
 
-							saveStylesToFile(decompressedData.toString(), pathname);
+              saveStylesToFile(decompressedData.toString(), pathname);
 
-							routes[pathname] = Date.now();
-						});
-					}, 0);
-				}
-			});
-		}
+              routes[pathname] = Date.now();
+            });
+          }, 0);
+        }
+      });
+    }
 
-		handle(req, res, parsedUrl);
-	}).listen(3000, () => {
-		console.log(`> Ready on http://localhost:${port}`);
-	});
+    handle(req, res, parsedUrl);
+  }).listen(3000, () => {
+    console.log(`> Ready on http://localhost:${port}`);
+  });
 });

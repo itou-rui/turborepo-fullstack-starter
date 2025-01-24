@@ -7,24 +7,24 @@ import { render } from '@testing-library/react';
 import { ReduxProvider, ThemeProvider } from '../components/Providers';
 
 global.matchMedia =
-	global.matchMedia ||
-	function () {
-		return {
-			matches: false,
-			addListener: function () {},
-			removeListener: function () {},
-		};
-	};
+  global.matchMedia ||
+  function () {
+    return {
+      matches: false,
+      addListener: function () {},
+      removeListener: function () {},
+    };
+  };
 
 const customRender = (ui, options) =>
-	render(
-		<ReduxProvider>
-			<ThemeProvider defaultTheme='light' enableSystem={false}>
-				{ui}
-			</ThemeProvider>
-		</ReduxProvider>,
-		options,
-	);
+  render(
+    <ReduxProvider>
+      <ThemeProvider defaultTheme='light' enableSystem={false}>
+        {ui}
+      </ThemeProvider>
+    </ReduxProvider>,
+    options,
+  );
 
 export * from '@testing-library/react';
 export * from '@testing-library/user-event';
