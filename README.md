@@ -23,16 +23,16 @@ The following applications are included:
 | REST               | API that follows REST design principles | ✅      |
 | DiscordBot         | Discord App Use Cases                   | 🚫      |
 
-| Packages | Description                                                     |
-| -------- | --------------------------------------------------------------- |
-| critters | A plugin to inline critical CSS and lazy-load the rest.         |
-| esbuild  | An extremely fast JavaScript bundler and minifier.              |
-| eslint   | A tool for identifying and reporting on patterns in JavaScript. |
-| jest     | A delightful JavaScript testing framework.                      |
-| prettier | An opinionated code formatter.                                  |
-| tailwind | A utility-first CSS framework for rapid UI development.         |
-| tsconfig | Shared TypeScript configurations.                               |
-| ui       | A collection of reusable UI components.                         |
+| Packages | Description                                                    |
+| -------- | -------------------------------------------------------------- |
+| critters | A plugin to inline critical CSS and lazy-load the rest         |
+| esbuild  | An extremely fast JavaScript bundler and minifier              |
+| eslint   | A tool for identifying and reporting on patterns in JavaScript |
+| jest     | A delightful JavaScript testing framework                      |
+| prettier | An opinionated code formatter                                  |
+| tailwind | A utility-first CSS framework for rapid UI development         |
+| tsconfig | Shared TypeScript configurations                               |
+| ui       | A collection of reusable UI components                         |
 
 ## Requirements
 
