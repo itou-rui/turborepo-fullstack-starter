@@ -1,0 +1,101 @@
+name: "Deploy Nest.js"
+
+on:
+  push:
+    branches: [main, stage, develop]
+
+env:
+  GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+  GOOGLE_CLOUD_PROJECT_NUMBER: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
+  GOOGLE_CLOUD_REGION: ${{ secrets.GOOGLE_CLOUD_REGION }}
+  GOOGLE_CLOUD_IDENTITY_POOL_ID: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
+  GOOGLE_CLOUD_IDENTITY_PROVIDER_ID: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
+
+jobs:
+  prepare-api:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.get_environment.outputs.environment }}
+      app_name: ${{ steps.get_app_name.outputs.app_name }}
+      api_lowercase_version: ${{ steps.get_versions.outputs.api_lowercase_version }}
+      repo_name_lowercase: ${{ steps.get_repository.outputs.repo_name_lowercase }}
+      ref_name_lowercase: ${{ steps.get_repository.outputs.ref_name_lowercase }}
+    steps:
+      - name: Get Environment
+        id: get_environment
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=main" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/stage" ]; then
+            echo "environment=stage" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get App Name
+        id: get_app_name
+        uses: ./.github/workflows/get-app-name.yml
+
+      - name: Get Versions
+        id: get_versions
+        uses: ./.github/workflows/get-versions.yml
+
+      - name: Get Repository
+        id: get_repository
+        uses: ./.github/workflows/get-repository.yml
+        with:
+          trigger: ${{ github.event_name }}
+
+  deploy-api:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    needs:
+      - prepare-api
+    steps:
+      - name: Authenticate to Google Cloud
+        id: auth-google-cloud
+        uses: ./.github/workflows/auth-google-cloud.yml
+        with:
+          google_cloud_project_id: ${{ env.GOOGLE_CLOUD_PROJECT_ID }}
+          google_cloud_project_number: ${{ env.GOOGLE_CLOUD_PROJECT_NUMBER }}
+          workload_identity_pool_id: ${{ env.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
+          workload_identity_provider_id: ${{ env.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
+          service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ env.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+
+      - name: Create Artifact Repository
+        uses: ./.github/workflows/artifact-repository.yml
+        with:
+          action: create
+          repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
+          google_cloud_region: ${{ env.GOOGLE_CLOUD_REGION }}
+          google_cloud_project_id: ${{ env.GOOGLE_CLOUD_PROJECT_ID }}
+
+      - name: Build and Push Docker Image
+        id: build-and-push
+        uses: ./.github/workflows/docker.yml
+        with:
+          action: "build-and-push"
+          repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
+          google_cloud_region: ${{ env.GOOGLE_CLOUD_REGION }}
+          google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
+          google_cloud_access_token: ${{ steps.auth-google-cloud.outputs.access_token }}
+          app: api
+          app_version: ${{ needs.prepare-api.outputs.api_lowercase_version }}
+          google_cloud_project_id: ${{ env.GOOGLE_CLOUD_PROJECT_ID }}
+
+      - name: Deploy to Google Cloud Run
+        uses: ./.github/workflows/deploy-google-cloud-run.yml
+        with:
+          app_name: ${{ needs.prepare-api.outputs.app_name }}
+          app: api
+          app_version: ${{ needs.prepare-api.outputs.api_lowercase_version }}
+          environment: ${{ needs.prepare-api.outputs.environment }}
+          ref_name: ${{ needs.prepare-api.outputs.ref_name_lowercase }}
+          google_cloud_region: ${{ env.GOOGLE_CLOUD_REGION }}
+          google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
+          service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ env.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+          docker_image: ${{ steps.build-and-push.outputs.docker_image }}
+          google_cloud_project_id: ${{ env.GOOGLE_CLOUD_PROJECT_ID }}
