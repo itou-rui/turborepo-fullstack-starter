@@ -2,13 +2,21 @@ name: Get repository
 
 on:
   workflow_call:
+    inputs:
+      trigger:
+        type: string
+        default: "push"
 
 jobs:
   get-repository:
     runs-on: ubuntu-latest
     outputs:
       repo_name: ${{ steps.get_repo_info.outputs.repo_name }}
+      repo_name_lowercase: ${{ steps.get_repo_info.outputs.repo_name_lowercase }}
       repo_owner: ${{ steps.get_repo_info.outputs.repo_owner }}
+      repo_owner_lowercase: ${{ steps.get_repo_info.outputs.repo_owner_lowercase }}
+      ref_name: ${{ steps.get_repo_info.outputs.ref_name }}
+      ref_name_lowercase: ${{ steps.get_repo_info.outputs.ref_name_lowercase }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -16,5 +24,22 @@ jobs:
       - name: Get repository information
         id: get_repo_info
         run: |
-          echo "repo_name=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
-          echo "repo_owner=$(dirname $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
+          repo_name=$(basename $GITHUB_REPOSITORY)
+          repo_name_lowercase=$(echo "$repo_name" | tr '[:upper:]' '[:lower:]')
+          repo_owner=$(dirname $GITHUB_REPOSITORY)
+          repo_owner_lowercase=$(echo "$repo_owner" | tr '[:upper:]' '[:lower:]')
+
+          ## If the trigger is a pull request, the method of obtaining the branch name is different
+          ref_name=$(echo '${{ github.ref_name }}' | tr '[:upper:]' '[:lower:]')
+          ref_name_lowercase=$(echo "$ref_name" | tr '/' '-')
+          if [ "${{ inputs.trigger }}" = "pull_request" ]; then
+            ref_name=$(echo '${{ github.event.pull_request.head.ref }}' | tr '[:upper:]' '[:lower:]')
+            ref_name_lowercase=$(echo "$ref_name" | tr '/' '-')
+          fi
+
+          echo "repo_name=$repo_name" >> $GITHUB_OUTPUT
+          echo "repo_name_lowercase=$repo_name_lowercase" >> $GITHUB_OUTPUT
+          echo "repo_owner=$repo_owner" >> $GITHUB_OUTPUT
+          echo "repo_owner_lowercase=$repo_owner_lowercase" >> $GITHUB_OUTPUT
+          echo "ref_name=$ref_name" >> $GITHUB_OUTPUT
+          echo "ref_name_lowercase=$ref_name_lowercase" >> $GITHUB_OUTPUT
