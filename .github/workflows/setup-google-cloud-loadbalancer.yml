@@ -30,7 +30,6 @@ jobs:
       - name: Check Backend Service
         id: check-backend
         run: |
-          set -e
           if gcloud compute backend-services describe ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google-cloud-env }}-backend --global; then
             echo "Backend service exists"
             echo "needs_setup=false" >> $GITHUB_OUTPUT
@@ -43,7 +42,6 @@ jobs:
         id: check-urlmap
         if: inputs.app == 'web'
         run: |
-          set -e
           if gcloud compute url-maps describe ${{ inputs.app_name }}-${{ inputs.google-cloud-env }}-load-balancer --global; then
             echo "URL Map exists"
           else
@@ -55,7 +53,6 @@ jobs:
         id: check-pathrule
         if: inputs.app == 'web'
         run: |
-          set -e
           MAP_INFO=$(gcloud compute url-maps describe ${{ inputs.app_name }}-${{ inputs.google-cloud-env }}-load-balancer --global --format=json)
           if echo "$MAP_INFO" | grep -q "path-matcher"; then
             echo "Path matcher exists"
@@ -68,7 +65,6 @@ jobs:
         id: check-proxy
         if: inputs.app == 'web'
         run: |
-          set -e
           if gcloud compute target-https-proxies describe ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }} --global; then
             echo "HTTPS proxy exists"
           else
@@ -80,7 +76,6 @@ jobs:
         id: check-forwarding
         if: inputs.app == 'web'
         run: |
-          set -e
           if gcloud compute forwarding-rules describe ${{ inputs.app_name }}-${{ inputs.google_cloud_env }}-https-forwarding-rule --global; then
             echo "Forwarding rule exists"
           else
@@ -91,7 +86,6 @@ jobs:
       - name: Check Domain Mapping
         id: check-domain
         run: |
-          set -e
           domain="${{ inputs.domain }}"
           default_domain="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-${{ secrets.google_cloud_project_number }}.${{ inputs.google_cloud_region }}.run.app"
 
@@ -137,7 +131,6 @@ jobs:
       - name: Get SSL Certificates
         id: get-ssl-certificates
         run: |
-          set -e
           certificates=$(gcloud compute ssl-certificates list --format="value(name)" --filter="name~'^${{ inputs.app_name }}-${{ inputs.google-cloud_env }}'")
           echo "ssl_certificates=$certificates" >> $GITHUB_ENV
 
@@ -149,7 +142,6 @@ jobs:
       - name: Create HTTPS Proxy
         if: ${{ inputs.app == 'web' }}
         run: |
-          set -e
           domain="${{ inputs.domain }}"
           default_domain="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-${{ secrets.google_cloud_project_number }}.${{ inputs.google_cloud_region }}.run.app"
           url_map="${{ inputs.app_name }}-${{ inputs.google_cloud_env }}-load-balancer"
