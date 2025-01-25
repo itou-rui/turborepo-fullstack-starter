@@ -1,0 +1,37 @@
+name: "Artifacts Repository Operations"
+
+on:
+  workflow_call:
+    inputs:
+      action:
+        required: true
+        type: string
+      repo_name:
+        required: true
+        type: string
+      google_cloud_region:
+        required: true
+        type: string
+    secrets:
+      google_cloud_project_id:
+        required: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if artifact repository is created
+        id: check_artifact_repository
+        run: |
+          gcloud artifacts repositories describe ${{ inputs.repo_name }} --location=${{ inputs.google_cloud_region }} --project=${{ secrets.google_cloud_project_id }} && echo "is_created=true" >> $GITHUB_OUTPUT || echo "is_created=false" >> $GITHUB_OUTPUT
+
+  create:
+    if: ${{ inputs.action == 'create' && steps.check_artifact_repository.outputs.is_created == 'false') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Artifacts Repository
+        run: |
+          gcloud artifacts repositories create ${{ inputs.repo_name }} \
+            --repository-format="docker" \
+            --location="${{ inputs.google_cloud_region }}" \
+            --project="${{ secrets.google_cloud_project_id }}
