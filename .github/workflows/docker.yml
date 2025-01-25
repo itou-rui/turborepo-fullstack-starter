@@ -1,0 +1,78 @@
+name: "Docker Build and Push"
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      repo_name:
+        required: true
+        type: string
+      google_cloud_region:
+        required: true
+        type: string
+      google_cloud_service_env:
+        required: true
+        type: string
+      google_cloud_access_token:
+        required: true
+        type: string
+      app:
+        required: true
+        type: string
+      app_version:
+        required: true
+        type: string
+    secrets:
+      google_cloud_project_id:
+        required: true
+    outputs:
+      docker_image: ${{ job.set_docker_image.outputs.docker_image }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if artifact repository is created
+        id: check_artifact_repository
+        run: |
+          gcloud artifacts repositories describe ${{ inputs.repo_name }} --location=${{ inputs.google_cloud_region }} --project=${{ secrets.google_cloud_project_id }} && echo "is_created=true" >> $GITHUB_OUTPUT || echo "is_created=false" >> $GITHUB_OUTPUT
+
+      - name: Create Artifacts Repository
+        if: steps.check_artifact_repository.outputs.is_created == 'false'
+        run: |
+          gcloud artifacts repositories create ${{ inputs.repo_name }} \
+            --repository-format="docker" \
+            --location="${{ inputs.google_cloud_region }}" \
+            --project="${{ secrets.google_cloud_project_id }}"
+
+      - name: Set Docker image
+        id: set_docker_image
+        run: |
+          echo "docker_image=${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.google_cloud_project_id }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}" >> $GITHUB_OUTPUT
+
+      - name: Authenticate with Docker
+        uses: docker/login-action@v1
+        with:
+          username: "oauth2accesstoken"
+          password: "${{ inputs.google_cloud_access_token }}"
+          registry: "${{ inputs.google_cloud_region }}-docker.pkg.dev"
+
+      - name: Build, tag, and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./apps/${{ inputs.app }}/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.set_docker_image.outputs.docker_image }}:${{ inputs.app_version }}
+            ${{ steps.set_docker_image.outputs.docker_image }}:${{ inputs.ref }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      ## [issue](https://github.com/docker/build-push-action/issues/252)
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
