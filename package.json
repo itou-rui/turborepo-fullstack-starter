@@ -1,5 +1,6 @@
 {
-  "name": "turborepo-fullstack-starter",
+  "name": "fullstack-starter",
+  "author": "itou-rui",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
@@ -11,7 +12,8 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "commit": "cz"
+    "commit": "cz",
+    "setup-google-cloud": "./scripts/setup-google-cloud.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
