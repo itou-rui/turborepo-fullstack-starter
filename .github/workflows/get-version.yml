@@ -1,0 +1,22 @@
+name: Get version
+
+on:
+  workflow_call:
+
+jobs:
+  get-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      web_version: ${{ steps.get_web_version.outputs.web_version }}
+      api_version: ${{ steps.get_api_version.outputs.api_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get version from apps/web/package.json
+        id: get_web_version
+        run: echo "web_version=$(jq -r .version < apps/web/package.json)" >> $GITHUB_OUTPUT
+
+      - name: Get version from apps/api/package.json
+        id: get_api_version
+        run: echo "api_version=$(jq -r .version < apps/api/package.json)" >> $GITHUB_OUTPUT
