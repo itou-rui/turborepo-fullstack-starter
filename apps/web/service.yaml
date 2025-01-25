@@ -1,0 +1,37 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}
+  annotations:
+    run.googleapis.com/minScale: '1'
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '10'
+        autoscaling.knative.dev/minScale: '1'
+    spec:
+      containerConcurrency: 80
+      containers:
+        - image: ${CONTAINER_IMAGE}
+          resources:
+            limits:
+              cpu: '1'
+              memory: '1Gi'
+          env:
+            - name: ENVIRONMENT
+              value: '${ENVIRONMENT}'
+            - name: BASE_URL
+              value: '${BASE_URL}'
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+  traffic:
+    - percent: 100
+      latestRevision: true
