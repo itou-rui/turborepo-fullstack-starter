@@ -32,7 +32,7 @@ on:
         value: ${{ jobs.generate-image.outputs.docker_image }}
 
 jobs:
-  auth:
+  auth-docker:
     runs-on: ubuntu-latest
     steps:
       - name: Authenticate with Docker
@@ -45,7 +45,7 @@ jobs:
   generate-image:
     runs-on: ubuntu-latest
     needs:
-      - auth
+      - auth-docker
     outputs:
       docker_image: ${{ steps.generate_docker_image.outputs.docker_image }}
     steps:
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.action == 'build-and-push' }}
     needs:
-      - auth
+      - auth-docker
       - generate-image
     steps:
       - name: Build, tag, and push Docker image
