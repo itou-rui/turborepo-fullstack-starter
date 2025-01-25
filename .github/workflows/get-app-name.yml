@@ -1,0 +1,17 @@
+name: Get app name
+
+on:
+  workflow_call:
+
+jobs:
+  get-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      app_name: ${{ steps.get_app_name.outputs.app_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get app name from package.json
+        id: get_app_name
+        run: echo "app_name=$(jq -r .name < package.json)" >> $GITHUB_OUTPUT
