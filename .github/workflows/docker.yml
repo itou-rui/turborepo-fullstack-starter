@@ -52,7 +52,8 @@ jobs:
       - name: Generate Docker image
         id: generate_docker_image
         run: |
-          echo "docker_image=${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.google_cloud_project_id }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}" >> $GITHUB_OUTPUT
+          IMAGE_NAME="${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.google_cloud_project_id }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}"
+          echo "docker_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
   build-and-push:
     runs-on: ubuntu-latest
