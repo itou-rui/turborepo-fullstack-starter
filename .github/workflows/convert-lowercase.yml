@@ -15,4 +15,4 @@ jobs:
     steps:
       - name: Convert text to lowercase
         id: convert_text
-        run: echo "lowercase_text=${{ inputs.text,, }}" >> $GITHUB_OUTPUT
+        run: echo "lowercase_text=${{ inputs.text }}" >> $GITHUB_OUTPUT
