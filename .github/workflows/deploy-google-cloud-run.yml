@@ -1,0 +1,54 @@
+name: "Deploy Google Cloud Run"
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+      app:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      ref_name:
+        required: true
+        type: string
+      google_cloud_region:
+        required: true
+        type: string
+      google_cloud_service_env:
+        required: true
+        type: string
+      google_cloud_service_account:
+        required: true
+        type: string
+      docker_image:
+        required: true
+        type: string
+    secrets:
+      google_cloud_project_id:
+        required: true
+
+jobs:
+  auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Service declaration for Cloud Run
+        run: |
+          export CONTAINER_IMAGE="${{ inputs.docker_image }}:${{ github.sha }}"
+          export SERVICE_NAME="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}"
+          export PROJECT_ID="${{ secrets.google_cloud_project_id }}"
+          export REVISION_TAG="${{ github.sha }}"/${{ inputs.ref_name }}
+          export CLOUD_RUN_SA="${{ inputs.google_cloud_service_account }}"
+          export ENVIRONMENT="${{ inputs.environment }}"
+          envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}
+          region: ${{ env.GOOGLE_CLOUD_REGION }}
+          metadata: service-${{ inputs.environment }}.yaml
+          project_id: ${{ secrets.google_cloud_project_id }}
