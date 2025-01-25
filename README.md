@@ -52,6 +52,14 @@ npm install --global nps
 
 You can [install](https://docs.docker.com/desktop/) it any way you like.
 
+4. [gcloud](https://cloud.google.com/sdk?hl=en)
+
+You can [install](https://cloud.google.com/sdk/docs/install?hl=en) it any way you like.
+
+```sh
+gcloud auth login
+```
+
 ## Run Project
 
 1. Develop Mode
@@ -85,3 +93,23 @@ You can create commits interactively
 | Commitizen | Standard for consistent commitments            |
 | Commitlint | Inspect for commitments according to the rules |
 | husky      | Automatically inspect when `git commit` is run |
+
+## Deploy (Google Cloud Run)
+
+1. Edit `name` in [package.json](./package.json)
+
+> [!WARNING]
+> Please respect GoogleCloudRun's naming conventions.
+> Only `-` special symbols are allowed and names exceeding 32 characters cannot be set.
+> Prefixes are handled internally in the system and must be set to 20 characters.
+
+2. Copy [.env.example](./.env.example) to `.env` and fill in the values
+
+3. Run Scripts
+
+> [!NOTE]
+> Please grant the authority to execute shell scripts in advance!
+
+```sh
+yarn setup-google-cloud
+```
