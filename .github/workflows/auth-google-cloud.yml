@@ -1,4 +1,4 @@
-name: Google Cloud Authentication
+name: "Google Cloud Authentication"
 
 on:
   workflow_call:
@@ -18,12 +18,8 @@ on:
         value: ${{ jobs.auth.outputs.access_token }}
 
 jobs:
-  auth:
+  auth-google-cloud:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      pull-requests: write
     outputs:
       access_token: ${{ steps.auth.outputs.access_token }}
     steps:
