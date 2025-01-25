@@ -17,18 +17,20 @@ on:
         required: true
 
 jobs:
-  check:
+  check-artifact-repository:
     runs-on: ubuntu-latest
+    outputs:
+      is_created: ${{ steps.check_artifact_repository.outputs.is_created }}
     steps:
       - name: Check if artifact repository is created
         id: check_artifact_repository
         run: |
           gcloud artifacts repositories describe ${{ inputs.repo_name }} --location=${{ inputs.google_cloud_region }} --project=${{ secrets.google_cloud_project_id }} && echo "is_created=true" >> $GITHUB_OUTPUT || echo "is_created=false" >> $GITHUB_OUTPUT
 
-  create:
+  create-artifact-repository:
     runs-on: ubuntu-latest
-    if: ${{ inputs.action == 'create' && needs.check.outputs.is_created == 'false' }}
-    needs: check
+    needs: check-artifact-repository
+    if: ${{ inputs.action == 'create' && needs.check-artifact-repository.outputs.is_created == 'false' }}
     steps:
       - name: Create Artifacts Repository
         id: create_artifact_repository
