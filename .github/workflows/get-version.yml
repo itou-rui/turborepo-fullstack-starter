@@ -1,4 +1,4 @@
-name: Get version
+name: "Get App Version"
 
 on:
   workflow_call:

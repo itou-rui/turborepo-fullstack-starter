@@ -1,4 +1,4 @@
-name: Get repository
+name: "Get Repository Information"
 
 on:
   workflow_call:

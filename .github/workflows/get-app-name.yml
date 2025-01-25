@@ -1,4 +1,4 @@
-name: Get app name
+name: "Get App Name"
 
 on:
   workflow_call:
