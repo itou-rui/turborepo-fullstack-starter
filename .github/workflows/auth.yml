@@ -20,6 +20,10 @@ on:
 jobs:
   auth:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
     outputs:
       access_token: ${{ steps.auth.outputs.access_token }}
     steps:
