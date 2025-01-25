@@ -1,0 +1,20 @@
+name: Get repository
+
+on:
+  workflow_call:
+
+jobs:
+  get-repository:
+    runs-on: ubuntu-latest
+    outputs:
+      repo_name: ${{ steps.get_repo_info.outputs.repo_name }}
+      repo_owner: ${{ steps.get_repo_info.outputs.repo_owner }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get repository information
+        id: get_repo_info
+        run: |
+          echo "repo_name=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
+          echo "repo_owner=$(dirname $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
