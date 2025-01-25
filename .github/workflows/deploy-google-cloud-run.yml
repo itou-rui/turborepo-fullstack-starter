@@ -32,7 +32,7 @@ on:
         required: true
 
 jobs:
-  auth:
+  create-service-declaration:
     runs-on: ubuntu-latest
     steps:
       - name: Create Service declaration for Cloud Run
@@ -45,6 +45,9 @@ jobs:
           export ENVIRONMENT="${{ inputs.environment }}"
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
 
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
