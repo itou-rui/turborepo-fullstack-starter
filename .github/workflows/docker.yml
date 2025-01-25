@@ -28,11 +28,16 @@ on:
       google_cloud_project_id:
         required: true
     outputs:
-      docker_image: ${{ job.set_docker_image.outputs.docker_image }}
+      docker_image:
+        description: "Docker image name"
+        value: ${{ jobs.build.outputs.docker_image }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      docker_image: ${{ steps.set_docker_image.outputs.docker_image }}
+
     steps:
       - name: Check if artifact repository is created
         id: check_artifact_repository
