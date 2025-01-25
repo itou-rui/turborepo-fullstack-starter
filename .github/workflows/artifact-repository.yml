@@ -26,12 +26,14 @@ jobs:
           gcloud artifacts repositories describe ${{ inputs.repo_name }} --location=${{ inputs.google_cloud_region }} --project=${{ secrets.google_cloud_project_id }} && echo "is_created=true" >> $GITHUB_OUTPUT || echo "is_created=false" >> $GITHUB_OUTPUT
 
   create:
-    if: ${{ inputs.action == 'create' && steps.check_artifact_repository.outputs.is_created == 'false') }}
     runs-on: ubuntu-latest
+    if: ${{ inputs.action == 'create' && needs.check.outputs.is_created == 'false' }}
+    needs: check
     steps:
       - name: Create Artifacts Repository
+        id: create_artifact_repository
         run: |
           gcloud artifacts repositories create ${{ inputs.repo_name }} \
             --repository-format="docker" \
             --location="${{ inputs.google_cloud_region }}" \
-            --project="${{ secrets.google_cloud_project_id }}
+            --project="${{ secrets.google_cloud_project_id }}"
