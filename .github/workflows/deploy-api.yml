@@ -3,6 +3,8 @@ name: "Deploy Nest.js"
 on:
   push:
     branches: [main, stage, develop]
+    paths:
+      - "apps/api/**"
 
   #WARN: Temporary permission
   workflow_dispatch:

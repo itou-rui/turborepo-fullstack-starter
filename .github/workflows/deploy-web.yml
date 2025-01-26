@@ -3,6 +3,10 @@ name: "Deploy Next.js"
 on:
   push:
     branches: [main, stage, develop]
+    paths:
+      - "apps/web/**"
+      - "packages/critters/**"
+      - "packages/ui/**"
 
   #WARN: Temporary permission
   workflow_dispatch:
