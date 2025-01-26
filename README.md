@@ -137,3 +137,6 @@ brew install act
 ```sh
 yarn act --job=job_name
 ```
+
+> [!NOTE]
+> Run `act:list` to see the list of jobs
