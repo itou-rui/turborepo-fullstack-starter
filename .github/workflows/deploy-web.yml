@@ -3,10 +3,10 @@ name: "Deploy Next.js"
 on:
   push:
     branches: [main, stage, develop, feat/deploy-google-cloud]
-    paths:
-      - "apps/web/**"
-      - "packages/critters/**"
-      - "packages/ui/**"
+    # paths:
+    #   - "apps/web/**"
+    #   - "packages/critters/**"
+    #   - "packages/ui/**"
 
   #WARN: Temporary permission
   workflow_dispatch:
