@@ -1,4 +1,4 @@
-name: "Get Repository Information"
+name: "Prepare Deploy"
 
 on:
   workflow_call:
@@ -8,6 +8,55 @@ on:
         default: "push"
 
 jobs:
+  get-environment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Environment
+        id: get_environment
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=main" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/stage" ]; then
+            echo "environment=stage" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+  get-app-name:
+    runs-on: ubuntu-latest
+    outputs:
+      app_name: ${{ steps.get_app_name.outputs.app_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get app name from package.json
+        id: get_app_name
+        run: echo "app_name=$(jq -r .name < package.json)" >> $GITHUB_OUTPUT
+
+  get-app-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      web_version: ${{ steps.get_web_version.outputs.web_version }}
+      web_lowercase_version: ${{ steps.get_web_version.outputs.web_lowercase_version }}
+      api_version: ${{ steps.get_api_version.outputs.api_version }}
+      api_lowercase_version: ${{ steps.get_api_version.outputs.api_lowercase_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get version from apps/web/package.json
+        id: get_web_version
+        run: |
+          echo "web_version=$(jq -r .version < apps/web/package.json)" >> $GITHUB_OUTPUT
+          echo "web_lowercase_version=$(jq -r .version < apps/web/package.json | sed 's/\./-/g')" >> $GITHUB_OUTPUT
+
+      - name: Get version from apps/api/package.json
+        id: get_api_version
+        run: |
+          echo "api_version=$(jq -r .version < apps/api/package.json)" >> $GITHUB_OUTPUT
+          echo "api_lowercase_version=$(jq -r .version < apps/api/package.json | sed 's/\./-/g')" >> $GITHUB_OUTPUT
+
   get-repository:
     runs-on: ubuntu-latest
     outputs:
