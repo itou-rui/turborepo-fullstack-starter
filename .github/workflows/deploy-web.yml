@@ -2,7 +2,7 @@ name: "Deploy Next.js"
 
 on:
   push:
-    branches: [main, stage, develop]
+    branches: [main, stage, develop, feat/deploy-google-cloud]
     paths:
       - "apps/web/**"
       - "packages/critters/**"
