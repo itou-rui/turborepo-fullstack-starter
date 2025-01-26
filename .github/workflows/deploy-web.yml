@@ -4,6 +4,9 @@ on:
   push:
     branches: [main, stage, develop]
 
+  #WARN: Temporary permission
+  workflow_dispatch:
+
 env:
   GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
   GOOGLE_CLOUD_PROJECT_NUMBER: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
