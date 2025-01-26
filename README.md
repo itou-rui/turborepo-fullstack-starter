@@ -113,3 +113,27 @@ You can create commits interactively
 ```sh
 yarn setup-google-cloud
 ```
+
+## Testing Github Workflow
+
+1. Install [act](https://github.com/nektos/act)
+
+```sh
+brew install act
+```
+
+2. Copy [.variables.example](./.variables.example) to `.variables` and fill in the values
+
+> [!NOTE]
+> The values in this file are called out in `vars.xxx`!
+
+3. Copy [.env.example](./.env.example) to `.env` and fill in the values
+
+> [!NOTE]
+> The values in this file are called out in `secrets.xxx`!
+
+4. Run test
+
+```sh
+yarn act --job=job_name
+```
