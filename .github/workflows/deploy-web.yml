@@ -15,13 +15,13 @@ env:
 
 jobs:
   prepare:
-    name: Prepare/Workflow
+    name: Prepare Web
     uses: ./.github/workflows/prepare-deploy.yml
     with:
       trigger: ${{ github.event_name }}
 
   prepare-google-cloud:
-    name: Prepare/GoogleCloud
+    name: Prepare web with google cloud
     permissions:
       id-token: write
       contents: read
@@ -40,7 +40,7 @@ jobs:
       service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   build:
-    name: Build/Docker
+    name: Build web with docker
     needs:
       - prepare
       - prepare-google-cloud
@@ -57,7 +57,7 @@ jobs:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
 
   deploy:
-    name: Deploy/CloudRun
+    name: Deploy web to cloudrun
     needs:
       - prepare
       - prepare-google-cloud

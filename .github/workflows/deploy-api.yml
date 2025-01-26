@@ -17,13 +17,13 @@ env:
 
 jobs:
   prepare:
-    name: Prepare/Workflow
+    name: Prepare Api
     uses: ./.github/workflows/prepare-deploy.yml
     with:
       trigger: ${{ github.event_name }}
 
   prepare-google-cloud:
-    name: Prepare/GoogleCloud
+    name: Prepare api with google cloud
     permissions:
       id-token: write
       contents: read
@@ -42,7 +42,7 @@ jobs:
       service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   build:
-    name: Build/Docker
+    name: Build api with docker
     needs:
       - prepare
       - prepare-google-cloud
@@ -59,7 +59,7 @@ jobs:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
 
   deploy:
-    name: Deploy/CloudRun
+    name: Deploy api to cloudrun
     needs:
       - prepare
       - prepare-google-cloud
