@@ -7,7 +7,6 @@ on:
 env:
   GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
   GOOGLE_CLOUD_PROJECT_NUMBER: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
-  GOOGLE_CLOUD_REGION: ${{ secrets.GOOGLE_CLOUD_REGION }}
   GOOGLE_CLOUD_IDENTITY_POOL_ID: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
   GOOGLE_CLOUD_IDENTITY_PROVIDER_ID: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
 
@@ -31,7 +30,7 @@ jobs:
     with:
       action: deploy
       repo_name: ${{ needs.prepare.outputs.repo_name_lowercase }}
-      google_cloud_region: region
+      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
@@ -48,7 +47,7 @@ jobs:
     with:
       action: "build-and-push"
       repo_name: ${{ needs.prepare.outputs.repo_name_lowercase }}
-      google_cloud_region: region
+      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
       google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare.outputs.environment || format('pre-{0}', needs.prepare.outputs.ref_name_lowercase) }}
       google_cloud_access_token: ${{ needs.prepare-google-cloud.outputs.access_token }}
       app: web
@@ -68,7 +67,7 @@ jobs:
       app: web
       environment: ${{ needs.prepare.outputs.environment }}
       ref_name: ${{ needs.prepare.outputs.ref_name_lowercase }}
-      google_cloud_region: region
+      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
       google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare.outputs.environment || format('pre-{0}', needs.prepare.outputs.ref_name_lowercase) }}
       docker_image: ${{ needs.build.outputs.docker_image }}
     secrets:
