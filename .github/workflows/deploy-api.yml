@@ -37,9 +37,9 @@ jobs:
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
-      workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
-      workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
+      google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
+      google_cloud_service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   build:
     name: Build api with docker
@@ -75,4 +75,4 @@ jobs:
       docker_image: ${{ needs.build.outputs.docker_image }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-      service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com

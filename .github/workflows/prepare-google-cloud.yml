@@ -18,11 +18,11 @@ on:
         required: true
       google_cloud_project_number:
         required: true
-      workload_identity_pool_id:
+      google_cloud_workload_identity_pool_id:
         required: true
-      workload_identity_provider_id:
+      google_cloud_workload_identity_provider_id:
         required: true
-      service_account:
+      google_cloud_service_account:
         required: true
     outputs:
       access_token:
@@ -38,8 +38,8 @@ jobs:
         id: auth
         with:
           token_format: "access_token"
-          workload_identity_provider: "projects/${{ secrets.google_cloud_project_number }}/locations/global/workloadIdentityPools/${{ secrets.workload_identity_pool_id }}/providers/${{ secrets.workload_identity_provider_id }}"
-          service_account: "${{ secrets.service_account }}"
+          workload_identity_provider: "projects/${{ secrets.google_cloud_project_number }}/locations/global/workloadIdentityPools/${{ secrets.google_cloud_workload_identity_pool_id }}/providers/${{ secrets.google_cloud_workload_identity_provider_id }}"
+          google_cloud_service_account: "${{ secrets.google_cloud_service_account }}"
           project_id: "${{ secrets.google_cloud_project_id }}"
 
   check-artifact-repository:
