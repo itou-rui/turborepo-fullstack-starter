@@ -46,6 +46,7 @@ on:
 
 jobs:
   get-environment:
+    name: Get Environment
     runs-on: ubuntu-latest
     steps:
       - name: Get Environment
@@ -60,6 +61,7 @@ jobs:
           fi
 
   get-app-name:
+    name: Get AppName
     runs-on: ubuntu-latest
     outputs:
       app_name: ${{ steps.get_app_name.outputs.app_name }}
@@ -72,6 +74,7 @@ jobs:
         run: echo "app_name=$(jq -r .name < package.json)" >> $GITHUB_OUTPUT
 
   get-app-versions:
+    name: Get App Versions
     runs-on: ubuntu-latest
     outputs:
       web_version: ${{ steps.get_web_version.outputs.web_version }}
@@ -95,6 +98,7 @@ jobs:
           echo "api_lowercase_version=$(jq -r .version < apps/api/package.json | sed 's/\./-/g')" >> $GITHUB_OUTPUT
 
   get-repository:
+    name: Get Repository Info
     runs-on: ubuntu-latest
     outputs:
       repo_name: ${{ steps.get_repo_info.outputs.repo_name }}
