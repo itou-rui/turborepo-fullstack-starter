@@ -26,16 +26,15 @@ jobs:
     with:
       trigger: ${{ github.event_name }}
 
-  prepare-web-google-cloud:
-    name: Prepare google cloud
+  create-artifact-repository:
+    name: Artifacts Repository
     permissions:
       id-token: write
       contents: read
       pull-requests: write
     needs: prepare-web
-    uses: ./.github/workflows/prepare-google-cloud.yml
+    uses: ./.github/workflows/create_artifact_repository.yml
     with:
-      action: deploy
       repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
     secrets:
@@ -49,13 +48,13 @@ jobs:
     name: Docker
     needs:
       - prepare-web
-      - prepare-web-google-cloud
+      - create-artifact-repository
     uses: ./.github/workflows/docker-build.yml
     with:
       repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
       google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-web.outputs.environment || format('pre-{0}', needs.prepare-web.outputs.ref_name_lowercase) }}
-      google_cloud_access_token: ${{ needs.prepare-web-google-cloud.outputs.access_token }}
+      google_cloud_access_token: ${{ needs.create-artifact-repository.outputs.access_token }}
       app: web
       app_version: ${{ needs.prepare-web.outputs.web_lowercase_version }}
     secrets:

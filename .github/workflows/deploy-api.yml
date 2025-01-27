@@ -26,36 +26,35 @@ jobs:
     with:
       trigger: ${{ github.event_name }}
 
-  prepare-api-google-cloud:
-    name: Prepare google cloud
+  create-artifact-repository:
+    name: Artifacts Repository
     permissions:
       id-token: write
       contents: read
       pull-requests: write
     needs: prepare-api
-    uses: ./.github/workflows/prepare-google-cloud.yml
+    uses: ./.github/workflows/create_artifact_repository.yml
     with:
-      action: deploy
-      repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
+      repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
       google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
       google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-web.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   build-api:
     name: Docker
     needs:
       - prepare-api
-      - prepare-api-google-cloud
+      - create-artifact-repository
     uses: ./.github/workflows/docker-build.yml
     with:
       repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
       google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
-      google_cloud_access_token: ${{ needs.prepare-api-google-cloud.outputs.access_token }}
+      google_cloud_access_token: ${{ needs.create-artifact-repository.outputs.access_token }}
       app: api
       app_version: ${{ needs.prepare-api.outputs.web_lowercase_version }}
     secrets:

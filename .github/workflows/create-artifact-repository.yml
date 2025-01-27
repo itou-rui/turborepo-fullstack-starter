@@ -1,11 +1,8 @@
-name: "Prepare GoogleCloud"
+name: "Create Artifacts Repository"
 
 on:
   workflow_call:
     inputs:
-      action:
-        type: string
-        default: deploy
       repo_name:
         required: true
         type: string
@@ -28,8 +25,8 @@ on:
         value: ${{ jobs.authenticate.outputs.access_token }}
 
 jobs:
-  authenticate:
-    name: Authenticate Google Cloud
+  create:
+    name: Check and Create
     runs-on: ubuntu-latest
     outputs:
       access_token: ${{ steps.auth-google-cloud.outputs.access_token }}
@@ -46,7 +43,11 @@ jobs:
       - name: Check if artifact repository is created
         id: check_artifact_repository
         run: |
-          gcloud artifacts repositories describe ${{ inputs.repo_name }} --location=${{ inputs.google_cloud_region }} --project=${{ secrets.google_cloud_project_id }} && echo "is_created=true" >> $GITHUB_OUTPUT || echo "is_created=false" >> $GITHUB_OUTPUT
+          if gcloud artifacts repositories describe "${{ inputs.repo_name }}" --location="${{ inputs.google_cloud_region }}" --project="${{ secrets.google_cloud_project_id }}"; then
+            echo "is_created=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_created=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create Artifacts Repository
         id: create_artifact_repository
