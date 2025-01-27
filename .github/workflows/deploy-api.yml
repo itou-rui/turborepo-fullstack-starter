@@ -62,7 +62,7 @@ jobs:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
 
   deploy-api:
-    name: Deploy to cloudrun
+    name: CloudRun
     needs:
       - prepare-api
       - prepare-api-google-cloud

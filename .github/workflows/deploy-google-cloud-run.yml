@@ -31,7 +31,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Google CloudRun
+    name: Deploy
     runs-on: ubuntu-latest
     steps:
       - name: Create Service declaration
