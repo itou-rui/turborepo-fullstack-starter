@@ -46,7 +46,7 @@ jobs:
       google_cloud_service_account: ${{ needs.prepare-web.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   build-web:
-    name: Build
+    name: Docker
     needs:
       - prepare-web
       - prepare-web-google-cloud

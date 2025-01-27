@@ -46,7 +46,7 @@ jobs:
       google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   build-api:
-    name: Build
+    name: Docker
     needs:
       - prepare-api
       - prepare-api-google-cloud

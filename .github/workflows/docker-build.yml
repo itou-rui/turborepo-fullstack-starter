@@ -30,7 +30,7 @@ on:
 
 jobs:
   build-and-push:
-    name: Build with docker
+    name: Build and Push
     runs-on: ubuntu-latest
     outputs:
       docker_image: ${{ steps.generate_image.outputs.docker_image }}
