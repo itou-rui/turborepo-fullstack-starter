@@ -64,7 +64,6 @@ jobs:
     name: CloudRun
     needs:
       - prepare-api
-      - prepare-api-google-cloud
       - build-api
     uses: ./.github/workflows/deploy-google-cloud-run.yml
     with:

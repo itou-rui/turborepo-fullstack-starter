@@ -64,7 +64,6 @@ jobs:
     name: CloudRun
     needs:
       - prepare-web
-      - prepare-web-google-cloud
       - build-web
     uses: ./.github/workflows/deploy-google-cloud-run.yml
     with:
