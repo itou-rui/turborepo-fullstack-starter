@@ -20,63 +20,62 @@ env:
   MONGODB_HOST_NAME: ${{ secrets.MONGODB_HOST_NAME }}
 
 jobs:
-  prepare:
-    name: Prepare Api
+  prepare-api:
+    name: Prepare
     uses: ./.github/workflows/prepare-deploy.yml
     with:
       trigger: ${{ github.event_name }}
 
-  prepare-google-cloud:
-    name: Prepare api with google cloud
+  prepare-api-google-cloud:
+    name: Prepare google cloud
     permissions:
       id-token: write
       contents: read
       pull-requests: write
-    needs: prepare
+    needs: prepare-api
     uses: ./.github/workflows/prepare-google-cloud.yml
     with:
       action: deploy
-      repo_name: ${{ needs.prepare.outputs.repo_name_lowercase }}
+      repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
       google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
       google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
-  build:
-    name: Build api with docker
+  build-api:
+    name: Build
     needs:
-      - prepare
-      - prepare-google-cloud
+      - prepare-api
+      - prepare-api-google-cloud
     uses: ./.github/workflows/docker-build.yml
     with:
-      action: "build-and-push"
-      repo_name: ${{ needs.prepare.outputs.repo_name_lowercase }}
+      repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare.outputs.environment || format('pre-{0}', needs.prepare.outputs.ref_name_lowercase) }}
-      google_cloud_access_token: ${{ needs.prepare-google-cloud.outputs.access_token }}
+      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
+      google_cloud_access_token: ${{ needs.prepare-api-google-cloud.outputs.access_token }}
       app: api
-      app_version: ${{ needs.prepare.outputs.web_lowercase_version }}
+      app_version: ${{ needs.prepare-api.outputs.web_lowercase_version }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
 
-  deploy:
-    name: Deploy api to cloudrun
+  deploy-api:
+    name: Deploy to cloudrun
     needs:
-      - prepare
-      - prepare-google-cloud
-      - build
+      - prepare-api
+      - prepare-api-google-cloud
+      - build-api
     uses: ./.github/workflows/deploy-google-cloud-run.yml
     with:
-      app_name: ${{ needs.prepare.outputs.app_name }}
+      app_name: ${{ needs.prepare-api.outputs.app_name }}
       app: api
-      environment: ${{ needs.prepare.outputs.environment }}
-      ref_name: ${{ needs.prepare.outputs.ref_name_lowercase }}
+      environment: ${{ needs.prepare-api.outputs.environment }}
+      ref_name: ${{ needs.prepare-api.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare.outputs.environment || format('pre-{0}', needs.prepare.outputs.ref_name_lowercase) }}
-      docker_image: ${{ needs.build.outputs.docker_image }}
+      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
+      docker_image: ${{ needs.build-api.outputs.docker_image }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-      google_cloud_service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com

@@ -20,63 +20,62 @@ env:
   BASE_URL: ${{ secrets.BASE_URL }}
 
 jobs:
-  prepare:
-    name: Prepare Web
+  prepare-web:
+    name: Prepare
     uses: ./.github/workflows/prepare-deploy.yml
     with:
       trigger: ${{ github.event_name }}
 
-  prepare-google-cloud:
-    name: Prepare web with google cloud
+  prepare-web-google-cloud:
+    name: Prepare google cloud
     permissions:
       id-token: write
       contents: read
       pull-requests: write
-    needs: prepare
+    needs: prepare-web
     uses: ./.github/workflows/prepare-google-cloud.yml
     with:
       action: deploy
-      repo_name: ${{ needs.prepare.outputs.repo_name_lowercase }}
+      repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
       google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
       google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-web.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
-  build:
-    name: Build web with docker
+  build-web:
+    name: Build
     needs:
-      - prepare
-      - prepare-google-cloud
+      - prepare-web
+      - prepare-web-google-cloud
     uses: ./.github/workflows/docker-build.yml
     with:
-      action: "build-and-push"
-      repo_name: ${{ needs.prepare.outputs.repo_name_lowercase }}
+      repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare.outputs.environment || format('pre-{0}', needs.prepare.outputs.ref_name_lowercase) }}
-      google_cloud_access_token: ${{ needs.prepare-google-cloud.outputs.access_token }}
+      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-web.outputs.environment || format('pre-{0}', needs.prepare-web.outputs.ref_name_lowercase) }}
+      google_cloud_access_token: ${{ needs.prepare-web-google-cloud.outputs.access_token }}
       app: web
-      app_version: ${{ needs.prepare.outputs.web_lowercase_version }}
+      app_version: ${{ needs.prepare-web.outputs.web_lowercase_version }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
 
-  deploy:
-    name: Deploy web to cloudrun
+  deploy-web:
+    name: Deploy to cloudrun
     needs:
-      - prepare
-      - prepare-google-cloud
-      - build
+      - prepare-web
+      - prepare-web-google-cloud
+      - build-web
     uses: ./.github/workflows/deploy-google-cloud-run.yml
     with:
-      app_name: ${{ needs.prepare.outputs.app_name }}
+      app_name: ${{ needs.prepare-web.outputs.app_name }}
       app: web
-      environment: ${{ needs.prepare.outputs.environment }}
-      ref_name: ${{ needs.prepare.outputs.ref_name_lowercase }}
+      environment: ${{ needs.prepare-web.outputs.environment }}
+      ref_name: ${{ needs.prepare-web.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare.outputs.environment || format('pre-{0}', needs.prepare.outputs.ref_name_lowercase) }}
-      docker_image: ${{ needs.build.outputs.docker_image }}
+      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-web.outputs.environment || format('pre-{0}', needs.prepare-web.outputs.ref_name_lowercase) }}
     secrets:
+      docker_image: ${{ needs.build.outputs.docker_image }}
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-      google_cloud_service_account: ${{ needs.prepare.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-web.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
