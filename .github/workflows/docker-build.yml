@@ -3,9 +3,6 @@ name: "Build and Push With Docker"
 on:
   workflow_call:
     inputs:
-      action:
-        required: true
-        type: string
       repo_name:
         required: true
         type: string
@@ -32,8 +29,11 @@ on:
         value: ${{ jobs.generate-image.outputs.docker_image }}
 
 jobs:
-  auth-docker:
+  build-and-push:
+    name: Build with docker
     runs-on: ubuntu-latest
+    outputs:
+      docker_image: ${{ steps.generate_image.outputs.docker_image }}
     steps:
       - name: Authenticate with Docker
         uses: docker/login-action@v1
@@ -42,26 +42,12 @@ jobs:
           password: "${{ inputs.google_cloud_access_token }}"
           registry: "${{ inputs.google_cloud_region }}-docker.pkg.dev"
 
-  generate-image:
-    runs-on: ubuntu-latest
-    needs:
-      - auth-docker
-    outputs:
-      docker_image: ${{ steps.generate_docker_image.outputs.docker_image }}
-    steps:
-      - name: Generate Docker image
-        id: generate_docker_image
+      - name: Generate Image
+        id: generate_image
         run: |
           IMAGE_NAME="${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.google_cloud_project_id }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}"
           echo "docker_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
-  build-and-push:
-    runs-on: ubuntu-latest
-    if: ${{ inputs.action == 'build-and-push' }}
-    needs:
-      - auth-docker
-      - generate-image
-    steps:
       - name: Build, tag, and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -69,9 +55,8 @@ jobs:
           file: ./apps/${{ inputs.app }}/Dockerfile
           push: true
           tags: |
-            tags: |
-              ${{ needs.generate_docker_image.outputs.docker_image }}:${{ inputs.app_version }}
-              ${{ needs.generate_docker_image.outputs.docker_image }}:${{ github.sha }}
+            ${{ steps.generate_docker_image.outputs.docker_image }}:${{ inputs.app_version }}
+            ${{ steps.generate_docker_image.outputs.docker_image }}:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
