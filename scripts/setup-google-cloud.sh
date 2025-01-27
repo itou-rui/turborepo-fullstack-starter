@@ -101,7 +101,7 @@ log "Created networking service account: $PACKAGE_NAME-net-sa"
 
 # Add IAM policy bindings for application service account
 gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT_NUMBER}" \
-  --member="serviceAccount:app-sa@$GOOGLE_CLOUD_PROJECT_ID.iam.gserviceaccount.com" \
+  --member="serviceAccount:$PACKAGE_NAME-app-sa@$GOOGLE_CLOUD_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/artifactregistry.admin" \
   --role="roles/run.admin" \
   --role="roles/storage.admin" \
