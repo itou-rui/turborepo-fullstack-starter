@@ -21,20 +21,20 @@ on:
       google_cloud_service_env:
         required: true
         type: string
+    secrets:
       docker_image:
         required: true
-        type: string
-    secrets:
       google_cloud_project_id:
         required: true
       google_cloud_google_cloud_service_account:
         required: true
 
 jobs:
-  create-service-declaration:
+  deploy:
+    name: Deploy Google CloudRun
     runs-on: ubuntu-latest
     steps:
-      - name: Create Service declaration for Cloud Run
+      - name: Create Service declaration
         run: |
           export CONTAINER_IMAGE="${{ inputs.docker_image }}:${{ github.sha }}"
           export SERVICE_NAME="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}"
@@ -44,13 +44,10 @@ jobs:
           export ENVIRONMENT="${{ inputs.environment }}"
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
 
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}
-          region: ${{ env.GOOGLE_CLOUD_REGION }}
+          region: ${{ inputs.google_cloud_region }}
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.google_cloud_project_id }}
