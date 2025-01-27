@@ -33,7 +33,7 @@ jobs:
       contents: read
       pull-requests: write
     needs: prepare-web
-    uses: ./.github/workflows/create_artifact_repository.yml
+    uses: ./.github/workflows/create-artifact-repository.yml
     with:
       repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
