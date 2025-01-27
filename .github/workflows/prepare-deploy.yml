@@ -6,6 +6,43 @@ on:
       trigger:
         type: string
         default: "push"
+    outputs:
+      environment:
+        description: "The deployment environment"
+        value: ${{ jobs.get-environment.outputs.environment }}
+      app_name:
+        description: "The application name"
+        value: ${{ jobs.get-app-name.outputs.app_name }}
+      web_version:
+        description: "The web application version"
+        value: ${{ jobs.get-app-versions.outputs.web_version }}
+      web_lowercase_version:
+        description: "The web application version in lowercase"
+        value: ${{ jobs.get-app-versions.outputs.web_lowercase_version }}
+      api_version:
+        description: "The API version"
+        value: ${{ jobs.get-app-versions.outputs.api_version }}
+      api_lowercase_version:
+        description: "The API version in lowercase"
+        value: ${{ jobs.get-app-versions.outputs.api_lowercase_version }}
+      repo_name:
+        description: "The repository name"
+        value: ${{ jobs.get-repository.outputs.repo_name }}
+      repo_name_lowercase:
+        description: "The repository name in lowercase"
+        value: ${{ jobs.get-repository.outputs.repo_name_lowercase }}
+      repo_owner:
+        description: "The repository owner"
+        value: ${{ jobs.get-repository.outputs.repo_owner }}
+      repo_owner_lowercase:
+        description: "The repository owner in lowercase"
+        value: ${{ jobs.get-repository.outputs.repo_owner_lowercase }}
+      ref_name:
+        description: "The reference name"
+        value: ${{ jobs.get-repository.outputs.ref_name }}
+      ref_name_lowercase:
+        description: "The reference name in lowercase"
+        value: ${{ jobs.get-repository.outputs.ref_name_lowercase }}
 
 jobs:
   get-environment:
