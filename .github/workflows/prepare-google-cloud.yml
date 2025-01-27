@@ -40,7 +40,7 @@ jobs:
         with:
           token_format: "access_token"
           workload_identity_provider: "projects/${{ secrets.google_cloud_project_number }}/locations/global/workloadIdentityPools/${{ secrets.google_cloud_workload_identity_pool_id }}/providers/${{ secrets.google_cloud_workload_identity_provider_id }}"
-          google_cloud_service_account: "${{ secrets.google_cloud_service_account }}"
+          service_account: "${{ secrets.google_cloud_service_account }}"
           project_id: "${{ secrets.google_cloud_project_id }}"
 
   create-repository:
