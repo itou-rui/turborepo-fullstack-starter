@@ -21,9 +21,10 @@ on:
       google_cloud_service_env:
         required: true
         type: string
-    secrets:
       docker_image:
         required: true
+        type: string
+    secrets:
       google_cloud_project_id:
         required: true
       google_cloud_project_number:
@@ -53,10 +54,10 @@ jobs:
 
       - name: Create Service declaration
         run: |
-          export CONTAINER_IMAGE="${{ secrets.docker_image }}:${{ github.sha }}"
+          export CONTAINER_IMAGE="${{ inputs.docker_image }}:${{ github.sha }}"
           export SERVICE_NAME="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}"
           export PROJECT_ID="${{ secrets.google_cloud_project_id }}"
-          export REVISION_TAG="${{ github.sha }}"/${{ inputs.ref_name }}
+          export REVISION_TAG="${{ github.sha }}/${{ inputs.ref_name }}"
           export CLOUD_RUN_SA="${{ secrets.google_cloud_service_account }}"
           export ENVIRONMENT="${{ inputs.environment }}"
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml

@@ -81,8 +81,8 @@ jobs:
       ref_name: ${{ needs.prepare-web.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
       google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-web.outputs.environment || format('pre-{0}', needs.prepare-web.outputs.ref_name_lowercase) }}
-    secrets:
       docker_image: ${{ needs.build-web.outputs.docker_image }}
+    secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
       google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}

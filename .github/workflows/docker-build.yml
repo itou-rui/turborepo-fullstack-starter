@@ -77,6 +77,8 @@ jobs:
           tags: |
             ${{ steps.generate_image.outputs.docker_image }}:${{ inputs.app_version }}
             ${{ steps.generate_image.outputs.docker_image }}:${{ github.sha }}
+            ${{ steps.generate_image.outputs.docker_image }}:latest
+
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
