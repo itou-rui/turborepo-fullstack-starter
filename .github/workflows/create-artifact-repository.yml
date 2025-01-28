@@ -20,16 +20,11 @@ on:
         required: true
       google_cloud_service_account:
         required: true
-    outputs:
-      access_token:
-        value: ${{ jobs.authenticate.outputs.access_token }}
 
 jobs:
   create:
     name: Check and Create
     runs-on: ubuntu-latest
-    outputs:
-      access_token: ${{ steps.auth-google-cloud.outputs.access_token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
