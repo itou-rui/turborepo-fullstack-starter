@@ -7,6 +7,7 @@ const { join } = require('path');
 const { processHTMLFile } = require('@workspace/critters');
 
 const dev = process.env.NODE_ENV !== 'production';
+const port = process.env.PORT || 3000;
 const hostname = dev ? 'localhost' : process.env.HOSTNAME || 'localhost';
 const app = next({ dev, port, hostname });
 const handle = app.getRequestHandler();
@@ -103,7 +104,7 @@ app.prepare().then(() => {
     }
 
     handle(req, res, parsedUrl);
-  }).listen(process.env.PORT || 3000, () => {
+  }).listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`);
   });
 });
