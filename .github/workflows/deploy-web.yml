@@ -48,7 +48,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    needs: [create-artifact-repository-web]
+    needs: [prepare-web, create-artifact-repository-web]
     uses: ./.github/workflows/docker-build.yml
     with:
       repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
@@ -68,16 +68,16 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    needs: [build-web]
+    needs: [prepare-web, create-artifact-repository-web, build-web]
     uses: ./.github/workflows/deploy-google-cloud-run.yml
     with:
       app_name: ${{ needs.prepare-web.outputs.app_name }}
       app: web
+      repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
       environment: ${{ needs.prepare-web.outputs.environment }}
       ref_name: ${{ needs.prepare-web.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
       google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-web.outputs.environment || format('pre-{0}', needs.prepare-web.outputs.ref_name_lowercase) }}
-      docker_image: ${{ needs.build-web.outputs.docker_image }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
