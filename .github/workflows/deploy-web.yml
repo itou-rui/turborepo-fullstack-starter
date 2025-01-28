@@ -31,7 +31,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      pull-requests: write
     needs: prepare-web
     uses: ./.github/workflows/create-artifact-repository.yml
     with:
@@ -46,6 +45,9 @@ jobs:
 
   build-web:
     name: Docker
+    permissions:
+      id-token: write
+      contents: read
     needs:
       - prepare-web
       - create-artifact-repository
@@ -65,6 +67,9 @@ jobs:
 
   deploy-web:
     name: CloudRun
+    permissions:
+      id-token: write
+      contents: read
     needs:
       - prepare-web
       - build-web

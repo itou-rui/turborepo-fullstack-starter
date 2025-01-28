@@ -31,7 +31,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      pull-requests: write
     needs: prepare-api
     uses: ./.github/workflows/create-artifact-repository.yml
     with:
@@ -46,6 +45,9 @@ jobs:
 
   build-api:
     name: Docker
+    permissions:
+      id-token: write
+      contents: read
     needs:
       - prepare-api
       - create-artifact-repository
@@ -65,6 +67,9 @@ jobs:
 
   deploy-api:
     name: CloudRun
+    permissions:
+      id-token: write
+      contents: read
     needs:
       - prepare-api
       - build-api
