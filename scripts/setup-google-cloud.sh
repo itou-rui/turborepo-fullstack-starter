@@ -100,16 +100,19 @@ gcloud iam service-accounts create "$PACKAGE_NAME-net-sa" \
 log "Created networking service account: $PACKAGE_NAME-net-sa"
 
 # Add IAM policy bindings for application service account
-gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT_NUMBER}" \
-  --member="serviceAccount:$PACKAGE_NAME-app-sa@$GOOGLE_CLOUD_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/artifactregistry.admin" \
-  --role="roles/run.admin" \
-  --role="roles/storage.admin" \
-  --role="roles/iam.serviceAccountUser" \
-  --role="roles/iam.serviceAccountTokenCreator" \
-  --role="roles/container.admin" \
-  --role="roles/cloudscheduler.admin" \
-  --role="roles/iam.serviceAccountTokenCreator"
+roles=(
+  "roles/artifactregistry.admin"
+  "roles/run.developer" ## "roles/run.admin"
+  "roles/iam.serviceAccountUser"
+  "roles/iam.serviceAccountTokenCreator"
+)
+
+# Add IAM policy bindings for application service account
+for role in "${roles[@]}"; do
+  gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT_ID}" \
+    --member="serviceAccount:$PACKAGE_NAME-app-sa@$GOOGLE_CLOUD_PROJECT_ID.iam.gserviceaccount.com" \
+    --role="$role"
+done
 log "Added IAM policy bindings for application service account."
 
 # Add IAM policy binding for networking service account
@@ -132,7 +135,3 @@ gcloud iam service-accounts add-iam-policy-binding "$PACKAGE_NAME-app-sa@$GOOGLE
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/projects/$GOOGLE_CLOUD_PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_IDENTITY_POOL_ID/attribute.repository/$REPO_OWNER/$REPO_NAME"
 log "Added IAM policy binding for application service account (repository)."
-
-# Enable Cloud Scheduler API
-gcloud services enable cloudscheduler.googleapis.com --project="$GOOGLE_CLOUD_PROJECT_ID"
-log "Enabled Cloud Scheduler API."
