@@ -53,7 +53,7 @@ jobs:
 
       - name: Create Service declaration
         run: |
-          export CONTAINER_IMAGE="${{ inputs.docker_image }}:${{ github.sha }}"
+          export CONTAINER_IMAGE="${{ secrets.docker_image }}:${{ github.sha }}"
           export SERVICE_NAME="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}"
           export PROJECT_ID="${{ secrets.google_cloud_project_id }}"
           export REVISION_TAG="${{ github.sha }}"/${{ inputs.ref_name }}
