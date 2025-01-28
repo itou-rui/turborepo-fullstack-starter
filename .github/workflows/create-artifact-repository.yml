@@ -31,6 +31,9 @@ jobs:
     outputs:
       access_token: ${{ steps.auth-google-cloud.outputs.access_token }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Authenticate with Google Cloud
         id: auth-google-cloud
         uses: google-github-actions/auth@v1
