@@ -26,6 +26,12 @@ on:
         required: true
       google_cloud_project_id:
         required: true
+      google_cloud_project_number:
+        required: true
+      google_cloud_workload_identity_pool_id:
+        required: true
+      google_cloud_workload_identity_provider_id:
+        required: true
       google_cloud_service_account:
         required: true
 
@@ -34,6 +40,17 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.google_cloud_project_number }}/locations/global/workloadIdentityPools/${{ secrets.google_cloud_workload_identity_pool_id }}/providers/${{ secrets.google_cloud_workload_identity_provider_id }}"
+          service_account: "${{ secrets.google_cloud_service_account }}"
+          project_id: "${{ secrets.google_cloud_project_id }}"
+
       - name: Create Service declaration
         run: |
           export CONTAINER_IMAGE="${{ inputs.docker_image }}:${{ github.sha }}"
