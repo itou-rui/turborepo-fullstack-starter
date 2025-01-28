@@ -41,7 +41,7 @@ jobs:
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
       google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
       google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare-web.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   build-api:
     name: Docker
@@ -63,7 +63,7 @@ jobs:
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
       google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
       google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare-web.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
 
   deploy-api:
     name: CloudRun
@@ -87,4 +87,4 @@ jobs:
       google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
       google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
       google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare-web.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
