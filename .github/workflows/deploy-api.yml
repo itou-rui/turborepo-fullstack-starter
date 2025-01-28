@@ -34,7 +34,7 @@ jobs:
     needs: prepare-api
     uses: ./.github/workflows/create-artifact-repository.yml
     with:
-      repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
+      repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
     secrets:
       google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
