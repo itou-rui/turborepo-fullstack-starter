@@ -31,7 +31,7 @@ on:
         required: true
     outputs:
       docker_image:
-        value: ${{ jobs.generate-image.outputs.docker_image }}
+        value: ${{ jobs.build-and-push.outputs.docker_image }}
 
 jobs:
   build-and-push:
@@ -56,7 +56,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           username: "oauth2accesstoken"
-          password: "${{ steps.auth-google-cloud.access_token }}"
+          password: "${{ steps.auth-google-cloud.outputs.access_token }}"
           registry: "${{ inputs.google_cloud_region }}-docker.pkg.dev"
 
       - name: Generate Image
@@ -72,12 +72,11 @@ jobs:
           file: ./apps/${{ inputs.app }}/Dockerfile
           push: true
           tags: |
-            ${{ steps.generate_docker_image.outputs.docker_image }}:${{ inputs.app_version }}
-            ${{ steps.generate_docker_image.outputs.docker_image }}:${{ github.sha }}
+            ${{ steps.generate_image.outputs.docker_image }}:${{ inputs.app_version }}
+            ${{ steps.generate_image.outputs.docker_image }}:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-      ## [issue](https://github.com/docker/build-push-action/issues/252)
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
