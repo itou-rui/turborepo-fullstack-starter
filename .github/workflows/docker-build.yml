@@ -12,9 +12,6 @@ on:
       google_cloud_service_env:
         required: true
         type: string
-      google_cloud_access_token:
-        required: true
-        type: string
       app:
         required: true
         type: string
@@ -23,6 +20,14 @@ on:
         type: string
     secrets:
       google_cloud_project_id:
+        required: true
+      google_cloud_project_number:
+        required: true
+      google_cloud_workload_identity_pool_id:
+        required: true
+      google_cloud_workload_identity_provider_id:
+        required: true
+      google_cloud_service_account:
         required: true
     outputs:
       docker_image:
@@ -35,11 +40,23 @@ jobs:
     outputs:
       docker_image: ${{ steps.generate_image.outputs.docker_image }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Authenticate with Google Cloud
+        id: auth-google-cloud
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.google_cloud_project_number }}/locations/global/workloadIdentityPools/${{ secrets.google_cloud_workload_identity_pool_id }}/providers/${{ secrets.google_cloud_workload_identity_provider_id }}"
+          service_account: "${{ secrets.google_cloud_service_account }}"
+          project_id: "${{ secrets.google_cloud_project_id }}"
+
       - name: Authenticate with Docker
         uses: docker/login-action@v1
         with:
           username: "oauth2accesstoken"
-          password: "${{ inputs.google_cloud_access_token }}"
+          password: "${{ steps.auth-google-cloud.access_token }}"
           registry: "${{ inputs.google_cloud_region }}-docker.pkg.dev"
 
       - name: Generate Image
