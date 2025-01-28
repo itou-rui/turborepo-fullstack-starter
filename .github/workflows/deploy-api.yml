@@ -26,7 +26,7 @@ jobs:
     with:
       trigger: ${{ github.event_name }}
 
-  create-artifact-repository:
+  create-artifact-repository-api:
     name: Artifacts Repository
     permissions:
       id-token: write
@@ -50,7 +50,7 @@ jobs:
       contents: read
     needs:
       - prepare-api
-      - create-artifact-repository
+      - create-artifact-repository-api
     uses: ./.github/workflows/docker-build.yml
     with:
       repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
