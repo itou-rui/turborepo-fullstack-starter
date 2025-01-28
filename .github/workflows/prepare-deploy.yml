@@ -48,6 +48,8 @@ jobs:
   get-environment:
     name: Get Environment
     runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.get_environment.outputs.environment }}
     steps:
       - name: Get Environment
         id: get_environment
