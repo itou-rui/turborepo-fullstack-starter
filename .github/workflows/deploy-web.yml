@@ -31,7 +31,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    needs: prepare-web
+    needs: [prepare-web]
     uses: ./.github/workflows/create-artifact-repository.yml
     with:
       repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
@@ -48,9 +48,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    needs:
-      - prepare-web
-      - create-artifact-repository-web
+    needs: [create-artifact-repository-web]
     uses: ./.github/workflows/docker-build.yml
     with:
       repo_name: ${{ needs.prepare-web.outputs.repo_name_lowercase }}
@@ -70,9 +68,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    needs:
-      - prepare-web
-      - build-web
+    needs: [build-web]
     uses: ./.github/workflows/deploy-google-cloud-run.yml
     with:
       app_name: ${{ needs.prepare-web.outputs.app_name }}
