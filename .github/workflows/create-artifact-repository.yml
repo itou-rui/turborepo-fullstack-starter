@@ -54,6 +54,7 @@ jobs:
 
       - name: Create Artifacts Repository
         id: create_artifact_repository
+        if: steps.check_artifact_repository.outputs.is_created == 'false'
         run: |
           gcloud artifacts repositories create ${{ inputs.repo_name }} \
             --repository-format="docker" \
