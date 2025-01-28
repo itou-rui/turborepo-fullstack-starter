@@ -44,4 +44,8 @@ COPY --from=sourcer /app/ .
 
 WORKDIR /app/apps/web/
 
+ENV PORT=8080
+ENV HOSTNAME="0.0.0.0"
+ENV NODE_ENV=production
+
 CMD [ "npm", "start" ]
