@@ -68,6 +68,9 @@ jobs:
       - name: Set up buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Create cache directory
+        run: mkdir -p /tmp/.buildx-cache
+
       - name: Build, tag, and push Docker image
         uses: docker/build-push-action@v5
         with:
