@@ -9,7 +9,7 @@ export const databaseConfig = registerAs(CONFIG_DATABASE, () => {
 
   return {
     main: {
-      uri: `mongodb+srv://${USER_NAME}:${PASSWORD}@${HOST_NAME}.ljyr9.mongodb.net/main`,
+      uri: `mongodb+srv://${USER_NAME}:${PASSWORD}@${HOST_NAME}.mongodb.net/main`,
       connectionName: 'app_main',
       options: {
         maxPoolSize: 50,
