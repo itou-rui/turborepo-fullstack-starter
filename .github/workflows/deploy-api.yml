@@ -26,61 +26,61 @@ jobs:
     with:
       trigger: ${{ github.event_name }}
 
-  create-artifact-repository-api:
-    name: Artifacts Repository
-    permissions:
-      id-token: write
-      contents: read
-    needs: [prepare-api]
-    uses: ./.github/workflows/create-artifact-repository.yml
-    with:
-      repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
-      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-    secrets:
-      google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-      google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
-      google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
-      google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
-
-  build-api:
-    name: Docker
-    permissions:
-      id-token: write
-      contents: read
-    needs: [prepare-api, create-artifact-repository-api]
-    uses: ./.github/workflows/docker-build.yml
-    with:
-      repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
-      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
-      app: api
-      app_version: ${{ needs.prepare-api.outputs.web_lowercase_version }}
-    secrets:
-      google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-      google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
-      google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
-      google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
-
-  deploy-api:
-    name: CloudRun
-    permissions:
-      id-token: write
-      contents: read
-    needs: [prepare-api, create-artifact-repository-api, build-api]
-    uses: ./.github/workflows/deploy-google-cloud-run.yml
-    with:
-      app_name: ${{ needs.prepare-api.outputs.app_name }}
-      app: api
-      repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
-      environment: ${{ needs.prepare-api.outputs.environment }}
-      ref_name: ${{ needs.prepare-api.outputs.ref_name_lowercase }}
-      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
-    secrets:
-      google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-      google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
-      google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
-      google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
-      google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+  # create-artifact-repository-api:
+  #   name: Artifacts Repository
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   needs: [prepare-api]
+  #   uses: ./.github/workflows/create-artifact-repository.yml
+  #   with:
+  #     repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
+  #     google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
+  #   secrets:
+  #     google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+  #     google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
+  #     google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
+  #     google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
+  #     google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+  #
+  # build-api:
+  #   name: Docker
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   needs: [prepare-api, create-artifact-repository-api]
+  #   uses: ./.github/workflows/docker-build.yml
+  #   with:
+  #     repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
+  #     google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
+  #     google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
+  #     app: api
+  #     app_version: ${{ needs.prepare-api.outputs.web_lowercase_version }}
+  #   secrets:
+  #     google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+  #     google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
+  #     google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
+  #     google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
+  #     google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
+  #
+  # deploy-api:
+  #   name: CloudRun
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   needs: [prepare-api, create-artifact-repository-api, build-api]
+  #   uses: ./.github/workflows/deploy-google-cloud-run.yml
+  #   with:
+  #     app_name: ${{ needs.prepare-api.outputs.app_name }}
+  #     app: api
+  #     repo_name: ${{ needs.prepare-api.outputs.repo_name_lowercase }}
+  #     environment: ${{ needs.prepare-api.outputs.environment }}
+  #     ref_name: ${{ needs.prepare-api.outputs.ref_name_lowercase }}
+  #     google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
+  #     google_cloud_service_env: ${{ github.event_name == 'push' && needs.prepare-api.outputs.environment || format('pre-{0}', needs.prepare-api.outputs.ref_name_lowercase) }}
+  #   secrets:
+  #     google_cloud_project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+  #     google_cloud_project_number: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
+  #     google_cloud_workload_identity_pool_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
+  #     google_cloud_workload_identity_provider_id: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
+  #     google_cloud_service_account: ${{ needs.prepare-api.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com
