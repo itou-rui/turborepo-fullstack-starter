@@ -81,6 +81,24 @@ nps start.web
 nps start.api
 ```
 
+## Branch Strategy
+
+### Main Branch (`main`)
+
+- Production environment
+
+- Merging requires Pull Request.
+
+- Merging requires confirmation of operation in a **stage environment**.
+
+### Feature Branches (`feat/{username}-*`)
+
+- Frequent rebasing of the main branch for consistency.
+
+- Confirm that the pull request works in the **stage environment** before submitting it.
+
+- If the environment cannot be checked locally, deploy manually to the **develop environment** to check the operation.
+
 ## Commit
 
 The following is incorporated
