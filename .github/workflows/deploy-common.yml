@@ -111,8 +111,11 @@ jobs:
             ${{ steps.generate_image.outputs.docker_image }}:${{ inputs.app_version }}
             ${{ steps.generate_image.outputs.docker_image }}:${{ github.sha }}
             ${{ steps.generate_image.outputs.docker_image }}:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-from: |
+            type=local,src=/tmp/.buildx-cache
+            type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:latest
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          platforms: linux/amd64
 
       - name: Move cache
         run: |
