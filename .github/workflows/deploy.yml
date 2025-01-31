@@ -1,0 +1,143 @@
+name: "Deploy"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "apps/api/**"
+      - "packages/critters/**"
+      - "packages/ui/**"
+
+  ## Allow manual execution
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target Environment"
+        type: choice
+        options:
+          - dev
+          - stage
+        default: "dev"
+        required: true
+      deploy_web:
+        description: "Deploy Web"
+        type: boolean
+        default: true
+        required: true
+      deploy_api:
+        description: "Deploy API"
+        type: boolean
+        default: true
+        required: true
+
+env:
+  ## Common
+  GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+  GOOGLE_CLOUD_PROJECT_NUMBER: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
+  GOOGLE_CLOUD_IDENTITY_POOL_ID: ${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}
+  GOOGLE_CLOUD_IDENTITY_PROVIDER_ID: ${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}
+
+  ## Web
+  BASE_URL: ${{ secrets.BASE_URL }}
+
+  ## Api
+  MONGODB_USER_NAME: ${{ secrets.MONGODB_USER_NAME }}
+  MONGODB_USER_PASSWORD: ${{ secrets.MONGODB_USER_PASSWORD }}
+  MONGODB_HOST_NAME: ${{ secrets.MONGODB_HOST_NAME }}
+
+jobs:
+  get-config:
+    name: Get Config
+    uses: ./.github/workflows/get-config.yml
+    with:
+      trigger: ${{ github.event_name }}
+
+  get-change-paths:
+    runs-on: ubuntu-latest
+    name: Get ChangePaths
+    if: github.event_name != 'workflow_dispatch'
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+      critters: ${{ steps.filter.outputs.critters }}
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Paths filter
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - '!apps/web/src/tests/**'
+              - '!apps/web/critters/**'
+              - '!apps/web/.*'
+              - '!apps/web/*.md'
+              - '!apps/web/*.config.mjs'
+              - '!apps/web/components.json'
+            api:
+              - 'apps/api/**'
+              - '!apps/api/tests/**'
+              - '!apps/api/**/*.*.spec.ts'
+              - '!apps/api/.*'
+              - '!apps/api/*.md'
+            critters:
+              - 'packages/critters/**'
+              - '!packages/critters/.*'
+              - '!packages/critters/*.md'
+              - '!packages/critters/*.mjs'
+            ui:
+              - 'packages/ui/**'
+              - '!packages/ui/.*'
+              - '!packages/ui/*.md'
+              - '!packages/ui/eslint.config.mjs'
+              - '!packages/ui/components.json'
+
+  deploy-web:
+    name: Web
+    needs: [get-config]
+    # Always run if manually triggered, otherwise run based on change detection
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.deploy_web == 'true') ||
+      (github.event_name != 'workflow_dispatch' &&
+      (needs.get-change-paths.outputs.web == 'true' || needs.get-change-paths.outputs.critters == 'true' || needs.get-change-paths.outputs.ui == 'true'))
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/deploy-common.yml
+    with:
+      environment: ${{ github.event.inputs.environment || 'prod' }}
+      app: web
+      app_name: ${{ needs.get-config.outputs.app_name }}
+      app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
+      repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
+      ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
+      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
+      google_cloud_service_env: ${{ github.event_name != 'workflow_dispatch' && 'prod' || format('{0}-{1}', github.event.inputs.environment, needs.get-config.outputs.ref_name_lowercase) }}
+    secrets: inherit
+
+  deploy-api:
+    name: Api
+    needs: [get-config]
+    # Always run if manually triggered, otherwise run based on change detection
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.deploy_api == 'true') || 
+      (github.event_name != 'workflow_dispatch' && needs.get-change-paths.outputs.api == 'true')
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/deploy-common.yml
+    with:
+      environment: ${{ github.event.inputs.environment || 'prod' }}
+      app: api
+      app_name: ${{ needs.get-config.outputs.app_name }}
+      app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
+      repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
+      ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
+      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
+      google_cloud_service_env: ${{ github.event_name != 'workflow_dispatch' && 'prod' || format('{0}-{1}', github.event.inputs.environment, needs.get-config.outputs.ref_name_lowercase) }}
+    secrets: inherit
