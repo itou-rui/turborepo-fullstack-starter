@@ -87,15 +87,26 @@ app.prepare().then(() => {
 
             const html = Buffer.concat(chunks);
 
-            zlib.unzip(html, (err, decompressedData) => {
-              if (err) {
-                console.error('Error decompressing data:', err);
-                return;
-              }
+            const contentEncoding = res.getHeader('content-encoding');
+            if (contentEncoding === 'gzip') {
+              zlib.unzip(html, (err, decompressedData) => {
+                if (err) {
+                  console.error('Error decompressing data:', err, {
+                    contentEncoding,
+                    dataLength: html.length,
+                  });
+                  return;
+                }
+                saveStylesToFile(decompressedData.toString(), pathname);
+                routes[pathname] = Date.now();
+              });
+            }
 
-              saveStylesToFile(decompressedData.toString(), pathname);
+            // Direct processing if not compressed
+            else {
+              saveStylesToFile(html.toString(), pathname);
               routes[pathname] = Date.now();
-            });
+            }
           }, 0);
         }
       });
