@@ -1,3 +1,7 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
@@ -7,11 +11,11 @@ const { join } = require('path');
 const { processHTMLFile } = require('@workspace/critters');
 
 const dev = process.env.NODE_ENV !== 'production';
-const port = process.env.PORT || 3000;
-const hostname = process.env.HOSTNAME || '0.0.0.0';
+const port = process.env.PORT || (dev ? '3000' : '8080');
+const hostname = process.env.HOSTNAME || (dev ? 'localhost' : '0.0.0.0');
 const app = next({ dev, port, hostname });
 const handle = app.getRequestHandler();
-const DIR = '/tmp/critters';
+const DIR = 'critters';
 const processedRoutes = new Set();
 const routes = {};
 const cachingTime = 5 * 60 * 1000;
