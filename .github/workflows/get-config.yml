@@ -55,7 +55,7 @@ jobs:
         id: get_environment
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "environment=main" >> $GITHUB_OUTPUT
+            echo "environment=prod" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" == "refs/heads/stage" ]; then
             echo "environment=stage" >> $GITHUB_OUTPUT
           else
