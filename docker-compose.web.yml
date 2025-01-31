@@ -7,10 +7,12 @@ services:
       dockerfile: ./apps/web/Dockerfile
     env_file:
       - ./apps/web/.env
-    # environment:
-    #     BASE_URL: ${BASE_URL}
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - HOSTNAME=0.0.0.0
     stop_signal: SIGINT
     ports:
-      - 3000:3000
+      - "8080:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"

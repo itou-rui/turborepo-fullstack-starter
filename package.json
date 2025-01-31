@@ -1,5 +1,6 @@
 {
-  "name": "turborepo-fullstack-starter",
+  "name": "fullstack-starter",
+  "author": "itou-rui",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
@@ -11,7 +12,11 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "commit": "cz"
+    "commit": "cz",
+    "setup-google-cloud": "./scripts/setup-google-cloud.sh",
+    "gcloud:role.list": "gcloud iam roles list --format=\"table(name, title, description)\"",
+    "act": "JOB=$npm_config_job act -j $JOB --var-file .variables --secret-file .env -s GITHUB_TOKEN=$(gh auth token) --container-architecture linux/amd64",
+    "act:list": "act -l --container-architecture linux/amd64"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

@@ -1,0 +1,137 @@
+name: "Prepare Deploy"
+
+on:
+  workflow_call:
+    inputs:
+      trigger:
+        type: string
+        default: "push"
+    outputs:
+      environment:
+        description: "The deployment environment"
+        value: ${{ jobs.get-environment.outputs.environment }}
+      app_name:
+        description: "The application name"
+        value: ${{ jobs.get-app-name.outputs.app_name }}
+      web_version:
+        description: "The web application version"
+        value: ${{ jobs.get-app-versions.outputs.web_version }}
+      web_lowercase_version:
+        description: "The web application version in lowercase"
+        value: ${{ jobs.get-app-versions.outputs.web_lowercase_version }}
+      api_version:
+        description: "The API version"
+        value: ${{ jobs.get-app-versions.outputs.api_version }}
+      api_lowercase_version:
+        description: "The API version in lowercase"
+        value: ${{ jobs.get-app-versions.outputs.api_lowercase_version }}
+      repo_name:
+        description: "The repository name"
+        value: ${{ jobs.get-repository.outputs.repo_name }}
+      repo_name_lowercase:
+        description: "The repository name in lowercase"
+        value: ${{ jobs.get-repository.outputs.repo_name_lowercase }}
+      repo_owner:
+        description: "The repository owner"
+        value: ${{ jobs.get-repository.outputs.repo_owner }}
+      repo_owner_lowercase:
+        description: "The repository owner in lowercase"
+        value: ${{ jobs.get-repository.outputs.repo_owner_lowercase }}
+      ref_name:
+        description: "The reference name"
+        value: ${{ jobs.get-repository.outputs.ref_name }}
+      ref_name_lowercase:
+        description: "The reference name in lowercase"
+        value: ${{ jobs.get-repository.outputs.ref_name_lowercase }}
+
+jobs:
+  get-environment:
+    name: Get Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.get_environment.outputs.environment }}
+    steps:
+      - name: Get Environment
+        id: get_environment
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/stage" ]; then
+            echo "environment=stage" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+  get-app-name:
+    name: Get AppName
+    runs-on: ubuntu-latest
+    outputs:
+      app_name: ${{ steps.get_app_name.outputs.app_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get app name from package.json
+        id: get_app_name
+        run: echo "app_name=$(jq -r .name < package.json)" >> $GITHUB_OUTPUT
+
+  get-app-versions:
+    name: Get App Versions
+    runs-on: ubuntu-latest
+    outputs:
+      web_version: ${{ steps.get_web_version.outputs.web_version }}
+      web_lowercase_version: ${{ steps.get_web_version.outputs.web_lowercase_version }}
+      api_version: ${{ steps.get_api_version.outputs.api_version }}
+      api_lowercase_version: ${{ steps.get_api_version.outputs.api_lowercase_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get version from apps/web/package.json
+        id: get_web_version
+        run: |
+          echo "web_version=$(jq -r .version < apps/web/package.json)" >> $GITHUB_OUTPUT
+          echo "web_lowercase_version=$(jq -r .version < apps/web/package.json | sed 's/\./-/g')" >> $GITHUB_OUTPUT
+
+      - name: Get version from apps/api/package.json
+        id: get_api_version
+        run: |
+          echo "api_version=$(jq -r .version < apps/api/package.json)" >> $GITHUB_OUTPUT
+          echo "api_lowercase_version=$(jq -r .version < apps/api/package.json | sed 's/\./-/g')" >> $GITHUB_OUTPUT
+
+  get-repository:
+    name: Get Repository Info
+    runs-on: ubuntu-latest
+    outputs:
+      repo_name: ${{ steps.get_repo_info.outputs.repo_name }}
+      repo_name_lowercase: ${{ steps.get_repo_info.outputs.repo_name_lowercase }}
+      repo_owner: ${{ steps.get_repo_info.outputs.repo_owner }}
+      repo_owner_lowercase: ${{ steps.get_repo_info.outputs.repo_owner_lowercase }}
+      ref_name: ${{ steps.get_repo_info.outputs.ref_name }}
+      ref_name_lowercase: ${{ steps.get_repo_info.outputs.ref_name_lowercase }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get repository information
+        id: get_repo_info
+        run: |
+          repo_name=$(basename $GITHUB_REPOSITORY)
+          repo_name_lowercase=$(echo "$repo_name" | tr '[:upper:]' '[:lower:]')
+          repo_owner=$(dirname $GITHUB_REPOSITORY)
+          repo_owner_lowercase=$(echo "$repo_owner" | tr '[:upper:]' '[:lower:]')
+
+          ## If the trigger is a pull request, the method of obtaining the branch name is different
+          ref_name=$(echo '${{ github.ref_name }}' | tr '[:upper:]' '[:lower:]')
+          ref_name_lowercase=$(echo "$ref_name" | tr '/' '-')
+          if [ "${{ inputs.trigger }}" = "pull_request" ]; then
+            ref_name=$(echo '${{ github.event.pull_request.head.ref }}' | tr '[:upper:]' '[:lower:]')
+            ref_name_lowercase=$(echo "$ref_name" | tr '/' '-')
+          fi
+
+          echo "repo_name=$repo_name" >> $GITHUB_OUTPUT
+          echo "repo_name_lowercase=$repo_name_lowercase" >> $GITHUB_OUTPUT
+          echo "repo_owner=$repo_owner" >> $GITHUB_OUTPUT
+          echo "repo_owner_lowercase=$repo_owner_lowercase" >> $GITHUB_OUTPUT
+          echo "ref_name=$ref_name" >> $GITHUB_OUTPUT
+          echo "ref_name_lowercase=$ref_name_lowercase" >> $GITHUB_OUTPUT

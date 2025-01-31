@@ -17,14 +17,15 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  const PORT = 5002;
+  const PORT = process.env.PORT || 5002;
+  const HOSTNAME = process.env.HOSTNAME || 'localhost';
 
-  await app.listen(PORT);
+  await app.listen(PORT, HOSTNAME);
 
   if (module.hot) {
     module.hot.accept();
     module.hot.dispose(() => app.close());
   }
-  logger.log(`Server running on http://localhost:${PORT}`);
+  logger.log(`Server running on http://${HOSTNAME}:${PORT}`);
 }
 bootstrap();

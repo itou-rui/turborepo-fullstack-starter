@@ -52,6 +52,14 @@ npm install --global nps
 
 You can [install](https://docs.docker.com/desktop/) it any way you like.
 
+4. [gcloud](https://cloud.google.com/sdk?hl=en)
+
+You can [install](https://cloud.google.com/sdk/docs/install?hl=en) it any way you like.
+
+```sh
+gcloud auth login
+```
+
 ## Run Project
 
 1. Develop Mode
@@ -73,6 +81,24 @@ nps start.web
 nps start.api
 ```
 
+## Branch Strategy
+
+### Main Branch (`main`)
+
+- Production environment
+
+- Merging requires Pull Request.
+
+- Merging requires confirmation of operation in a **stage environment**.
+
+### Feature Branches (`feat/{username}-*`)
+
+- Frequent rebasing of the main branch for consistency.
+
+- Confirm that the pull request works in the **stage environment** before submitting it.
+
+- If the environment cannot be checked locally, deploy manually to the **develop environment** to check the operation.
+
 ## Commit
 
 The following is incorporated
@@ -85,3 +111,50 @@ You can create commits interactively
 | Commitizen | Standard for consistent commitments            |
 | Commitlint | Inspect for commitments according to the rules |
 | husky      | Automatically inspect when `git commit` is run |
+
+## Deploy (Google Cloud Run)
+
+1. Edit `name` in [package.json](./package.json)
+
+> [!WARNING]
+> Please respect GoogleCloudRun's naming conventions.
+> Only `-` special symbols are allowed and names exceeding 32 characters cannot be set.
+> Prefixes are handled internally in the system and must be set to 20 characters.
+
+2. Copy [.env.example](./.env.example) to `.env` and fill in the values
+
+3. Run Scripts
+
+> [!NOTE]
+> Please grant the authority to execute shell scripts in advance!
+
+```sh
+yarn setup-google-cloud
+```
+
+## Testing Github Workflow
+
+1. Install [act](https://github.com/nektos/act)
+
+```sh
+brew install act
+```
+
+2. Copy [.variables.example](./.variables.example) to `.variables` and fill in the values
+
+> [!NOTE]
+> The values in this file are called out in `vars.xxx`!
+
+3. Copy [.env.example](./.env.example) to `.env` and fill in the values
+
+> [!NOTE]
+> The values in this file are called out in `secrets.xxx`!
+
+4. Run test
+
+```sh
+yarn act --job=job_name
+```
+
+> [!NOTE]
+> Run `act:list` to see the list of jobs

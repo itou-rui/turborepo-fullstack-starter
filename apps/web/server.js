@@ -1,3 +1,7 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
@@ -7,14 +11,14 @@ const { join } = require('path');
 const { processHTMLFile } = require('@workspace/critters');
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = dev ? 'localhost' : 'example.com';
-const port = 3000;
+const port = process.env.PORT || (dev ? '3000' : '8080');
+const hostname = process.env.HOSTNAME || (dev ? 'localhost' : '0.0.0.0');
 const app = next({ dev, port, hostname });
 const handle = app.getRequestHandler();
 const DIR = 'critters';
 const processedRoutes = new Set();
 const routes = {};
-const cachingTime = 5 * 60 * 1000; // 5 min
+const cachingTime = 5 * 60 * 1000;
 
 try {
   console.time('Critters: runtime prepare');
@@ -23,12 +27,10 @@ try {
 
   fs.cpSync('pages', DIR, {
     recursive: true,
-    // overwrite: true,
     filter: function (source) {
       if (source.includes('.')) {
         return false;
       }
-
       return true;
     },
   });
@@ -39,25 +41,24 @@ try {
 
   console.timeEnd('Critters: runtime prepare');
 } catch (error) {
-  /* empty */
+  console.error('Critters preparation error:', error);
 }
 
 async function saveStylesToFile(html, path) {
-  const folder = DIR + path;
-  const styles = await processHTMLFile(path, html, 'SSR');
+  try {
+    const folder = DIR + path;
+    const styles = await processHTMLFile(path, html, 'SSR');
 
-  fs.mkdirSync(folder, { recursive: true });
+    fs.mkdirSync(folder, { recursive: true });
 
-  const filePath = join(folder, 'styles.css');
+    const filePath = join(folder, 'styles.css');
 
-  fs.writeFile(filePath, styles, (err) => {
-    if (err) {
-      console.error('Error saving styles to file:', err);
-    } else {
-      console.log('styles saved to file:', filePath);
-    }
-  });
-  console.timeEnd('Critters: runtime');
+    await fs.promises.writeFile(filePath, styles);
+    console.log('styles saved to file:', filePath);
+    console.timeEnd('Critters: runtime');
+  } catch (error) {
+    console.error('Error in saveStylesToFile:', error);
+  }
 }
 
 app.prepare().then(() => {
@@ -73,9 +74,7 @@ app.prepare().then(() => {
         if (res.statusCode === 200 && res.getHeader('content-type')?.includes('text/html')) {
           chunks.push(chunk);
         }
-
         originalWrite.apply(res, arguments);
-
         return true;
       };
 
@@ -88,23 +87,33 @@ app.prepare().then(() => {
 
             const html = Buffer.concat(chunks);
 
-            zlib.unzip(html, (err, decompressedData) => {
-              if (err) {
-                console.error('Error decompressing data:', err);
-                return;
-              }
+            const contentEncoding = res.getHeader('content-encoding');
+            if (contentEncoding === 'gzip') {
+              zlib.unzip(html, (err, decompressedData) => {
+                if (err) {
+                  console.error('Error decompressing data:', err, {
+                    contentEncoding,
+                    dataLength: html.length,
+                  });
+                  return;
+                }
+                saveStylesToFile(decompressedData.toString(), pathname);
+                routes[pathname] = Date.now();
+              });
+            }
 
-              saveStylesToFile(decompressedData.toString(), pathname);
-
+            // Direct processing if not compressed
+            else {
+              saveStylesToFile(html.toString(), pathname);
               routes[pathname] = Date.now();
-            });
+            }
           }, 0);
         }
       });
     }
 
     handle(req, res, parsedUrl);
-  }).listen(3000, () => {
-    console.log(`> Ready on http://localhost:${port}`);
+  }).listen(port, hostname, () => {
+    console.log(`> Ready on http://${hostname}:${port}`);
   });
 });

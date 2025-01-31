@@ -48,5 +48,9 @@ COPY --from=installer --chown=api:nodejs /app .
 
 EXPOSE 5002
 
+ENV PORT=5002
+ENV HOSTNAME="0.0.0.0"
+ENV NODE_ENV=production
+
 # Command to start the application
 CMD [ "node", "/app/apps/api/dist/main.js" ]
