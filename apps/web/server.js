@@ -1,20 +1,20 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
-const fs = require('fs');
-const zlib = require('zlib');
-const { join } = require('path');
-const { processHTMLFile } = require('@workspace/critters');
+import { createServer } from 'http';
+import { parse } from 'url';
+import next from 'next';
+import fs from 'fs';
+import zlib from 'zlib';
+import { join } from 'path';
+import { processHTMLFile } from '@workspace/critters';
 
 const dev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 3000;
-const hostname = dev ? 'localhost' : process.env.HOSTNAME || 'localhost';
+const hostname = process.env.HOSTNAME || '0.0.0.0';
 const app = next({ dev, port, hostname });
 const handle = app.getRequestHandler();
-const DIR = 'critters';
+const DIR = '/tmp/critters';
 const processedRoutes = new Set();
 const routes = {};
-const cachingTime = 5 * 60 * 1000; // 5 min
+const cachingTime = 5 * 60 * 1000;
 
 try {
   console.time('Critters: runtime prepare');
@@ -23,12 +23,10 @@ try {
 
   fs.cpSync('pages', DIR, {
     recursive: true,
-    // overwrite: true,
     filter: function (source) {
       if (source.includes('.')) {
         return false;
       }
-
       return true;
     },
   });
@@ -39,25 +37,24 @@ try {
 
   console.timeEnd('Critters: runtime prepare');
 } catch (error) {
-  /* empty */
+  console.error('Critters preparation error:', error);
 }
 
 async function saveStylesToFile(html, path) {
-  const folder = DIR + path;
-  const styles = await processHTMLFile(path, html, 'SSR');
+  try {
+    const folder = DIR + path;
+    const styles = await processHTMLFile(path, html, 'SSR');
 
-  fs.mkdirSync(folder, { recursive: true });
+    fs.mkdirSync(folder, { recursive: true });
 
-  const filePath = join(folder, 'styles.css');
+    const filePath = join(folder, 'styles.css');
 
-  fs.writeFile(filePath, styles, (err) => {
-    if (err) {
-      console.error('Error saving styles to file:', err);
-    } else {
-      console.log('styles saved to file:', filePath);
-    }
-  });
-  console.timeEnd('Critters: runtime');
+    await fs.promises.writeFile(filePath, styles);
+    console.log('styles saved to file:', filePath);
+    console.timeEnd('Critters: runtime');
+  } catch (error) {
+    console.error('Error in saveStylesToFile:', error);
+  }
 }
 
 app.prepare().then(() => {
@@ -73,9 +70,7 @@ app.prepare().then(() => {
         if (res.statusCode === 200 && res.getHeader('content-type')?.includes('text/html')) {
           chunks.push(chunk);
         }
-
         originalWrite.apply(res, arguments);
-
         return true;
       };
 
@@ -95,7 +90,6 @@ app.prepare().then(() => {
               }
 
               saveStylesToFile(decompressedData.toString(), pathname);
-
               routes[pathname] = Date.now();
             });
           }, 0);
@@ -104,7 +98,7 @@ app.prepare().then(() => {
     }
 
     handle(req, res, parsedUrl);
-  }).listen(port, () => {
-    console.log(`> Ready on http://localhost:${port}`);
+  }).listen(port, hostname, () => {
+    console.log(`> Ready on http://${hostname}:${port}`);
   });
 });
