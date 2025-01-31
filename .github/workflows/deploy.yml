@@ -99,7 +99,7 @@ jobs:
 
   deploy-web:
     name: Web
-    needs: [get-config]
+    needs: [get-config, get-change-paths]
     # Always run if manually triggered, otherwise run based on change detection
     if: |
       (github.event_name == 'workflow_dispatch' && inputs.deploy_web == 'true') ||
@@ -122,7 +122,7 @@ jobs:
 
   deploy-api:
     name: Api
-    needs: [get-config]
+    needs: [get-config, get-change-paths]
     # Always run if manually triggered, otherwise run based on change detection
     if: |
       (github.event_name == 'workflow_dispatch' && inputs.deploy_api == 'true') || 
