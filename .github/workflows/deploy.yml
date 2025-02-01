@@ -113,7 +113,7 @@ jobs:
       environment: ${{ github.event.inputs.environment || 'prod' }}
       app: web
       app_name: ${{ needs.get-config.outputs.app_name }}
-      app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
+      app_version: ${{ needs.get-config.outputs[format('{0}_lowercase_version', 'web')] }}
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
@@ -135,7 +135,7 @@ jobs:
       environment: ${{ github.event.inputs.environment || 'prod' }}
       app: api
       app_name: ${{ needs.get-config.outputs.app_name }}
-      app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
+      app_version: ${{ needs.get-config.outputs[format('{0}_lowercase_version', 'api')] }}
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
