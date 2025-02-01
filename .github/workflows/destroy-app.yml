@@ -13,7 +13,7 @@ jobs:
       trigger: ${{ github.event_name }}
 
   destroy-dev:
-    name: Destroy Develop
+    name: Develop
     needs: [get-config]
     uses: ./.github/workflows/destroy-common.yml
     with:
@@ -28,7 +28,7 @@ jobs:
     secrets: inherit
 
   destroy-stage:
-    name: Destroy Stage
+    name: Stage
     needs: [get-config]
     uses: ./.github/workflows/destroy-common.yml
     with:
