@@ -100,11 +100,13 @@ jobs:
   deploy-web:
     name: Web
     needs: [get-config, get-change-paths]
-    # Always run if manually triggered, otherwise run based on change detection
     if: |
-      (github.event_name == 'workflow_dispatch' && inputs.deploy_web == 'true') ||
+      always() && 
+      needs.get-config.result == 'success' && 
+      (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
+      ((github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_web == 'true') ||
       (github.event_name != 'workflow_dispatch' &&
-      (needs.get-change-paths.outputs.web == 'true' || needs.get-change-paths.outputs.critters == 'true' || needs.get-change-paths.outputs.ui == 'true'))
+      (needs.get-change-paths.outputs.web == 'true' || needs.get-change-paths.outputs.critters == 'true' || needs.get-change-paths.outputs.ui == 'true')))
     permissions:
       id-token: write
       contents: read
@@ -113,7 +115,7 @@ jobs:
       environment: ${{ github.event.inputs.environment || 'prod' }}
       app: web
       app_name: ${{ needs.get-config.outputs.app_name }}
-      app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
+      app_version: ${{ needs.get-config.outputs[format('{0}_lowercase_version', 'web')] }}
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
@@ -123,10 +125,12 @@ jobs:
   deploy-api:
     name: Api
     needs: [get-config, get-change-paths]
-    # Always run if manually triggered, otherwise run based on change detection
     if: |
-      (github.event_name == 'workflow_dispatch' && inputs.deploy_api == 'true') || 
-      (github.event_name != 'workflow_dispatch' && needs.get-change-paths.outputs.api == 'true')
+      always() && 
+      needs.get-config.result == 'success' && 
+      (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
+      ((github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_api == 'true') || 
+      (github.event_name != 'workflow_dispatch' && needs.get-change-paths.outputs.api == 'true'))
     permissions:
       id-token: write
       contents: read
@@ -135,7 +139,7 @@ jobs:
       environment: ${{ github.event.inputs.environment || 'prod' }}
       app: api
       app_name: ${{ needs.get-config.outputs.app_name }}
-      app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
+      app_version: ${{ needs.get-config.outputs[format('{0}_lowercase_version', 'api')] }}
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
