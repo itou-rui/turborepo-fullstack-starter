@@ -65,6 +65,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Auth GoogleCloud
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
+          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+
       - name: Generate Image
         id: generate_image
         run: |
