@@ -104,7 +104,7 @@ jobs:
       always() && 
       needs.get-config.result == 'success' && 
       (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
-      ((github.event_name == 'workflow_dispatch' && inputs.deploy_web == 'true') ||
+      ((github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_web == 'true') ||
       (github.event_name != 'workflow_dispatch' &&
       (needs.get-change-paths.outputs.web == 'true' || needs.get-change-paths.outputs.critters == 'true' || needs.get-change-paths.outputs.ui == 'true')))
     permissions:
@@ -129,7 +129,7 @@ jobs:
       always() && 
       needs.get-config.result == 'success' && 
       (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
-      ((github.event_name == 'workflow_dispatch' && inputs.deploy_api == 'true') || 
+      ((github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_api == 'true') || 
       (github.event_name != 'workflow_dispatch' && needs.get-change-paths.outputs.api == 'true'))
     permissions:
       id-token: write
