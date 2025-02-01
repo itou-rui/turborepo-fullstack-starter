@@ -24,7 +24,7 @@ jobs:
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ format('dev-{1}', needs.get-config.outputs.ref_name_lowercase) }}
+      google_cloud_service_env: ${{ format('dev-{0}', needs.get-config.outputs.ref_name_lowercase) }}
     secrets: inherit
 
   destroy-stage:
@@ -39,5 +39,5 @@ jobs:
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
-      google_cloud_service_env: ${{ format('stage-{1}', needs.get-config.outputs.ref_name_lowercase) }}
+      google_cloud_service_env: ${{ format('stage-{0}', needs.get-config.outputs.ref_name_lowercase) }}
     secrets: inherit
