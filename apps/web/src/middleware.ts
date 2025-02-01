@@ -1,4 +1,4 @@
-import { chain, inlineCss } from './middlewares';
+import { chain, addCustomHeader } from './middlewares';
 
 /**
  * Configuration object for middleware.
@@ -25,4 +25,4 @@ export const config = {
   ],
 };
 
-export default chain([inlineCss]);
+export default chain([addCustomHeader]);
