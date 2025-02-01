@@ -1,2 +1,2 @@
 export * from './chain';
-export * from './inlineCss';
+export * from './addCustomHeader';
