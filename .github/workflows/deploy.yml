@@ -153,6 +153,9 @@ jobs:
       always() &&
       (needs.deploy-api.result == 'success' && needs.deploy-web.result == 'success') &&
       (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped')
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/setup-load-balancer.yml
     with:
       app_name: ${{ needs.get-config.outputs.app_name }}
