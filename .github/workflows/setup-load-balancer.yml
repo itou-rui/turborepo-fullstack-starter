@@ -14,7 +14,7 @@ on:
       google_cloud_region:
         type: string
         required: true
-      google_cloud_env:
+      google_cloud_service_env:
         type: string
         required: true
 
@@ -38,10 +38,10 @@ jobs:
       - name: Create Backend Service
         id: create-backend-service
         run: |
-          if gcloud compute backend-services describe ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-backend --global; then
+          if gcloud compute backend-services describe ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}-backend --global; then
             echo "Backend service exists"
           else
-            gcloud compute backend-services create ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-backend \
+            gcloud compute backend-services create ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}-backend \
               --global \
               --protocol=HTTP2 \
               --port-name=http \
@@ -49,20 +49,20 @@ jobs:
               --connection-draining-timeout=30s \
               --enable-cdn
           fi
-          echo "backend_service=${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-backend" >> $GITHUB_OUTPUT
+          echo "backend_service=${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
 
       - name: Create URL Map
         id: create-url-map
         if: inputs.app == 'web'
         run: |
-          if gcloud compute url-maps describe ${{ inputs.app_name }}-${{ inputs.google_cloud_env }}-load-balancer --global; then
+          if gcloud compute url-maps describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer --global; then
             echo "URL Map exists"
           else
-            gcloud compute url-maps create ${{ inputs.app_name }}-${{ inputs.google_cloud_env }}-load-balancer \
+            gcloud compute url-maps create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer \
               --default-service="${{ steps.create-backend-service.outputs.backend_service }}" \
               --global
           fi
-          echo "url_map=${{ inputs.app_name }}-${{ inputs.google_cloud_env }}-load-balancer" >> $GITHUB_OUTPUT
+          echo "url_map=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
 
       - name: Add Path Rule
         id: add-path-rule
@@ -77,7 +77,7 @@ jobs:
                 --default-service="${{ steps.create-backend-service.outputs.backend_service }}" \
                 --path-rules="/api/*=api-backend"
           fi
-          echo "path_matcher=${{ inputs.app_name }}-${{ inputs.google_cloud_env }}-load-balancer" >> $GITHUB_OUTPUT
+          echo "path_matcher=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
 
       - name: Create SSL Certificates
         id: create-ssl-certificates
@@ -86,7 +86,7 @@ jobs:
           if gcloud compute ssl-certificates list --format="value(name)" --filter="name~'^${{ inputs.app_name }}-${{ inputs.google-cloud_env }}'"; then
             echo "SSL certificates exists"
           else
-            gcloud compute ssl-certificates create ${{ inputs.app_name }}-${{ inputs.google_cloud_env }} --domains ${{ inputs.domain }}
+            gcloud compute ssl-certificates create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --domains ${{ inputs.domain }}
           fi
 
           echo "ssl_certificates=$certificates" >> $GITHUB_ENV
@@ -95,20 +95,20 @@ jobs:
         id: create-http-proxy
         if: inputs.app == 'web'
         run: |
-          if gcloud compute target-https-proxies describe ${{ inputs.app_name }}-${{ inputs.google_cloud_env }} --global; then
+          if gcloud compute target-https-proxies describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --global; then
             echo "HTTPS proxy exists"
           else
-            default_domain="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
+            default_domain="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
 
             if [ "${{ inputs.domain }}" = "$default_domain" ] || [ "${{ inputs.domain }}" != "" ]; then
-              gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}"
+              gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}"
             else
-              gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}" --ssl-certificates="${{ env.ssl_certificates }}"
+              gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}" --ssl-certificates="${{ env.ssl_certificates }}"
             fi
 
           fi
 
-          echo "http_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_env }}" >> $GITHUB_OUTPUT
+          echo "http_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" >> $GITHUB_OUTPUT
 
       - name: Add Forwarding Rule
         id: add-forwarding
@@ -128,14 +128,14 @@ jobs:
         id: domain-mapping
         if: ${{ inputs.domain }}
         run: |
-          default_domain="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
+          default_domain="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
 
           if [ "${{ inputs.domain }}" != "$default_domain" ]; then
             if gcloud beta run domain-mappings describe --domain "${{ inputs.domain }}" --region "${{ inputs.google_cloud_region }}"; then
               echo "Domain mapping exists"
             else
               gcloud beta run domain-mappings create \
-                  --service "${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}" \
+                  --service "${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}" \
                   --domain ${{ inputs.domain }} \
                   --region "${{ inputs.google_cloud_region }}"
             fi
