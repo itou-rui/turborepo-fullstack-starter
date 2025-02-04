@@ -100,7 +100,7 @@ jobs:
           else
             default_domain="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_env }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
 
-            if [ "${{ inputs.domain }}" = "$default_domain" || "${{ inputs.domain }}" != "" ]; then
+            if [ "${{ inputs.domain }}" = "$default_domain" ] || [ "${{ inputs.domain }}" != "" ]; then
               gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}"
             else
               gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}" --ssl-certificates="${{ env.ssl_certificates }}"
