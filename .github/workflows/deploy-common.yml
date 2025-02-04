@@ -157,3 +157,15 @@ jobs:
           region: ${{ inputs.google_cloud_region }}
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+
+  load-balancer:
+    name: Setup LoadBalancer
+    needs: [deploy-cloudrun]
+    uses: ./.github/workflows/setup-load-balancer.yml
+    with:
+      app_name: ${{ inputs.app_name }}
+      app: ${{ inputs.app }}
+      domain: ${{ vars.DOMAIN }}
+      google_cloud_region: ${{ inputs.google_cloud_region }}
+      google_cloud_env: ${{ inputs.google_cloud_env }}
+    secrets: inherit
