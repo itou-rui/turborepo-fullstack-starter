@@ -30,7 +30,7 @@ on:
 
 jobs:
   artifact-repository:
-    name: Setup Artifacts Repository
+    name: Create Artifacts Repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
