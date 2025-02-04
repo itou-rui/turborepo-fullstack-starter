@@ -145,3 +145,26 @@ jobs:
       google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
       google_cloud_service_env: ${{ github.event_name != 'workflow_dispatch' && 'prod' || format('{0}-{1}', github.event.inputs.environment, needs.get-config.outputs.ref_name_lowercase) }}
     secrets: inherit
+
+  setup-load-balancer-api:
+    name: Setup LoadBalancer
+    needs: [deploy-api]
+    uses: ./.github/workflows/setup-load-balancer.yml
+    with:
+      app_name: ${{ needs.get-config.outputs.app_name }}
+      app: api
+      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
+      google_cloud_service_env: ${{ github.event_name != 'workflow_dispatch' && 'prod' || format('{0}-{1}', github.event.inputs.environment, needs.get-config.outputs.ref_name_lowercase) }}
+    secrets: inherit
+
+  setup-load-balancer-web:
+    name: Setup LoadBalancer
+    needs: [deploy-web, setup-load-balancer-api]
+    uses: ./.github/workflows/setup-load-balancer.yml
+    with:
+      app_name: ${{ needs.get-config.outputs.app_name }}
+      app: web
+      domain: ${{ vars.DOMAIN }}
+      google_cloud_region: ${{ vars.GOOGLE_CLOUD_REGION }}
+      google_cloud_service_env: ${{ github.event_name != 'workflow_dispatch' && 'prod' || format('{0}-{1}', github.event.inputs.environment, needs.get-config.outputs.ref_name_lowercase) }}
+    secrets: inherit
