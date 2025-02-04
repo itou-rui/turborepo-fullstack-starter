@@ -75,7 +75,7 @@ jobs:
             gcloud compute url-maps add-path-matcher ${{ steps.create-url-map.outputs.url_map }} \
                 --path-matcher-name="path-matcher" \
                 --default-service="${{ steps.create-backend-service.outputs.backend_service }}" \
-                --path-rules="/api/*=api-backend"
+                --path-rules="/api/*=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend"
           fi
           echo "path_matcher=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
 
