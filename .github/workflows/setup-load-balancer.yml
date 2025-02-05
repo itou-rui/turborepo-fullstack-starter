@@ -73,7 +73,7 @@ jobs:
               --connection-draining-timeout=30s \
               --enable-cdn
           fi
-          echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT"
+          echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
 
       - name: Create Web NEG Backend
         id: create-web-backend-neg
@@ -98,8 +98,8 @@ jobs:
           else
             gcloud compute network-endpoint-groups create ${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg \
               --network-endpoint-type=serverless \
-              --cloud-run-service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }} \
-              --region=${{ inputs.google_cloud_region }}
+              --cloud-run-service="${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}" \
+              --region="${{ inputs.google_cloud_region }}"
           fi
           echo "api_backend_neg=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg" >> $GITHUB_OUTPUT
 
@@ -128,7 +128,7 @@ jobs:
             gcloud compute backend-services add-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
               --global \
               --network-endpoint-group="${{ steps.create-api-backend-neg.outputs.api_backend_neg }}" \
-              --network-endpoint-group-region=${{ inputs.google_cloud_region }}
+              --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
           fi
 
       - name: Create URL Map
