@@ -80,30 +80,21 @@ jobs:
           IMAGE_NAME="${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}"
           echo "docker_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
-      - name: Get Docker Images
-        id: get-docker-images
-        run: |
-          DOCKER_IMAGES=$(gcloud artifacts docker images list ${{ steps.generate_image.outputs.docker_image }} --include-tags --format="get(metadata.name)" --project ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }})
-          echo "docker_images=${DOCKER_IMAGES}" >> $GITHUB_OUTPUT
-
       - name: Remove Docker Images
         id: remove_docker_images
-        if: steps.get-docker-images.outputs.docker_images != ''
         run: |
+          # List images in the Artifact Registry
+          hashs=$(gcloud artifacts docker images list ${{ steps.generate_image.outputs.docker_image }} --include-tags --format="get(metadata.name)" --project ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }})
+
           # Loop through each image and delete it
-          if [ -n "${{ steps.get-docker-images.outputs.docker_images }}" ]; then
-            for image in ${{ steps.get-docker-images.outputs.docker_images }}; do
-              hash=$(echo $image | cut -d'@' -f2)
+          if [ -n "$hashs" ]; then
+            for hash in $hashs; do
               gcloud artifacts docker images delete "${{ steps.generate_image.outputs.docker_image }}@$hash" --delete-tags --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} --quiet
               echo "Remove: ${{ steps.generate_image.outputs.docker_image }}@$hash"
             done
-          fi
 
-      - name: Delete Artifacts Repository
-        id: delete_artifact_resistories
-        if: steps.get-docker-images.outputs.docker_images != ''
-        run: |
-          gcloud artifacts docker images delete "${{ steps.generate_image.outputs.docker_image }}" --delete-tags --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} --quiet
+            gcloud artifacts docker images delete "${{ steps.generate_image.outputs.docker_image }}" --delete-tags --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} --quiet
+          fi
 
   build-cache:
     name: Delete Build Cache
