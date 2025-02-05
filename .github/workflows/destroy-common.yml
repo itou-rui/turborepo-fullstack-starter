@@ -104,3 +104,31 @@ jobs:
         if: steps.get-docker-images.outputs.docker_images != ''
         run: |
           gcloud artifacts docker images delete "${{ steps.generate_image.outputs.docker_image }}" --delete-tags --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} --quiet
+
+  build-cache:
+    name: Delete Build Cache
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Delete GitHub Actions Cache
+        run: |
+          gh extension install actions/gh-actions-cache
+
+          REPO="${{ github.repository }}"
+          BRANCH="${{ inputs.ref_name }}"
+
+          echo "Fetching list of cache key"
+          cacheKeys=$(gh actions-cache list -R $REPO -B $BRANCH | cut -f 1 )
+
+          ## Setting this to not fail the workflow while deleting cache
+          set +e
+          echo "Deleting caches..."
+          for cacheKey in $cacheKeys
+          do
+              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+          done
+          echo "Done"
+        env:
+          GH_TOKEN: ${{ github.token }}
