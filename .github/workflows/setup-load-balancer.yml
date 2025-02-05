@@ -54,7 +54,8 @@ jobs:
               --port-name=http \
               --timeout=30s \
               --connection-draining-timeout=30s \
-              --enable-cdn
+              --enable-cdn \
+              --load-balancing-scheme=EXTERNAL_MANAGED
           fi
           echo "web_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
 
@@ -72,7 +73,63 @@ jobs:
               --connection-draining-timeout=30s \
               --enable-cdn
           fi
-          echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
+          echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT    project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+
+      - name: Create Web NEG Backend
+        id: create-web-backend-neg
+        run: |
+          if gcloud compute network-endpoint-groups describe ${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg \
+              --region=${{ inputs.google_cloud_region }} --format=json > /dev/null 2>&1; then
+            echo "Web NEG exists"
+          else
+            gcloud compute network-endpoint-groups create ${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg \
+              --network-endpoint-type=serverless \
+              --cloud-run-service="${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}" \
+              --region="${{ inputs.google_cloud_region }}"
+          fi
+          echo "web_backend_neg=${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg" >> $GITHUB_OUTPUT
+
+      - name: Create API NEG Backend
+        id: create-api-backend-neg
+        run: |
+          if gcloud compute network-endpoint-groups describe ${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg \
+              --region=${{ inputs.google_cloud_region }} --format=json > /dev/null 2>&1; then
+            echo "API NEG exists"
+          else
+            gcloud compute network-endpoint-groups create ${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg \
+              --network-endpoint-type=serverless \
+              --cloud-run-service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }} \
+              --region=${{ inputs.google_cloud_region }}
+          fi
+          echo "api_backend_neg=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg" >> $GITHUB_OUTPUT
+
+      - name: Add Web NEG Backend
+        run: |
+          if gcloud compute backend-services get-backend ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
+              --global \
+              --filter="networkEndpointGroup:${{ steps.create-web-backend-neg.outputs.web_backend_neg }}" \
+              --format=json > /dev/null 2>&1; then
+            echo "Web backend already exists"
+          else
+            gcloud compute backend-services add-backend ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
+              --global \
+              --network-endpoint-group="${{ steps.create-web-backend-neg.outputs.web_backend_neg }}" \
+              --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
+          fi
+
+      - name: Add Api NEG Backend
+        run: |
+          if gcloud compute backend-services get-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
+              --global \
+              --filter="networkEndpointGroup:${{ steps.create-api-backend-neg.outputs.api_backend_neg }}" \
+              --format=json > /dev/null 2>&1; then
+            echo "API backend already exists"
+          else
+            gcloud compute backend-services add-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
+              --global \
+              --network-endpoint-group="${{ steps.create-api-backend-neg.outputs.api_backend_neg }}" \
+              --network-endpoint-group-region=${{ inputs.google_cloud_region }}
+          fi
 
       - name: Create URL Map
         id: create-url-map
@@ -81,7 +138,7 @@ jobs:
             echo "URL Map exists"
           else
             gcloud compute url-maps create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer \
-              --default-service="${{ steps.create-backend-service.outputs.api_backend_service }}" \
+              --default-service="${{ steps.create-web-backend-service.outputs.web_backend_service }}" \
               --global
           fi
           echo "url_map=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
@@ -96,24 +153,23 @@ jobs:
             gcloud compute url-maps add-path-matcher ${{ steps.create-url-map.outputs.url_map }} \
                 --path-matcher-name="path-matcher" \
                 --default-service="${{ steps.create-web-backend-service.outputs.web_backend_service }}" \
-                --path-rules="/api/*=${{ steps.create-api-backend-service.outputs.api_backend_service }}"
+                --path-rules="/api/*=${{ steps.create-api-backend-service.outputs.api_backend_service }}" \
+                --global
           fi
           echo "path_matcher=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
 
       - name: Create SSL Certificates
         id: create-ssl-certificates
         run: |
-          if [[ $(gcloud compute ssl-certificates list --format="value(name)" --filter="name~'^${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}'") ]]; then
-            echo "SSL certificates exist"
-          else
-            gcloud compute ssl-certificates create "$certificates" --domains "${{ steps.set-domain.outputs.domain }}"
+          if [[ ! $(gcloud compute ssl-certificates list --format="value(name)" --filter="name~'^${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}'") ]]; then
+            gcloud compute ssl-certificates create "${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" --domains "${{ steps.set-domain.outputs.domain }}"
           fi
           echo "ssl_certificates=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" >> $GITHUB_ENV
 
       - name: Create HTTPS Proxy
         id: create-http-proxy
         run: |
-          if gcloud compute target-https-proxies describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --global; then
+          if [[ $(gcloud compute target-https-proxies describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --global) ]]; then
             echo "HTTPS proxy exists"
           else
               gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}" --ssl-certificates="${{ env.ssl_certificates }}"
@@ -124,7 +180,7 @@ jobs:
       - name: Add Forwarding Rule
         id: add-forwarding
         run: |
-          if gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule --global; then
+          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule --global) ]]; then
             echo "Forwarding rule exists"
           else
             gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule \
@@ -137,23 +193,11 @@ jobs:
       - name: Web Domain Mapping
         id: web-domain-mapping
         run: |
-          if gcloud beta run domain-mappings describe --domain "${{ steps.set-domain.outputs.domain }}" --region "${{ inputs.google_cloud_region }}"; then
+          if [[ $(gcloud beta run domain-mappings describe --domain "${{ steps.set-domain.outputs.domain }}" --region "${{ inputs.google_cloud_region }}") ]]; then
             echo "Domain mapping exists"
           else
              gcloud beta run domain-mappings create \
                  --service "${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}" \
-                 --domain "${{ steps.set-domain.outputs.domain }}" \
-                 --region "${{ inputs.google_cloud_region }}"
-          fi
-
-      - name: Api Domain Mapping
-        id: api-domain-mapping
-        run: |
-          if gcloud beta run domain-mappings describe --domain "${{ steps.set-domain.outputs.domain }}" --region "${{ inputs.google_cloud_region }}"; then
-            echo "Domain mapping exists"
-          else
-             gcloud beta run domain-mappings create \
-                 --service "${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}" \
                  --domain "${{ steps.set-domain.outputs.domain }}" \
                  --region "${{ inputs.google_cloud_region }}"
           fi
