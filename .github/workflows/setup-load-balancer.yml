@@ -73,7 +73,7 @@ jobs:
               --connection-draining-timeout=30s \
               --enable-cdn
           fi
-          echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT    project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+          echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT"
 
       - name: Create Web NEG Backend
         id: create-web-backend-neg
