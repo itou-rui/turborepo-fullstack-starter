@@ -105,10 +105,8 @@ jobs:
 
       - name: Add Web NEG Backend
         run: |
-          if gcloud compute backend-services get-backend ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
-              --global \
-              --filter="networkEndpointGroup:${{ steps.create-web-backend-neg.outputs.web_backend_neg }}" \
-              --format=json > /dev/null 2>&1; then
+          if gcloud compute backend-services describe ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
+              --global > /dev/null 2>&1; then
             echo "Web backend already exists"
           else
             gcloud compute backend-services add-backend ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
@@ -119,10 +117,8 @@ jobs:
 
       - name: Add Api NEG Backend
         run: |
-          if gcloud compute backend-services get-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
-              --global \
-              --filter="networkEndpointGroup:${{ steps.create-api-backend-neg.outputs.api_backend_neg }}" \
-              --format=json > /dev/null 2>&1; then
+          if gcloud compute backend-services describe ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
+              --global > /dev/null 2>&1; then
             echo "API backend already exists"
           else
             gcloud compute backend-services add-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
