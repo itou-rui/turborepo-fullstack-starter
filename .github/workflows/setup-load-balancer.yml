@@ -42,11 +42,27 @@ jobs:
           service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
           project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
 
-      - name: Create Backend Service
-        id: create-backend-service
+      - name: Create Web Backend Service
+        id: create-web-backend-service
+        run: |
+          if gcloud compute backend-services describe ${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-backend --global; then
+            echo "Web backend service exists"
+          else
+            gcloud compute backend-services create ${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-backend \
+              --global \
+              --protocol=HTTP2 \
+              --port-name=http \
+              --timeout=30s \
+              --connection-draining-timeout=30s \
+              --enable-cdn
+          fi
+          echo "web_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
+
+      - name: Create Api Backend Service
+        id: create-api-backend-service
         run: |
           if gcloud compute backend-services describe ${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend --global; then
-            echo "Backend service exists"
+            echo "Api Backend service exists"
           else
             gcloud compute backend-services create ${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend \
               --global \
@@ -56,7 +72,7 @@ jobs:
               --connection-draining-timeout=30s \
               --enable-cdn
           fi
-          echo "backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
+          echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
 
       - name: Create URL Map
         id: create-url-map
@@ -65,7 +81,7 @@ jobs:
             echo "URL Map exists"
           else
             gcloud compute url-maps create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer \
-              --default-service="${{ steps.create-backend-service.outputs.backend_service }}" \
+              --default-service="${{ steps.create-backend-service.outputs.api_backend_service }}" \
               --global
           fi
           echo "url_map=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
@@ -79,8 +95,8 @@ jobs:
           else
             gcloud compute url-maps add-path-matcher ${{ steps.create-url-map.outputs.url_map }} \
                 --path-matcher-name="path-matcher" \
-                --default-service="${{ steps.create-backend-service.outputs.backend_service }}" \
-                --path-rules="/api/*=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend"
+                --default-service="${{ steps.create-web-backend-service.outputs.web_backend_service }}" \
+                --path-rules="/api/*=${{ steps.create-api-backend-service.outputs.api_backend_service }}"
           fi
           echo "path_matcher=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
 
@@ -118,14 +134,26 @@ jobs:
           fi
           echo "forwarding_rules=${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule" >> $GITHUB_OUTPUT
 
-      - name: Domain Mapping
-        id: domain-mapping
+      - name: Web Domain Mapping
+        id: web-domain-mapping
         run: |
           if gcloud beta run domain-mappings describe --domain "${{ steps.set-domain.outputs.domain }}" --region "${{ inputs.google_cloud_region }}"; then
             echo "Domain mapping exists"
           else
              gcloud beta run domain-mappings create \
                  --service "${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}" \
+                 --domain "${{ steps.set-domain.outputs.domain }}" \
+                 --region "${{ inputs.google_cloud_region }}"
+          fi
+
+      - name: Api Domain Mapping
+        id: api-domain-mapping
+        run: |
+          if gcloud beta run domain-mappings describe --domain "${{ steps.set-domain.outputs.domain }}" --region "${{ inputs.google_cloud_region }}"; then
+            echo "Domain mapping exists"
+          else
+             gcloud beta run domain-mappings create \
+                 --service "${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}" \
                  --domain "${{ steps.set-domain.outputs.domain }}" \
                  --region "${{ inputs.google_cloud_region }}"
           fi
