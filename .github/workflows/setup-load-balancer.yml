@@ -88,11 +88,11 @@ jobs:
         id: create-ssl-certificates
         run: |
           if [[ $(gcloud compute ssl-certificates list --format="value(name)" --filter="name~'^${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}'") ]]; then
-            echo "SSL certificates exists"
+            echo "SSL certificates exist"
           else
-            gcloud compute ssl-certificates create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --domains ${{ steps.set-domain.outputs.domain }}
+            gcloud compute ssl-certificates create "$certificates" --domains "${{ steps.set-domain.outputs.domain }}"
           fi
-          echo "ssl_certificates=$certificates" >> $GITHUB_ENV
+          echo "ssl_certificates=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" >> $GITHUB_ENV
 
       - name: Create HTTPS Proxy
         id: create-http-proxy
