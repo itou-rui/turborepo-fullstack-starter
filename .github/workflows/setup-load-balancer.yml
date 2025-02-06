@@ -82,11 +82,13 @@ jobs:
           if gcloud compute network-endpoint-groups describe ${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg \
               --region=${{ inputs.google_cloud_region }} --format=json > /dev/null 2>&1; then
             echo "Web NEG exists"
+            echo "is_create=false" >> $GITHUB_OUTPUT
           else
             gcloud compute network-endpoint-groups create ${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}" \
               --region="${{ inputs.google_cloud_region }}"
+            echo "is_create=true" >> $GITHUB_OUTPUT
           fi
           echo "web_backend_neg=${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg" >> $GITHUB_OUTPUT
 
@@ -96,37 +98,31 @@ jobs:
           if gcloud compute network-endpoint-groups describe ${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg \
               --region=${{ inputs.google_cloud_region }} --format=json > /dev/null 2>&1; then
             echo "API NEG exists"
+            echo "is_create=false" >> $GITHUB_OUTPUT
           else
             gcloud compute network-endpoint-groups create ${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}" \
               --region="${{ inputs.google_cloud_region }}"
+            echo "is_create=true" >> $GITHUB_OUTPUT
           fi
           echo "api_backend_neg=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg" >> $GITHUB_OUTPUT
 
       - name: Add Web NEG Backend
+        if: steps.create-web-backend-neg.outputs.is_create == 'true'
         run: |
-          if gcloud compute backend-services describe ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
-              --global > /dev/null 2>&1; then
-            echo "Web backend already exists"
-          else
-            gcloud compute backend-services add-backend ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
-              --global \
-              --network-endpoint-group="${{ steps.create-web-backend-neg.outputs.web_backend_neg }}" \
-              --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
-          fi
+          gcloud compute backend-services add-backend ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
+            --global \
+            --network-endpoint-group="${{ steps.create-web-backend-neg.outputs.web_backend_neg }}" \
+            --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
 
       - name: Add Api NEG Backend
+        if: steps.create-api-backend-neg.outputs.is_create == 'true'
         run: |
-          if gcloud compute backend-services describe ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
-              --global > /dev/null 2>&1; then
-            echo "API backend already exists"
-          else
-            gcloud compute backend-services add-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
-              --global \
-              --network-endpoint-group="${{ steps.create-api-backend-neg.outputs.api_backend_neg }}" \
-              --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
-          fi
+          gcloud compute backend-services add-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
+            --global \
+            --network-endpoint-group="${{ steps.create-api-backend-neg.outputs.api_backend_neg }}" \
+            --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
 
       - name: Create URL Map
         id: create-url-map
