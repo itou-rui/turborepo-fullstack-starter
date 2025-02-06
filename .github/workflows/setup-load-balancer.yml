@@ -144,16 +144,40 @@ jobs:
         id: add-path-rule
         run: |
           MAP_INFO=$(gcloud compute url-maps describe ${{ steps.create-url-map.outputs.url_map }} --global --format=json)
-          if echo "$MAP_INFO" | grep -q "path-matcher"; then
-            echo "Path matcher exists"
+          if jq -e '.pathMatchers | map(select(.name == "path-matcher")) | length' <<< "$MAP_INFO" > 0; then
+              echo "Path matcher exists"
+              echo "is_add=false" >> $GITHUB_OUTPUT
           else
             gcloud compute url-maps add-path-matcher ${{ steps.create-url-map.outputs.url_map }} \
                 --path-matcher-name="path-matcher" \
                 --default-service="${{ steps.create-web-backend-service.outputs.web_backend_service }}" \
                 --path-rules="/api/*=${{ steps.create-api-backend-service.outputs.api_backend_service }}" \
                 --global
+              echo "is_add=true" >> $GITHUB_OUTPUT
           fi
           echo "path_matcher=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" >> $GITHUB_OUTPUT
+
+      - name: Install yq
+        if: steps.add-path-rule.outputs.is_add == 'true'
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+
+      - name: Configure URL Map with Path Rewrite
+        id: configure-url-map
+        if: steps.add-path-rule.outputs.is_add == 'true'
+        run: |
+          gcloud compute url-maps export ${{ steps.create-url-map.outputs.url_map }} \
+            --destination url_map_config.yaml \
+            --global
+
+          yq eval '.pathMatchers[0].pathRules[0].routeAction.urlRewrite.pathPrefixRewrite = "/"' -i url_map_config.yaml
+
+          gcloud compute url-maps import ${{ steps.create-url-map.outputs.url_map }} \
+            --source url_map_config.yaml \
+            --global
+
+          rm url_map_config.yaml
 
       - name: Create SSL Certificates
         id: create-ssl-certificates
