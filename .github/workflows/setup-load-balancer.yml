@@ -71,7 +71,8 @@ jobs:
               --port-name=http \
               --timeout=30s \
               --connection-draining-timeout=30s \
-              --enable-cdn
+              --enable-cdn \
+              --load-balancing-scheme=EXTERNAL_MANAGED
           fi
           echo "api_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
 
@@ -162,28 +163,57 @@ jobs:
           fi
           echo "ssl_certificates=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" >> $GITHUB_ENV
 
-      - name: Create HTTPS Proxy
+      - name: Create HTTP Proxy
         id: create-http-proxy
         run: |
-          if [[ $(gcloud compute target-https-proxies describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --global) ]]; then
-            echo "HTTPS proxy exists"
+          # HTTP Proxy
+          if [[ $(gcloud compute target-http-proxies describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http --global) ]]; then
+            echo "HTTP proxy exists"
           else
-              gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} --url-map="${{ steps.create-url-map.outputs.url_map }}" --ssl-certificates="${{ env.ssl_certificates }}"
+            gcloud compute target-http-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http \
+              --url-map="${{ steps.create-url-map.outputs.url_map }}" \
+              --global
+          fi
+
+          # HTTPS Proxy
+          if [[ "${{ vars.DOMAIN }}" != "" ]]; then
+            if [[ $(gcloud compute target-https-proxies describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https --global) ]]; then
+              echo "HTTPS proxy exists"
+            else
+              gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https \
+                --url-map="${{ steps.create-url-map.outputs.url_map }}" \
+                --ssl-certificates="${{ env.ssl_certificates }}" \
+                --global
+            fi
           fi
 
           echo "http_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" >> $GITHUB_OUTPUT
 
-      - name: Add Forwarding Rule
+      - name: Add Forwarding Rules
         id: add-forwarding
         run: |
-          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule --global) ]]; then
-            echo "Forwarding rule exists"
+          # HTTP Forwarding Rule
+          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-http-forwarding-rule --global) ]]; then
+            echo "HTTP Forwarding rule exists"
           else
-            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule \
-                --global \
-                --target-https-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}" \
-                --ports=443
+            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-http-forwarding-rule \
+              --global \
+              --target-http-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}-http" \
+              --ports=80
           fi
+
+          # HTTPS Forwarding Rule
+          if [[ "${{ vars.DOMAIN }}" != "" ]]; then
+            if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule --global) ]]; then
+              echo "HTTPS Forwarding rule exists"
+            else
+              gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule \
+                --global \
+                --target-https-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}-https" \
+                --ports=443
+            fi
+          fi
+
           echo "forwarding_rules=${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule" >> $GITHUB_OUTPUT
 
       - name: Web Domain Mapping
