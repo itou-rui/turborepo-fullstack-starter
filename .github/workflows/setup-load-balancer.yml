@@ -144,7 +144,7 @@ jobs:
         id: add-path-rule
         run: |
           MAP_INFO=$(gcloud compute url-maps describe ${{ steps.create-url-map.outputs.url_map }} --global --format=json)
-          if jq -e '.pathMatchers | map(select(.name == "path-matcher")) | length' <<< "$MAP_INFO" > 0; then
+          if echo "$MAP_INFO" | grep -q "path-matcher"; then
               echo "Path matcher exists"
               echo "is_add=false" >> $GITHUB_OUTPUT
           else
