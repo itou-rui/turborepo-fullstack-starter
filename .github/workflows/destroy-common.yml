@@ -123,3 +123,72 @@ jobs:
           echo "Done"
         env:
           GH_TOKEN: ${{ github.token }}
+
+  load-balancer:
+    name: Cleanup LoadBalancer Resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auth GoogleCloud
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
+          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+
+      - name: Remove Domain Mapping
+        if: vars.DOMAIN != ''
+        run: |
+          gcloud beta run domain-mappings delete \
+            --domain "${{ vars.DOMAIN }}" \
+            --region "${{ inputs.google_cloud_region }}" \
+            --quiet
+
+      - name: Remove Forwarding Rules
+        run: |
+          gcloud compute forwarding-rules delete "${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http-forwarding-rule" \
+            --global \
+            --quiet || true
+          gcloud compute forwarding-rules delete "${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https-forwarding-rule" \
+            --global \
+            --quiet || true
+
+      - name: Remove HTTP/HTTPS Proxies
+        run: |
+          gcloud compute target-http-proxies delete "${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" \
+            --global \
+            --quiet || true
+          gcloud compute target-https-proxies delete "${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" \
+            --global \
+            --quiet || true
+
+      - name: Remove SSL Certificate
+        run: |
+          gcloud compute ssl-certificates delete "${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" \
+            --global \
+            --quiet || true
+
+      - name: Remove URL Map
+        run: |
+          gcloud compute url-maps delete "${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer" \
+            --global \
+            --quiet || true
+
+      - name: Remove Backend Services
+        run: |
+          gcloud compute backend-services delete "${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-backend" \
+            --global \
+            --quiet || true
+          gcloud compute backend-services delete "${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" \
+            --global \
+            --quiet || true
+
+      - name: Remove Network Endpoint Groups
+        run: |
+          gcloud compute network-endpoint-groups delete "${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg" \
+            --region "${{ inputs.google_cloud_region }}" \
+            --quiet || true
+          gcloud compute network-endpoint-groups delete "${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg" \
+            --region "${{ inputs.google_cloud_region }}" \
+            --quiet || true
