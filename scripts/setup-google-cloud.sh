@@ -100,11 +100,16 @@ gcloud iam service-accounts create "$PACKAGE_NAME-net-sa" \
 log "Created networking service account: $PACKAGE_NAME-net-sa"
 
 # Add IAM policy bindings for application service account
+
 roles=(
   "roles/artifactregistry.admin"
-  "roles/run.developer" ## "roles/run.admin"
+  "roles/run.admin"
+  "roles/run.domainMappingAdmin"
   "roles/iam.serviceAccountUser"
   "roles/iam.serviceAccountTokenCreator"
+  "roles/compute.loadBalancerAdmin"
+  "roles/compute.networkAdmin"
+  "roles/compute.securityAdmin"
 )
 
 # Add IAM policy bindings for application service account
@@ -135,3 +140,15 @@ gcloud iam service-accounts add-iam-policy-binding "$PACKAGE_NAME-app-sa@$GOOGLE
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/projects/$GOOGLE_CLOUD_PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_IDENTITY_POOL_ID/attribute.repository/$REPO_OWNER/$REPO_NAME"
 log "Added IAM policy binding for application service account (repository)."
+
+## Enable required services
+services=(
+  "compute.googleapis.com"
+  "domains.googleapis.com"
+  "dns.googleapis.com"
+)
+
+for service in "${services[@]}"; do
+  gcloud services enable "$service" --project="$GOOGLE_CLOUD_PROJECT_ID"
+  echo "Enabled $service"
+done

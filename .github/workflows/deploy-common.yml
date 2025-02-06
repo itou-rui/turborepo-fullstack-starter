@@ -30,7 +30,7 @@ on:
 
 jobs:
   artifact-repository:
-    name: Setup Artifacts Repository
+    name: Create Artifacts Repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -141,7 +141,7 @@ jobs:
           export ENVIRONMENT="${{ inputs.environment }}"
 
           if [ "${{ inputs.app }}" == "web" ]; then
-            export BASE_URL="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.GOOGLE_CLOUD_ENV }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
+            export BASE_URL="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
           else
             export MONGODB_USER_NAME="${{ secrets.MONGODB_USER_NAME }}"
             export MONGODB_USER_PASSWORD="${{ secrets.MONGODB_USER_PASSWORD }}"
