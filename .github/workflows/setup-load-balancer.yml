@@ -57,7 +57,7 @@ jobs:
               --enable-cdn \
               --load-balancing-scheme=EXTERNAL_MANAGED
           fi
-          echo "web_backend_service=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
+          echo "web_backend_service=${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
 
       - name: Create Api Backend Service
         id: create-api-backend-service
