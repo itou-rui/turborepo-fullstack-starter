@@ -125,37 +125,35 @@ jobs:
           BRANCH_HOST="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}"
 
           if gcloud compute url-maps describe $MAP_NAME --global; then
-            echo "Adding branch host rule to existing URL Map"
-            gcloud compute url-maps add-host-rule $MAP_NAME \
-              --hosts="$BRANCH_HOST.${{ vars.DOMAIN }}" \
-              --path-matcher-name="$BRANCH_HOST-matcher" \
-              --global || true
+            echo "URL Map exists"
           else
             echo "Creating new URL Map"
             gcloud compute url-maps create $MAP_NAME \
               --default-service="${{ steps.create-web-backend-service.outputs.web_backend_service }}" \
               --global
 
-            gcloud compute url-maps add-host-rule $MAP_NAME \
-              --hosts="$BRANCH_HOST.${{ vars.DOMAIN }}" \
-              --path-matcher-name="$BRANCH_HOST-matcher" \
-              --global
           fi
           echo "url_map=$MAP_NAME" >> $GITHUB_OUTPUT
 
       - name: Add Path Rule
         id: add-path-rule
         run: |
-          MAP_NAME="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-load-balancer"
           BRANCH_HOST="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}"
 
-          gcloud compute url-maps add-path-matcher $MAP_NAME \
+          gcloud compute url-maps add-path-matcher ${{ steps.create-url-map.outputs.url_map }} \
             --path-matcher-name="$BRANCH_HOST-matcher" \
             --default-service="${{ steps.create-web-backend-service.outputs.web_backend_service }}" \
             --path-rules="/api/*=${{ steps.create-api-backend-service.outputs.api_backend_service }}" \
             --global || true
 
-          echo "path_matcher=$MAP_NAME" >> $GITHUB_OUTPUT
+      - name: Add Host Rule
+        run: |
+          BRANCH_HOST="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}"
+
+          gcloud compute url-maps add-host-rule ${{ steps.create-url-map.outputs.url_map }} \
+            --hosts="$BRANCH_HOST.${{ vars.DOMAIN }}" \
+            --path-matcher-name="$BRANCH_HOST-matcher" \
+            --global
 
       - name: Install yq
         run: |
@@ -208,7 +206,7 @@ jobs:
           else
             gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https \
               --url-map="${{ steps.create-url-map.outputs.url_map }}" \
-              --ssl-certificates="${{ env.ssl_certificates }}" \
+              --ssl-certificates="${{ steps.create-ssl-certificates.outputs.ssl_certificates }}" \
               --global
           fi
 
