@@ -44,9 +44,6 @@ jobs:
               --timeout=30s \
               --connection-draining-timeout=30s \
               --enable-cdn \
-              --enable-iap \
-              --iap-oauth2-client-id=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_ID }} \
-              --iap-oauth2-client-secret=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_SECRET }} \
               --load-balancing-scheme=EXTERNAL_MANAGED
           fi
           echo "web_backend_service=$SERVICE_NAME" >> $GITHUB_OUTPUT
@@ -65,9 +62,6 @@ jobs:
               --timeout=30s \
               --connection-draining-timeout=30s \
               --enable-cdn \
-              --enable-iap \
-              --iap-oauth2-client-id=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_ID }} \
-              --iap-oauth2-client-secret=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_SECRET }} \
               --load-balancing-scheme=EXTERNAL_MANAGED
           fi
           echo "api_backend_service=$SERVICE_NAME" >> $GITHUB_OUTPUT
@@ -123,22 +117,6 @@ jobs:
             --global \
             --network-endpoint-group="${{ steps.create-api-backend-neg.outputs.api_backend_neg }}" \
             --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
-
-      - name: Setup Security Policies
-        id: setup-security
-        run: |
-          POLICY_NAME="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-security-policy"
-          if ! gcloud compute security-policies describe $POLICY_NAME --global; then
-            gcloud compute security-policies create $POLICY_NAME \
-              --description="Security policy for ${{ inputs.app_name }}"
-          fi
-
-          # Add default rules
-          gcloud compute security-policies rules update 2147483647 \
-            --security-policy=$POLICY_NAME \
-            --action=allow \
-            --description="Default rule" \
-            --global
 
       - name: Create URL Map
         id: create-url-map
@@ -231,15 +209,6 @@ jobs:
             gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https \
               --url-map="${{ steps.create-url-map.outputs.url_map }}" \
               --ssl-certificates="${{ env.ssl_certificates }}" \
-              --global
-
-            # Apply security policy to backend services
-            gcloud compute backend-services update ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
-              --security-policy="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-security-policy" \
-              --global
-
-            gcloud compute backend-services update ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
-              --security-policy="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-security-policy" \
               --global
           fi
 
