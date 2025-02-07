@@ -45,8 +45,8 @@ jobs:
               --connection-draining-timeout=30s \
               --enable-cdn \
               --enable-iap \
-              --iap-oauth2-client-id=${{ secrets.OAUTH_CLIENT_ID }} \
-              --iap-oauth2-client-secret=${{ secrets.OAUTH_CLIENT_SECRET }} \
+              --iap-oauth2-client-id=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_ID }} \
+              --iap-oauth2-client-secret=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_SECRET }} \
               --load-balancing-scheme=EXTERNAL_MANAGED
           fi
           echo "web_backend_service=$SERVICE_NAME" >> $GITHUB_OUTPUT
@@ -66,8 +66,8 @@ jobs:
               --connection-draining-timeout=30s \
               --enable-cdn \
               --enable-iap \
-              --iap-oauth2-client-id=${{ secrets.OAUTH_CLIENT_ID }} \
-              --iap-oauth2-client-secret=${{ secrets.OAUTH_CLIENT_SECRET }} \
+              --iap-oauth2-client-id=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_ID }} \
+              --iap-oauth2-client-secret=${{ secrets.GOOGLE_CLOUD_OAUTH_CLIENT_SECRET }} \
               --load-balancing-scheme=EXTERNAL_MANAGED
           fi
           echo "api_backend_service=$SERVICE_NAME" >> $GITHUB_OUTPUT
