@@ -206,7 +206,7 @@ jobs:
           else
             gcloud compute target-https-proxies create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https \
               --url-map="${{ steps.create-url-map.outputs.url_map }}" \
-              --ssl-certificates="${{ steps.create-ssl-certificates.outputs.ssl_certificates }}" \
+              --ssl-certificates="${{ steps.create-ssl-certificates.outputs.ssl_certificate }}" \
               --global
           fi
 
