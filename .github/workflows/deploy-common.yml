@@ -109,9 +109,9 @@ jobs:
             ${{ steps.generate_image.outputs.docker_image }}:${{ github.sha }}
             ${{ steps.generate_image.outputs.docker_image }}:latest
           cache-from: |
-            type=gha
+            type=gha,scope=${{ inputs.app }}
             type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:latest
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,scope=${{ inputs.app }}
           platforms: linux/amd64
 
   deploy-cloudrun:
