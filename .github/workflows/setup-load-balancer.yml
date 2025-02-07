@@ -216,22 +216,25 @@ jobs:
       - name: Reserve Static IP Address
         id: reserve-ip
         run: |
-          if gcloud compute addresses describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip \
-            --region=${{ vars.GCP_REGION }} &> /dev/null; then
+          IP_NAME="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip"
+          REGION="${{ inputs.google_cloud_region }}"
+
+          if gcloud compute addresses describe ${IP_NAME} \
+            --region=${REGION} &> /dev/null; then
             echo "Static IP already exists. Retrieving IP address..."
             IP_ADDRESS=$(gcloud compute addresses describe ${IP_NAME} --region=${REGION} --format='get(address)')
             echo "IP_ADDRESS=${IP_ADDRESS}" >> $GITHUB_OUTPUT
 
           else
             echo "Creating new static IP address..."
-            gcloud compute addresses create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip \
-              --region=${{ inputs.google_cloud_region }} \
+            gcloud compute addresses create ${IP_NAME} \
+              --region=${REGION} \
               --network-tier=PREMIUM
           fi
 
           for i in {1..30}; do
-            IP_ADDRESS=$(gcloud compute addresses describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip \
-              --region=${{ inputs.google_cloud_region }} \
+            IP_ADDRESS=$(gcloud compute addresses describe ${IP_NAME} \
+              --region=${REGION} \
               --format='get(address)' 2>/dev/null)
 
             if [ ! -z "$IP_ADDRESS" ]; then
@@ -261,15 +264,15 @@ jobs:
           fi
 
           # HTTPS Forwarding Rule
-          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule --global) ]]; then
+          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.https_proxy }}-forwarding-rule --global) ]]; then
             echo "HTTPS Forwarding rule exists"
           else
-            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule \
+            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.https_proxy }}-https-forwarding-rule \
               --global \
               --load-balancing-scheme=EXTERNAL_MANAGED \
               --network-tier=PREMIUM \
               --address="${{ steps.reserve-ip.outputs.ip_address }}" \
-              --target-https-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}-https" \
+              --target-https-proxy="${{ steps.create-http-proxy.outputs.https_proxy }}" \
               --ports=443
           fi
 
