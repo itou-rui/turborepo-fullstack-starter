@@ -207,34 +207,36 @@ jobs:
             fi
           fi
 
-          echo "http_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}" >> $GITHUB_OUTPUT
+          echo "http_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
+          echo "https_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
 
       - name: Add Forwarding Rules
         id: add-forwarding
         run: |
           # HTTP Forwarding Rule
-          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-http-forwarding-rule --global) ]]; then
+          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-forwarding-rule --global) ]]; then
             echo "HTTP Forwarding rule exists"
           else
-            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-http-forwarding-rule \
+            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-forwarding-rule \
               --global \
-              --target-http-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}-http" \
+              --target-http-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}" \
               --ports=80
           fi
 
           # HTTPS Forwarding Rule
           if [[ "${{ vars.DOMAIN }}" != "" ]]; then
-            if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule --global) ]]; then
+            if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.https_proxy }}-forwarding-rule --global) ]]; then
               echo "HTTPS Forwarding rule exists"
             else
-              gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule \
+              gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.https_proxy }}-forwarding-rule \
                 --global \
-                --target-https-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}-https" \
+                --target-https-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}" \
                 --ports=443
             fi
           fi
 
-          echo "forwarding_rules=${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule" >> $GITHUB_OUTPUT
+          echo "http_forwarding_rules=${{ steps.create-http-proxy.outputs.http_proxy }}-forwarding-rule" >> $GITHUB_OUTPUT
+          echo "https_forwarding_rules=${{ steps.create-http-proxy.outputs.https_proxy }}-forwarding-rule" >> $GITHUB_OUTPUT
 
       - name: Web Domain Mapping
         id: web-domain-mapping
