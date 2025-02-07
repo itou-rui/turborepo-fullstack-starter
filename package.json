@@ -34,7 +34,10 @@
   "packageManager": "yarn@1.22.17",
   "config": {
     "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
+      "path": "./node_modules/cz-customizable",
+      "cz-customizable": {
+        "config": ".cz-config.js"
+      }
     }
   }
 }
