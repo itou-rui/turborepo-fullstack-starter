@@ -217,25 +217,24 @@ jobs:
         id: reserve-ip
         run: |
           IP_NAME="${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip"
-          REGION="${{ inputs.google_cloud_region }}"
 
           if gcloud compute addresses describe ${IP_NAME} \
-            --region=${REGION} &> /dev/null; then
+            --global &> /dev/null; then
             echo "Static IP already exists. Retrieving IP address..."
-            IP_ADDRESS=$(gcloud compute addresses describe ${IP_NAME} --region=${REGION} --format='get(address)')
+            IP_ADDRESS=$(gcloud compute addresses describe ${IP_NAME} --global --format='get(address)')
             echo "ip_address=${IP_ADDRESS}" >> $GITHUB_OUTPUT
             echo "ip_name=${IP_NAME}" >> $GITHUB_OUTPUT
 
           else
             echo "Creating new static IP address..."
             gcloud compute addresses create ${IP_NAME} \
-              --region=${REGION} \
+              --global \
               --network-tier=PREMIUM
           fi
 
           for i in {1..30}; do
             IP_ADDRESS=$(gcloud compute addresses describe ${IP_NAME} \
-              --region=${REGION} \
+              --global \
               --format='get(address)' 2>/dev/null)
 
             if [ ! -z "$IP_ADDRESS" ]; then
