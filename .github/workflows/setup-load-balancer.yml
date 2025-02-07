@@ -153,7 +153,7 @@ jobs:
           gcloud compute url-maps add-host-rule ${{ steps.create-url-map.outputs.url_map }} \
             --hosts="$BRANCH_HOST.${{ vars.DOMAIN }}" \
             --path-matcher-name="$BRANCH_HOST-matcher" \
-            --global
+            --global || true
 
       - name: Install yq
         run: |
