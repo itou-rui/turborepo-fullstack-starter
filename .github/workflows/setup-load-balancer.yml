@@ -213,6 +213,40 @@ jobs:
           echo "http_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
           echo "https_proxy=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
 
+      - name: Reserve Static IP Address
+        id: reserve-ip
+        run: |
+          if gcloud compute addresses describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip \
+            --region=${{ vars.GCP_REGION }} &> /dev/null; then
+            echo "Static IP already exists. Retrieving IP address..."
+            IP_ADDRESS=$(gcloud compute addresses describe ${IP_NAME} --region=${REGION} --format='get(address)')
+            echo "IP_ADDRESS=${IP_ADDRESS}" >> $GITHUB_OUTPUT
+
+          else
+            echo "Creating new static IP address..."
+            gcloud compute addresses create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip \
+              --region=${{ inputs.google_cloud_region }} \
+              --network-tier=PREMIUM
+          fi
+
+          for i in {1..30}; do
+            IP_ADDRESS=$(gcloud compute addresses describe ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip \
+              --region=${{ inputs.google_cloud_region }} \
+              --format='get(address)' 2>/dev/null)
+
+            if [ ! -z "$IP_ADDRESS" ]; then
+              echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_OUTPUT
+              echo "Reserved IP address: $IP_ADDRESS"
+              exit 0
+            fi
+
+            echo "Waiting for IP address to be available... (Attempt $i/30)"
+            sleep 10
+          done
+
+          echo "Failed to get IP address after 5 minutes"
+          exit 1
+
       - name: Add Forwarding Rules
         id: add-forwarding
         run: |
@@ -227,26 +261,56 @@ jobs:
           fi
 
           # HTTPS Forwarding Rule
-          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.https_proxy }}-forwarding-rule --global) ]]; then
+          if [[ $(gcloud compute forwarding-rules describe ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule --global) ]]; then
             echo "HTTPS Forwarding rule exists"
           else
-            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.https_proxy }}-forwarding-rule \
+            gcloud compute forwarding-rules create ${{ steps.create-http-proxy.outputs.http_proxy }}-https-forwarding-rule \
               --global \
-              --target-https-proxy="${{ steps.create-http-proxy.outputs.https_proxy }}" \
+              --load-balancing-scheme=EXTERNAL_MANAGED \
+              --network-tier=PREMIUM \
+              --address="${{ steps.reserve-ip.outputs.ip_address }}" \
+              --target-https-proxy="${{ steps.create-http-proxy.outputs.http_proxy }}-https" \
               --ports=443
           fi
 
           echo "http_forwarding_rules=${{ steps.create-http-proxy.outputs.http_proxy }}-forwarding-rule" >> $GITHUB_OUTPUT
           echo "https_forwarding_rules=${{ steps.create-http-proxy.outputs.https_proxy }}-forwarding-rule" >> $GITHUB_OUTPUT
 
-      - name: Web Domain Mapping
-        id: web-domain-mapping
+      - name: Add DNS Record
         run: |
-          if [[ $(gcloud beta run domain-mappings describe --domain "${{ vars.DOMAIN }}" --region "${{ inputs.google_cloud_region }}") ]]; then
-            echo "Domain mapping exists"
+          ZONE_NAME=${ZONE_NAME//./-}  
+          DOMAIN="${{ vars.DOMAIN }}"
+          IP_ADDRESS="${{ steps.reserve-ip.outputs.ip_address }}"
+
+          echo "Checking existing DNS records for domain: $DOMAIN"
+
+          EXISTING_RECORD=$(gcloud dns record-sets list \
+            --zone=$ZONE_NAME \
+            --name="${{ vars.DOMAIN }}" \
+            --type=A \
+            --format="get(name,rrdatas[0])" 2>/dev/null)
+
+          if [ ! -z "$EXISTING_RECORD" ]; then
+            EXISTING_IP=$(echo "$EXISTING_RECORD" | awk '{print $2}')
+            if [ "$EXISTING_IP" == "$IP_ADDRESS" ]; then
+              echo "DNS record already exists with the same IP address: $IP_ADDRESS"
+              exit 0
+            else
+              echo "Updating existing DNS record from $EXISTING_IP to $IP_ADDRESS"
+              gcloud dns record-sets transaction start --zone=$ZONE_NAME
+              gcloud dns record-sets transaction remove --zone=$ZONE_NAME \
+                --name="${{ vars.DOMAIN }}" \
+                --ttl=300 --type=A "$EXISTING_IP"
+              gcloud dns record-sets transaction add --zone=$ZONE_NAME \
+                --name="${{ vars.DOMAIN }}" \
+                --ttl=300 --type=A "$IP_ADDRESS"
+              gcloud dns record-sets transaction execute --zone=$ZONE_NAME
+            fi
           else
-             gcloud beta run domain-mappings create \
-                 --service "${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}" \
-                 --domain "${{ vars.DOMAIN }}" \
-                 --region "${{ inputs.google_cloud_region }}"
+            echo "Adding new DNS record for $DOMAIN with IP: $IP_ADDRESS"
+            gcloud dns record-sets transaction start --zone=$ZONE_NAME
+            gcloud dns record-sets transaction add --zone=$ZONE_NAME \
+                --name="${{ vars.DOMAIN }}" \
+              --ttl=300 --type=A "$IP_ADDRESS"
+            gcloud dns record-sets transaction execute --zone=$ZONE_NAME
           fi
