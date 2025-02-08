@@ -405,7 +405,7 @@ jobs:
         if: needs.check-condition.outputs.api_path_rule_exists == 'false'
         run: |
           gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
-            --path-matcher-name="${{ needs.set-variables.outputs.path-matcher-name }}" \
+            --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
             --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
             --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_service_name }}" \
             --global
@@ -453,14 +453,14 @@ jobs:
         if: needs.check-condition.outputs.http_proxy_exists == 'false'
         run: |
           gcloud compute target-http-proxies create ${{ needs.set-variables.outputs.http_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url-map_name }}" \
+            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
             --global
 
       - name: Create Https Proxy
         if: needs.check-condition.outputs.https_proxy_exists == 'false'
         run: |
           gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url-map_name }}" \
+            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
             --ssl-certificates="${{ needs.set-variables.outputs.cert_name }}" \
             --global
 
