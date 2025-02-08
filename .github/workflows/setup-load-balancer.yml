@@ -245,7 +245,7 @@ jobs:
       - name: Check SSL Certificates
         id: check-ssl-certificates
         run: |
-          if gcloud certificate-manager certificates describe ${{ needs.set-variables.outputs.cert_name }} --global 2> /dev/null; then
+          if gcloud certificate-manager certificates describe ${{ needs.set-variables.outputs.cert_name }} 2> /dev/null; then
             echo "cert_exists=true" >> $GITHUB_OUTPUT
             echo "cert_exists: true"
           else
