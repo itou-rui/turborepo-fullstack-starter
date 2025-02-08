@@ -93,6 +93,10 @@ jobs:
       existing_ip: ${{ steps.check-add-dns-a-record.outputs.existing_ip }}
       ip_matches: ${{ steps.check-add-dns-a-record.outputs.ip_matches }}
       dns_auth_exists: ${{ steps.check-create-dns-auth.outputs.dns_auth_exists }}
+      dns_cname_record_exists: ${{ steps.check-dns-cname-record.outputs.dns_cname_record_exists }}
+      cname_value_matches: ${{ steps.check-dns-cname-record.outputs.cname_value_matches }}
+      cname_value: ${{ steps.check-dns-cname-record.outputs.cname_value }}
+      cname_name: ${{ steps.check-dns-cname-record.outputs.cname_name }}
 
     steps:
       - name: Checkout repository
@@ -299,7 +303,7 @@ jobs:
       - name: Check DNS Authorizations
         id: check-create-dns-auth
         run: |
-          if gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" 2>/dev/null; then
+          if gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json 2>/dev/null; then
             echo "dns_auth_exists=true" >> $GITHUB_OUTPUT
             echo "dns_auth_exists: true"
           else
@@ -307,8 +311,57 @@ jobs:
             echo "dns_auth_exists: false"
           fi
 
-      - name: Check Add DNS Record
-        id: check-add-dns-record
+      - name: Check DNS CNAME Record
+        id: check-dns-cname-record
+        run: |
+          ZONE_NAME="${{ vars.DOMAIN }}"
+          ZONE_NAME=${ZONE_NAME//./-}
+
+          if [ "${{ steps.check-create-dns-auth.outputs.dns_auth_exists }}" == "true" ]; then
+            DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json)
+            CNAME_NAME=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')
+            EXPECTED_VALUE=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')
+
+            echo "cname_name=$CNAME_NAME" >> $GITHUB_OUTPUT
+            echo "cname_value=$EXPECTED_VALUE" >> $GITHUB_OUTPUT
+            echo "cname_name: $CNAME_NAME"
+            echo "cname_value: $EXPECTED_VALUE"
+
+            EXISTING_RECORD=$(gcloud dns record-sets list \
+              --zone=$ZONE_NAME \
+              --name="$CNAME_NAME" \
+              --type=CNAME \
+              --format="get(name,rrdatas[0])" 2>/dev/null || true)
+
+            if [ ! -z "$EXISTING_RECORD" ]; then
+              echo "dns_cname_record_exists=true" >> $GITHUB_OUTPUT
+              echo "dns_cname_record_exists: true"
+
+              EXISTING_VALUE=$(echo "$EXISTING_RECORD" | awk '{print $2}')
+              echo "cname_value=$EXISTING_VALUE" >> $GITHUB_OUTPUT
+              echo "cname_value: $EXISTING_VALUE"
+
+              if [ "$EXISTING_VALUE" == "$EXPECTED_VALUE" ]; then
+                echo "cname_value_matches=true" >> $GITHUB_OUTPUT
+                echo "cname_value_matches: true"
+              else
+                echo "cname_value_matches=false" >> $GITHUB_OUTPUT
+                echo "cname_value_matches: false"
+              fi
+            else
+              echo "dns_cname_record_exists=false" >> $GITHUB_OUTPUT
+              echo "dns_cname_record_exists: false"
+              echo "cname_value=" >> $GITHUB_OUTPUT
+              echo "cname_value_matches=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "dns_cname_record_exists=false" >> $GITHUB_OUTPUT
+            echo "dns_cname_record_exists: false"
+            echo "cname_value=" >> $GITHUB_OUTPUT
+            echo "cname_value_matches=false" >> $GITHUB_OUTPUT
+            echo "cname_name=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Check Add DNS A Record
         id: check-add-dns-a-record
         run: |
@@ -538,7 +591,72 @@ jobs:
         run: |
           gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}"
 
+      - name: Get DNS Authorization Record
+        id: get-dns-auth-record
+        run: |
+          if [ "${{ needs.check-condition.outputs.dns_cname_record_exists }}" == 'true' ]; then 
+            echo "cname_name=${{ needs.check-condition.outputs.cname_name }}" >> $GITHUB_OUTPUT
+            echo "cname_value=${{ needs.check-condition.outputs.cname_value }}" >> $GITHUB_OUTPUT
+          else
+            DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json)
+            echo "cname_name=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')" >> $GITHUB_OUTPUT
+            echo "cname_value=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')" >> $GITHUB_OUTPUT
+          fi
+
       - name: Add DNS Record
+        if: needs.check-condition.outputs.dns_cname_record_exists == 'false'
+        run: |
+          ZONE_NAME="${{ vars.DOMAIN }}"
+          ZONE_NAME=${ZONE_NAME//./-}
+
+          gcloud dns record-sets transaction start --zone="$ZONE_NAME"
+          gcloud dns record-sets transaction add "${{ steps.get-dns-auth-record.outputs.cname_value }}" \
+            --name="${{ steps.get-dns-auth-record.outputs.cname_name }}" \
+            --ttl="300" \
+            --type="CNAME" \
+            --zone="$ZONE_NAME"
+          gcloud dns record-sets transaction execute --zone="$ZONE_NAME"
+
+      - name: Create SSL Certificates
+        if: needs.check-condition.outputs.cert_exists == 'false'
+        run: |
+          gcloud certificate-manager certificates create ${{ needs.set-variables.outputs.cert_name }} \
+            --domains="*.${{ needs.set-variables.outputs.host_name }}" \
+            --dns-authorizations="${{ needs.set-variables.outputs.dns_auth_name }}" \
+            --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
+
+      - name: Create Http Proxy
+        if: needs.check-condition.outputs.http_proxy_exists == 'false'
+        run: |
+          gcloud compute target-http-proxies create ${{ needs.set-variables.outputs.http_proxy_name }} \
+            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
+            --global
+
+      - name: Create Https Proxy
+        if: needs.check-condition.outputs.https_proxy_exists == 'false'
+        run: |
+          gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
+            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
+            --ssl-certificates="${{ needs.set-variables.outputs.cert_name }}" \
+            --global
+
+      - name: Add Http Forwarding Rules
+        run: |
+          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.http_forwarding_rule_name }} \
+            --global \
+            --target-http-proxy="${{ needs.set-variables.outputs.http_proxy_name }}" \
+            --ports=80
+
+      - name: Add Https Forwarding Rules
+        run: |
+          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.https_forwarding_rule_name }} \
+            --global \
+            --load-balancing-scheme=EXTERNAL_MANAGED \
+            --network-tier=PREMIUM \
+            --address="${{ needs.set-variables.outputs.static_ip_name }}" \
+            --target-http-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
+            --ports=443
+
       - name: Add DNS A Record
         if: |
           needs.check-condition.outputs.dns_record_exists == 'false' || 
@@ -589,43 +707,3 @@ jobs:
             echo "Failed to update DNS record"
             exit 1
           fi
-
-      - name: Create SSL Certificates
-        if: needs.check-condition.outputs.cert_exists == 'false'
-        run: |
-          gcloud certificate-manager certificates create ${{ needs.set-variables.outputs.cert_name }} \
-            --domains="*.${{ needs.set-variables.outputs.host_name }}" \
-            --dns-authorizations="${{ needs.set-variables.outputs.dns_auth_name }}" \
-            --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
-
-      - name: Create Http Proxy
-        if: needs.check-condition.outputs.http_proxy_exists == 'false'
-        run: |
-          gcloud compute target-http-proxies create ${{ needs.set-variables.outputs.http_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
-            --global
-
-      - name: Create Https Proxy
-        if: needs.check-condition.outputs.https_proxy_exists == 'false'
-        run: |
-          gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
-            --ssl-certificates="${{ needs.set-variables.outputs.cert_name }}" \
-            --global
-
-      - name: Add Http Forwarding Rules
-        run: |
-          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.http_forwarding_rule_name }} \
-            --global \
-            --target-http-proxy="${{ needs.set-variables.outputs.http_proxy_name }}" \
-            --ports=80
-
-      - name: Add Https Forwarding Rules
-        run: |
-          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.https_forwarding_rule_name }} \
-            --global \
-            --load-balancing-scheme=EXTERNAL_MANAGED \
-            --network-tier=PREMIUM \
-            --address="${{ needs.set-variables.outputs.static_ip_name }}" \
-            --target-http-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
-            --ports=443
