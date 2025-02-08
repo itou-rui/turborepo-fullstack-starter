@@ -632,7 +632,9 @@ jobs:
           gcloud certificate-manager maps create ${{ needs.set-variables.outputs.cert_map_name }}
 
           gcloud certificate-manager maps entries create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} \
-            --map="${{ needs.set-variables.outputs.cert_map_name }}"
+            --map="${{ needs.set-variables.outputs.cert_map_name }}" \
+            --certificates="${{ needs.set-variables.outputs.cert_name }}" \
+            --hostname="*.${{ needs.set-variables.outputs.host_name }}"
 
       - name: Create Http Proxy
         if: needs.check-condition.outputs.http_proxy_exists == 'false'
