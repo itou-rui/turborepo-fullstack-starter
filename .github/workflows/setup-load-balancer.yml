@@ -446,7 +446,7 @@ jobs:
       - name: Add NEG to backend service
         if: needs.check-condition.outputs.web_neg_in_backend == 'false'
         run: |
-          gcloud compute backend-services add-backend ${{ steps.create-web-backend-service.outputs.web_backend_service }} \
+          gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_service_name }} \
             --global \
             --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_name }}" \
             --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
@@ -491,7 +491,7 @@ jobs:
       - name: Add NEG to backend service
         if: needs.check-condition.outputs.api_neg_in_backend == 'false'
         run: |
-          gcloud compute backend-services add-backend ${{ steps.create-api-backend-service.outputs.api_backend_service }} \
+          gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_service_name }} \
             --global \
             --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_name }}" \
             --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
