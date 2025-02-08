@@ -65,7 +65,7 @@ jobs:
           echo "dns_auth_name=${{ inputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
           echo "http_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
           echo "https_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
-          echo "static_ip_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip" >> $GITHUB_OUTPUT
+          echo "static_ip_name=${{ inputs.app_name }}-ip" >> $GITHUB_OUTPUT
           echo "http_forwarding_rule_name=${{ inputs.app_name }}-http-forwarding-rule" >> $GITHUB_OUTPUT
           echo "https_forwarding_rule_name=${{ inputs.app_name }}-https-forwarding-rule" >> $GITHUB_OUTPUT
 
