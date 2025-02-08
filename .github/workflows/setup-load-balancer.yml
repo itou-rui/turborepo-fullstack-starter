@@ -260,16 +260,16 @@ jobs:
             echo "http_proxy_exists=true" >> $GITHUB_OUTPUT
             echo "http_proxy_exists: true"
           else
-            echo "http_proxy_exist=false" >> $GITHUB_OUTPUT
-            echo "http_proxy_exist: false"
+            echo "http_proxy_exists=false" >> $GITHUB_OUTPUT
+            echo "http_proxy_exists: false"
           fi
 
           if [[ $(gcloud compute target-https-proxies describe ${{ needs.set-variables.outputs.https_proxy_name }} --global) ]] 2> /dev/null; then
             echo "https_proxy_exists=true" >> $GITHUB_OUTPUT
             echo "https_proxy_exists: true"
           else
-            echo "https_proxy_exist=false" >> $GITHUB_OUTPUT
-            echo "https_proxy_exist: false"
+            echo "https_proxy_exists=false" >> $GITHUB_OUTPUT
+            echo "https_proxy_exists: false"
           fi
 
       - name: Check Static IP Address
