@@ -544,7 +544,7 @@ jobs:
       - name: Create DNS Authorizations
         if: needs.check-condition.outputs.dns_auth_exists == 'false'
         run: |
-          gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="*.${{ needs.set-variables.outputs.host_name }}"
+          gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}"
           for i in {1..30}; do
             STATUS=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" \
               --format='get(state)')
