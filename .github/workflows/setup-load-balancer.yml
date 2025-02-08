@@ -31,11 +31,13 @@ jobs:
       url_map_name: ${{ steps.set-vars.outputs.url_map_name }}
       path_matcher_name: ${{ steps.set-vars.outputs.path_matcher_name }}
       cert_name: ${{ steps.set-vars.outputs.cert_name }}
+      dns_auth_name: ${{ steps.set-vars.outputs.dns_auth_name }}
       http_proxy_name: ${{ steps.set-vars.outputs.http_proxy_name }}
       https_proxy_name: ${{ steps.set-vars.outputs.https_proxy_name }}
       static_ip_name: ${{ steps.set-vars.outputs.static_ip_name }}
       http_forwarding_rule_name: ${{ steps.set-vars.outputs.http_forwarding_rule_name }}
       https_forwarding_rule_name: ${{ steps.set-vars.outputs.https_forwarding_rule_name }}
+
     steps:
       - name: Set variables
         id: set-vars
@@ -56,6 +58,7 @@ jobs:
           echo "url_map_name=${{ inputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
           echo "path_matcher_name=${{ inputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
           echo "cert_name=${{ inputs.app_name }}-cert" >> $GITHUB_OUTPUT
+          echo "dns_auth_name=${{ inputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
           echo "http_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
           echo "https_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
           echo "static_ip_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-ip" >> $GITHUB_OUTPUT
@@ -89,6 +92,9 @@ jobs:
       dns_record_exists: ${{ steps.check-add-dns-record.outputs.dns_record_exists }}
       existing_ip: ${{ steps.check-add-dns-record.outputs.existing_ip }}
       ip_matches: ${{ steps.check-add-dns-record.outputs.ip_matches }}
+      dns_auth_exists: ${{ steps.check-create-dns-auth.outputs.dns_auth_exists }}
+      dns_auth_status: ${{ steps.check-dns-auth-status.outputs.dns_auth_status }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -291,6 +297,26 @@ jobs:
             echo "https_forwarding_rule_exists: false"
           fi
 
+      - name: Check DNS Authorizations
+        id: check-create-dns-auth
+        run: |
+          if gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" 2>/dev/null; then
+            echo "dns_auth_exists=true" >> $GITHUB_OUTPUT
+            echo "dns_auth_exists: true"
+          else
+            echo "dns_auth_exists=false" >> $GITHUB_OUTPUT
+            echo "dns_auth_exists: false"
+          fi
+
+      - name: Check DNS Authorizations Status
+        id: check-dns-auth-status
+        if: steps.check-dns-auth.outputs.dns_auth_exists == 'true'
+        run: |
+          STATUS=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" \
+            --format='get(state)')
+          echo "dns_auth_status=$STATUS" >> $GITHUB_OUTPUT
+          echo "dns_auth_status: $STATUS"
+
       - name: Check Add DNS Record
         id: check-add-dns-record
         run: |
@@ -486,28 +512,6 @@ jobs:
 
           rm url_map_config.yaml
 
-      - name: Create SSL Certificates
-        if: needs.check-condition.outputs.cert_exists == 'false'
-        run: |
-          gcloud certificate-manager certificates create ${{ needs.set-variables.outputs.cert_name }} \
-            --domains="*.${{ needs.set-variables.outputs.host_name }}" \
-            --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
-
-      - name: Create Http Proxy
-        if: needs.check-condition.outputs.http_proxy_exists == 'false'
-        run: |
-          gcloud compute target-http-proxies create ${{ needs.set-variables.outputs.http_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
-            --global
-
-      - name: Create Https Proxy
-        if: needs.check-condition.outputs.https_proxy_exists == 'false'
-        run: |
-          gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
-            --ssl-certificates="${{ needs.set-variables.outputs.cert_name }}" \
-            --global
-
       - name: Reserve Static IP Address
         id: reserve-ip
         run: |
@@ -537,22 +541,28 @@ jobs:
             exit 1
           fi
 
-      - name: Add Http Forwarding Rules
+      - name: Create DNS Authorizations
+        if: needs.check-condition.outputs.dns_auth_exists == 'false'
         run: |
-          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.http_forwarding_rule_name }} \
-            --global \
-            --target-http-proxy="${{ needs.set-variables.outputs.http_proxy_name }}" \
-            --ports=80
+          gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="*.${{ needs.set-variables.outputs.host_name }}"
+          for i in {1..30}; do
+            STATUS=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" \
+              --format='get(state)')
+            echo "Current DNS authorization status: $STATUS"
 
-      - name: Add Https Forwarding Rules
-        run: |
-          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.https_forwarding_rule_name }} \
-            --global \
-            --load-balancing-scheme=EXTERNAL_MANAGED \
-            --network-tier=PREMIUM \
-            --address="${{ needs.set-variables.outputs.static_ip_name }}" \
-            --target-http-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
-            --ports=443
+            if [ "$STATUS" = "ACTIVE" ]; then
+              echo "DNS authorization is now active"
+              break
+            fi
+
+            if [ $i -eq 30 ]; then
+              echo "DNS authorization did not become active within the timeout period"
+              exit 1
+            fi
+
+            echo "Waiting for DNS authorization to become active... (Attempt $i/30)"
+            sleep 20
+          done
 
       - name: Add DNS Record
         if: |
@@ -604,3 +614,43 @@ jobs:
             echo "Failed to update DNS record"
             exit 1
           fi
+
+      - name: Create SSL Certificates
+        if: needs.check-condition.outputs.cert_exists == 'false'
+        run: |
+          gcloud certificate-manager certificates create ${{ needs.set-variables.outputs.cert_name }} \
+            --domains="*.${{ needs.set-variables.outputs.host_name }}" \
+            --dns-authorizations="${{ needs.set-variables.outputs.dns_auth_name }}" \
+            --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
+
+      - name: Create Http Proxy
+        if: needs.check-condition.outputs.http_proxy_exists == 'false'
+        run: |
+          gcloud compute target-http-proxies create ${{ needs.set-variables.outputs.http_proxy_name }} \
+            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
+            --global
+
+      - name: Create Https Proxy
+        if: needs.check-condition.outputs.https_proxy_exists == 'false'
+        run: |
+          gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
+            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
+            --ssl-certificates="${{ needs.set-variables.outputs.cert_name }}" \
+            --global
+
+      - name: Add Http Forwarding Rules
+        run: |
+          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.http_forwarding_rule_name }} \
+            --global \
+            --target-http-proxy="${{ needs.set-variables.outputs.http_proxy_name }}" \
+            --ports=80
+
+      - name: Add Https Forwarding Rules
+        run: |
+          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.https_forwarding_rule_name }} \
+            --global \
+            --load-balancing-scheme=EXTERNAL_MANAGED \
+            --network-tier=PREMIUM \
+            --address="${{ needs.set-variables.outputs.static_ip_name }}" \
+            --target-http-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
+            --ports=443
