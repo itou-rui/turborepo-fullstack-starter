@@ -110,8 +110,8 @@ roles=(
   "roles/compute.loadBalancerAdmin"
   "roles/compute.networkAdmin"
   "roles/compute.securityAdmin"
-  "roles/certificatemanager.serviceAgent"
   "roles/certificatemanager.admin"
+  "roles/dns.admin"
 )
 
 # Add IAM policy bindings for application service account
