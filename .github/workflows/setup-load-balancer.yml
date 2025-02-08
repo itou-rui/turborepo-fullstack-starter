@@ -284,7 +284,7 @@ jobs:
       - name: Check Add Forwarding Rules
         id: check-add-forwarding-rules
         run: |
-          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.http_forwarding_rule_name }} --global) ]]; then
+          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.http_forwarding_rule_name }} --global 2>/dev/null) ]]; then
             echo "http_forwarding_rule_exists=true" >> $GITHUB_OUTPUT
             echo "http_forwarding_rule_exists: true"
           else
@@ -292,7 +292,7 @@ jobs:
             echo "http_forwarding_rule_exists: false"
           fi
 
-          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.https_forwarding_rule_name }} --global) ]]; then
+          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.https_forwarding_rule_name }} --global 2>/dev/null) ]]; then
             echo "https_forwarding_rule_exists=true" >> $GITHUB_OUTPUT
             echo "https_forwarding_rule_exists: true"
           else
