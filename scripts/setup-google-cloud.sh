@@ -111,6 +111,7 @@ roles=(
   "roles/compute.networkAdmin"
   "roles/compute.securityAdmin"
   "roles/certificatemanager.serviceAgent"
+  "roles/certificatemanager.admin"
 )
 
 # Add IAM policy bindings for application service account
