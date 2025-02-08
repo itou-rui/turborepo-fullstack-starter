@@ -667,7 +667,7 @@ jobs:
             --load-balancing-scheme=EXTERNAL_MANAGED \
             --network-tier=PREMIUM \
             --address="${{ needs.set-variables.outputs.static_ip_name }}" \
-            --target-http-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
+            --target-https-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
             --ports=443
 
       - name: Add DNS A Record
