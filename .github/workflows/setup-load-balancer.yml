@@ -107,14 +107,18 @@ jobs:
         run: |
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} --global 2> /dev/null; then
             echo "web_backend_exists=true" >> $GITHUB_OUTPUT
+            echo "web_backend_exists: true"
           else
             echo "web_backend_exists=false" >> $GITHUB_OUTPUT
+            echo "web_backend_exists: false"
           fi
 
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} --global 2> /dev/null; then
             echo "api_backend_exists=true" >> $GITHUB_OUTPUT
+            echo "api_backend_exists: true"
           else
             echo "api_backend_exists=false" >> $GITHUB_OUTPUT
+            echo "api_backend_exists: false"
           fi
 
       - name: Check Create NEG
@@ -122,14 +126,18 @@ jobs:
         run: |
           if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_name }} --region="${{ inputs.google_cloud_region }}" 2> /dev/null; then
             echo "web_neg_exists=true" >> $GITHUB_OUTPUT
+            echo "web_neg_exists: true"
           else
             echo "web_neg_exists=false" >> $GITHUB_OUTPUT
+            echo "web_neg_exists: false"
           fi
 
           if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_name }} --region="${{ inputs.google_cloud_region }}" 2> /dev/null; then
             echo "api_neg_exists=true" >> $GITHUB_OUTPUT
+            echo "api_neg_exists: true"
           else
             echo "api_neg_exists=false" >> $GITHUB_OUTPUT
+            echo "api_neg_exists: false"
           fi
 
       - name: Check Add NEG to backend
@@ -138,15 +146,19 @@ jobs:
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} \
               --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.web_neg_name }}'"))' 2> /dev/null; then
             echo "web_neg_in_backend=true" >> $GITHUB_OUTPUT
+            echo "web_neg_in_backend: true"
           else
             echo "web_neg_in_backend=false" >> $GITHUB_OUTPUT
+            echo "web_neg_in_backend: false"
           fi
 
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} \
               --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.api_neg_name }}'"))' 2> /dev/null; then
             echo "api_neg_in_backend=true" >> $GITHUB_OUTPUT
+            echo "api_neg_in_backend: true"
           else
             echo "api_neg_in_backend=false" >> $GITHUB_OUTPUT
+            echo "api_neg_in_backend: false"
           fi
 
       - name: Check Create URL Map
@@ -154,18 +166,22 @@ jobs:
         run: |
           if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} --global; then
             echo "url_map_exists=true" >> $GITHUB_OUTPUT
+            echo "url_map_exists: true"
           else
             echo "url_map_exists=false" >> $GITHUB_OUTPUT
+            echo "url_map_exists: false"
           fi
 
       - name: Check Add Path Rule
         id: check-path-rule
         run: |
           if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-            --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*"))' 2> /dev/null; then
+              --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*"))' 2> /dev/null; then
             echo "api_path_rule_exists=true" >> $GITHUB_OUTPUT
+            echo "api_path_rule_exists: true"
           else
             echo "api_path_rule_exists=false" >> $GITHUB_OUTPUT
+            echo "api_path_rule_exists: false"
           fi
 
       - name: Check Add Host Rule
@@ -174,34 +190,43 @@ jobs:
           if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
                --global --format="json" | jq -e '.hostRules[] | select(.hosts[] | contains("'${{ needs.set-variables.outputs.host_name }}'"))' 2> /dev/null; then
               echo "host_rule_exists=true" >> $GITHUB_OUTPUT
+              echo "host_rule_exists: true"
 
               if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
                    --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.path_matcher_name }}'")' 2> /dev/null; then
                  echo "path_matcher_exists=true" >> $GITHUB_OUTPUT
+                 echo "path_matcher_exists: true"
               else
                  echo "path_matcher_exists=false" >> $GITHUB_OUTPUT
+                 echo "path_matcher_exists: false"
               fi
 
           else
             echo "host_rule_exists=false" >> $GITHUB_OUTPUT
+            echo "host_rule_exists: false"
             echo "path_matcher_exists=false" >> $GITHUB_OUTPUT
+            echo "path_matcher_exists: false"
           fi
 
       - name: Check URL Map Path Prefix Rewrite
         id: check-path-rewrite
         run: |
           if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-            --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*")) | .routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
+              --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*")) | .routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
             echo "api_path_rewrite_exists=true" >> $GITHUB_OUTPUT
+            echo "api_path_rewrite_exists: true"
           else
             echo "api_path_rewrite_exists=false" >> $GITHUB_OUTPUT
+            echo "api_path_rewrite_exists: false"
           fi
 
           if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-            --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.branch_host_name }}'") | .pathRules[0].routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
+              --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.branch_host_name }}'") | .pathRules[0].routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
             echo "branch_path_rewrite_exists=true" >> $GITHUB_OUTPUT
+            echo "branch_path_rewrite_exists: true"
           else
             echo "branch_path_rewrite_exists=false" >> $GITHUB_OUTPUT
+            echo "branch_path_rewrite_exists: false"
           fi
 
       - name: Check SSL Certificates
@@ -209,8 +234,10 @@ jobs:
         run: |
           if gcloud compute ssl-certificates describe ${{ needs.set-variables.outputs.cert_name }} --global 2> /dev/null; then
             echo "cert_exists=true" >> $GITHUB_OUTPUT
+            echo "cert_exists: true"
           else
             echo "cert_exists=false" >> $GITHUB_OUTPUT
+            echo "cert_exists: false"
           fi
 
       - name: Check Proxies
@@ -218,14 +245,18 @@ jobs:
         run: |
           if [[ $(gcloud compute target-http-proxies describe ${{ needs.set-variables.outputs.http_proxy_name }} --global) ]] 2> /dev/null; then
             echo "http_proxy_exists=true" >> $GITHUB_OUTPUT
+            echo "http_proxy_exists: true"
           else
             echo "http_proxy_exist=false" >> $GITHUB_OUTPUT
+            echo "http_proxy_exist: false"
           fi
 
           if [[ $(gcloud compute target-https-proxies describe ${{ needs.set-variables.outputs.https_proxy_name }} --global) ]] 2> /dev/null; then
             echo "https_proxy_exists=true" >> $GITHUB_OUTPUT
+            echo "https_proxy_exists: true"
           else
             echo "https_proxy_exist=false" >> $GITHUB_OUTPUT
+            echo "https_proxy_exist: false"
           fi
 
       - name: Check Static IP Address
@@ -234,9 +265,11 @@ jobs:
           if gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} --global 2> /dev/null; then
             echo "ip_address=$(gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} --global --format='get(address)')" >> $GITHUB_OUTPUT
             echo "ip_address_exists=true" >> $GITHUB_OUTPUT
+            echo "ip_address_exists: true"
           else
             echo "ip_address_exists=false" >> $GITHUB_OUTPUT
             echo "ip_address=" >> $GITHUB_OUTPUT
+            echo "ip_address_exists: false"
           fi
 
       - name: Check Add Forwarding Rules
@@ -244,14 +277,18 @@ jobs:
         run: |
           if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.http_forwarding_rule_name }} --global) ]]; then
             echo "http_forwarding_rule_exists=true" >> $GITHUB_OUTPUT
+            echo "http_forwarding_rule_exists: true"
           else
             echo "http_forwarding_rule_exists=false" >> $GITHUB_OUTPUT
+            echo "http_forwarding_rule_exists: false"
           fi
 
           if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.https_forwarding_rule_name }} --global) ]]; then
             echo "https_forwarding_rule_exists=true" >> $GITHUB_OUTPUT
+            echo "https_forwarding_rule_exists: true"
           else
             echo "https_forwarding_rule_exists=false" >> $GITHUB_OUTPUT
+            echo "https_forwarding_rule_exists: false"
           fi
 
       - name: Check Add DNS Record
@@ -272,19 +309,26 @@ jobs:
 
           if [ ! -z "$EXISTING_RECORD" ]; then
             echo "dns_record_exists=true" >> $GITHUB_OUTPUT
+            echo "dns_record_exists: true"
 
             EXISTING_IP=$(echo "$EXISTING_RECORD" | awk '{print $2}')
             echo "existing_ip=$EXISTING_IP" >> $GITHUB_OUTPUT
+            echo "existing_ip: $EXISTING_IP"
 
             if [ "$EXISTING_IP" == "$EXPECTED_IP" ]; then
               echo "ip_matches=true" >> $GITHUB_OUTPUT
+              echo "ip_matches: true"
             else
               echo "ip_matches=false" >> $GITHUB_OUTPUT
+              echo "ip_matches: false"
             fi
           else
             echo "dns_record_exists=false" >> $GITHUB_OUTPUT
+            echo "dns_record_exists: false"
             echo "existing_ip=" >> $GITHUB_OUTPUT
+            echo "existing_ip: "
             echo "ip_matches=false" >> $GITHUB_OUTPUT
+            echo "ip_matches: false"
           fi
 
   web:
