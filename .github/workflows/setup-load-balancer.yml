@@ -93,7 +93,6 @@ jobs:
       existing_ip: ${{ steps.check-add-dns-record.outputs.existing_ip }}
       ip_matches: ${{ steps.check-add-dns-record.outputs.ip_matches }}
       dns_auth_exists: ${{ steps.check-create-dns-auth.outputs.dns_auth_exists }}
-      dns_auth_status: ${{ steps.check-dns-auth-status.outputs.dns_auth_status }}
 
     steps:
       - name: Checkout repository
@@ -307,15 +306,6 @@ jobs:
             echo "dns_auth_exists=false" >> $GITHUB_OUTPUT
             echo "dns_auth_exists: false"
           fi
-
-      - name: Check DNS Authorizations Status
-        id: check-dns-auth-status
-        if: steps.check-dns-auth.outputs.dns_auth_exists == 'true'
-        run: |
-          STATUS=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" \
-            --format='get(state)')
-          echo "dns_auth_status=$STATUS" >> $GITHUB_OUTPUT
-          echo "dns_auth_status: $STATUS"
 
       - name: Check Add DNS Record
         id: check-add-dns-record
@@ -545,24 +535,6 @@ jobs:
         if: needs.check-condition.outputs.dns_auth_exists == 'false'
         run: |
           gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}"
-          for i in {1..30}; do
-            STATUS=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" \
-              --format='get(state)')
-            echo "Current DNS authorization status: $STATUS"
-
-            if [ "$STATUS" = "ACTIVE" ]; then
-              echo "DNS authorization is now active"
-              break
-            fi
-
-            if [ $i -eq 30 ]; then
-              echo "DNS authorization did not become active within the timeout period"
-              exit 1
-            fi
-
-            echo "Waiting for DNS authorization to become active... (Attempt $i/30)"
-            sleep 20
-          done
 
       - name: Add DNS Record
         if: |
