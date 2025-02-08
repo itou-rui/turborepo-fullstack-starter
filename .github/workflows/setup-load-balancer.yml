@@ -89,9 +89,9 @@ jobs:
       ip_address_exists: ${{ steps.check-static-ip-address.outputs.ip_address_exists }}
       http_forwarding_rule_exists: ${{ steps.check-add-forwarding-rules.outputs.http_forwarding_rule_exists }}
       https_forwarding_rule_exists: ${{ steps.check-add-forwarding-rules.outputs.https_forwarding_rule_exists }}
-      dns_record_exists: ${{ steps.check-add-dns-record.outputs.dns_record_exists }}
-      existing_ip: ${{ steps.check-add-dns-record.outputs.existing_ip }}
-      ip_matches: ${{ steps.check-add-dns-record.outputs.ip_matches }}
+      dns_record_exists: ${{ steps.check-add-dns-a-record.outputs.dns_record_exists }}
+      existing_ip: ${{ steps.check-add-dns-a-record.outputs.existing_ip }}
+      ip_matches: ${{ steps.check-add-dns-a-record.outputs.ip_matches }}
       dns_auth_exists: ${{ steps.check-create-dns-auth.outputs.dns_auth_exists }}
 
     steps:
@@ -309,6 +309,8 @@ jobs:
 
       - name: Check Add DNS Record
         id: check-add-dns-record
+      - name: Check Add DNS A Record
+        id: check-add-dns-a-record
         run: |
           ZONE_NAME=${ZONE_NAME//./-}
           BRANCH_HOST="${{ needs.set-variables.outputs.branch_host_name }}"
@@ -537,6 +539,7 @@ jobs:
           gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}"
 
       - name: Add DNS Record
+      - name: Add DNS A Record
         if: |
           needs.check-condition.outputs.dns_record_exists == 'false' || 
           (needs.check-condition.outputs.dns_record_exists == 'true' && needs.check-condition.outputs.ip_matches == 'false')
