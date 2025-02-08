@@ -105,13 +105,13 @@ jobs:
       - name: Check Create Backend Service
         id: check-create-backend-services
         run: |
-          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} --region="${{ inputs.google_cloud_region }}" 2> /dev/null; then
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} --global 2> /dev/null; then
             echo "web_backend_exists=true" >> $GITHUB_OUTPUT
           else
             echo "web_backend_exists=false" >> $GITHUB_OUTPUT
           fi
 
-          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} --region="${{ inputs.google_cloud_region }}" 2> /dev/null; then
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} --global 2> /dev/null; then
             echo "api_backend_exists=true" >> $GITHUB_OUTPUT
           else
             echo "api_backend_exists=false" >> $GITHUB_OUTPUT
