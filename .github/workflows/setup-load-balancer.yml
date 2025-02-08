@@ -31,6 +31,7 @@ jobs:
       url_map_name: ${{ steps.set-vars.outputs.url_map_name }}
       path_matcher_name: ${{ steps.set-vars.outputs.path_matcher_name }}
       cert_name: ${{ steps.set-vars.outputs.cert_name }}
+      cert_map_name: ${{ steps.set-vars.outputs.cert_map_name }}
       dns_auth_name: ${{ steps.set-vars.outputs.dns_auth_name }}
       http_proxy_name: ${{ steps.set-vars.outputs.http_proxy_name }}
       https_proxy_name: ${{ steps.set-vars.outputs.https_proxy_name }}
@@ -57,7 +58,10 @@ jobs:
 
           echo "url_map_name=${{ inputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
           echo "path_matcher_name=${{ inputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
+
           echo "cert_name=${{ inputs.app_name }}-cert" >> $GITHUB_OUTPUT
+          echo "cert_map_name=${{ inputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
+
           echo "dns_auth_name=${{ inputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
           echo "http_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
           echo "https_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
@@ -625,6 +629,11 @@ jobs:
             --dns-authorizations="${{ needs.set-variables.outputs.dns_auth_name }}" \
             --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
 
+          gcloud certificate-manager maps create ${{ needs.set-variables.outputs.cert_map_name }}
+
+          gcloud certificate-manager maps entries create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} \
+            --map="${{ needs.set-variables.outputs.cert_map_name }}"
+
       - name: Create Http Proxy
         if: needs.check-condition.outputs.http_proxy_exists == 'false'
         run: |
@@ -637,7 +646,7 @@ jobs:
         run: |
           gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
             --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
-            --ssl-certificates="${{ needs.set-variables.outputs.cert_name }}" \
+            --certificate-map="${{ needs.set-variables.outputs.cert_map_name }}" \
             --global
 
       - name: Add Http Forwarding Rules
