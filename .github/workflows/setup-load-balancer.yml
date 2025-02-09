@@ -82,8 +82,8 @@ jobs:
           echo "dns_auth_name=${{ needs.get-config.outputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
 
           # Proxy name for each environment
-          echo "http_proxy_name=${{ needs.get-config.outputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
-          echo "https_proxy_name=${{ needs.get-config.outputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
+          echo "http_proxy_name=${{ needs.get-config.outputs.app_name }}-http" >> $GITHUB_OUTPUT
+          echo "https_proxy_name=${{ needs.get-config.outputs.app_name }}-https" >> $GITHUB_OUTPUT
 
           # Static IP and forwarding rules (common)
           echo "static_ip_name=${{ needs.get-config.outputs.app_name }}-ip" >> $GITHUB_OUTPUT
@@ -263,7 +263,7 @@ jobs:
               --global
 
             gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-              --hosts="*.${{ inputs.app_name }}.${{ vars.DOMAIN }}" \
+              --hosts="*.${{ needs.get-config.outputs.app_name }}.${{ vars.DOMAIN }}" \
               --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
               --global
           fi
