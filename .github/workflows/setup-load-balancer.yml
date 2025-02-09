@@ -342,7 +342,7 @@ jobs:
 
           EXISTING_RECORD=$(gcloud dns record-sets list \
             --zone=$ZONE_NAME \
-            --name="$${{ steps.get-dns-auth-record.outputs.cname_name }}" \
+            --name="${{ steps.create-dns-auth.outputs.cname_name }}" \
             --type=CNAME \
             --format="get(name,rrdatas[0])" 2>/dev/null)
 
@@ -350,8 +350,8 @@ jobs:
             echo "DNS CNAME Record exists"
           else
             gcloud dns record-sets transaction start --zone="$ZONE_NAME"
-            gcloud dns record-sets transaction add "${{ steps.get-dns-auth-record.outputs.cname_value }}" \
-              --name="${{ steps.get-dns-auth-record.outputs.cname_name }}" \
+            gcloud dns record-sets transaction add "${{ steps.create-dns-auth.outputs.cname_value }}" \
+              --name="${{ steps.create-dns-auth.outputs.cname_name }}" \
               --ttl="300" \
               --type="CNAME" \
               --zone="$ZONE_NAME"
