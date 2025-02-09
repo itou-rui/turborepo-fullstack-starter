@@ -3,7 +3,8 @@ kind: Service
 metadata:
   name: ${SERVICE_NAME}
   annotations:
-    run.googleapis.com/minScale: '1'
+    run.googleapis.com/ingress: 'internal-and-cloud-load-balancing'
+    run.googleapis.com/ingress-status: 'internal-and-cloud-load-balancing'
 spec:
   template:
     metadata:

@@ -159,4 +159,3 @@ jobs:
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
           tag: ${{ inputs.google_cloud_service_env }}
           no_traffic: true
-          flags: --ingress=internal-and-cloud-load-balancing --allow-unauthenticated
