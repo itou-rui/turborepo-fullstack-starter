@@ -110,6 +110,8 @@ roles=(
   "roles/compute.loadBalancerAdmin"
   "roles/compute.networkAdmin"
   "roles/compute.securityAdmin"
+  "roles/certificatemanager.admin"
+  "roles/dns.admin"
 )
 
 # Add IAM policy bindings for application service account
@@ -146,6 +148,7 @@ services=(
   "compute.googleapis.com"
   "domains.googleapis.com"
   "dns.googleapis.com"
+  "certificatemanager.googleapis.com"
 )
 
 for service in "${services[@]}"; do

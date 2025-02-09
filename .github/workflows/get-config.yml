@@ -58,8 +58,10 @@ jobs:
             echo "environment=prod" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" == "refs/heads/stage" ]; then
             echo "environment=stage" >> $GITHUB_OUTPUT
-          else
+          elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
+          else
+            echo "environment=prev" >> $GITHUB_OUTPUT
           fi
 
   get-app-name:
