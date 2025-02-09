@@ -464,7 +464,7 @@ jobs:
             --network-endpoint-type=serverless \
             --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
             --region="${{ inputs.google_cloud_region }}" \
-            --url-mask="<tag>.${{ needs.set-variables.outputs.web_cloudrun_service_name }}"
+            --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.web_cloudrun_service_name }}"
 
       - name: Add NEG to backend service
         if: needs.check-condition.outputs.web_neg_in_backend == 'false'
@@ -510,7 +510,7 @@ jobs:
             --network-endpoint-type=serverless \
             --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
             --region="${{ inputs.google_cloud_region }}" \
-            --url-mask="<tag>.${{ needs.set-variables.outputs.api_cloudrun_service_name }}"
+            --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.api_cloudrun_service_name }}"
 
       - name: Add NEG to backend service
         if: needs.check-condition.outputs.api_neg_in_backend == 'false'
