@@ -118,6 +118,7 @@ jobs:
       - name: Create Service declaration
         run: |
           if [ "${{ inputs.app }}" == "web" ]; then
+            echo "There are no environment variables on the Web."
           else
             export MONGODB_USER_NAME="${{ secrets.MONGODB_USER_NAME }}"
             export MONGODB_USER_PASSWORD="${{ secrets.MONGODB_USER_PASSWORD }}"
