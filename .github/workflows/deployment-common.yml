@@ -104,7 +104,7 @@ jobs:
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           fi
-          echo "service_name=${{ inputs.app_name }}-${{ inputs.app }}"
+          echo "service_name=${{ inputs.app_name }}-${{ inputs.app }}" >> $GITHUB_OUTPUT
 
       - name: Auth GoogleCloud
         id: auth-google-cloud
@@ -117,10 +117,7 @@ jobs:
 
       - name: Create Service declaration
         run: |
-          ## Web
           if [ "${{ inputs.app }}" == "web" ]; then
-
-          ## API
           else
             export MONGODB_USER_NAME="${{ secrets.MONGODB_USER_NAME }}"
             export MONGODB_USER_PASSWORD="${{ secrets.MONGODB_USER_PASSWORD }}"
