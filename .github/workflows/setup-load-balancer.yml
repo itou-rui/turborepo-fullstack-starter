@@ -10,7 +10,7 @@ on:
       default_sub_domain:
         description: "Use the app name as a subdomain (If true, `sub_domain` is ignored)"
         type: boolean
-        default: false
+        default: true
 
 jobs:
   get-config:
