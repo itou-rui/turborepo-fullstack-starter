@@ -43,19 +43,24 @@ jobs:
       - name: Set variables
         id: set-vars
         run: |
+          # Subdomains should be in the form branch-name.service-name.domain
           echo "sub_domain=${{ inputs.google_cloud_service_env }}.${{ inputs.app_name }}" >> $GITHUB_OUTPUT
           echo "host_name=${{ inputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
           echo "branch_host_name=${{ inputs.google_cloud_service_env }}.${{ inputs.app_name }}" >> $GITHUB_OUTPUT
 
-          echo "web_cloudrun_service_name=${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}" >> $GITHUB_OUTPUT
-          echo "api_cloudrun_service_name=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}" >> $GITHUB_OUTPUT
+          # Cloud Run Service Names
+          echo "web_cloudrun_service_name=${{ inputs.app_name }}-web" >> $GITHUB_OUTPUT
+          echo "api_cloudrun_service_name=${{ inputs.app_name }}-api" >> $GITHUB_OUTPUT
 
-          echo "web_backend_service_name=${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
-          echo "api_backend_service_name=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-backend" >> $GITHUB_OUTPUT
+          # NEG name (not necessary to separate for each environment)
+          echo "web_neg_name=${{ inputs.app_name }}-web-neg" >> $GITHUB_OUTPUT
+          echo "api_neg_name=${{ inputs.app_name }}-api-neg" >> $GITHUB_OUTPUT
 
-          echo "web_neg_name=${{ inputs.app_name }}-web-${{ inputs.google_cloud_service_env }}-neg" >> $GITHUB_OUTPUT
-          echo "api_neg_name=${{ inputs.app_name }}-api-${{ inputs.google_cloud_service_env }}-neg" >> $GITHUB_OUTPUT
+          # Name of backend service (no need to separate for each environment)
+          echo "web_backend_service_name=${{ inputs.app_name }}-web-backend" >> $GITHUB_OUTPUT
+          echo "api_backend_service_name=${{ inputs.app_name }}-api-backend" >> $GITHUB_OUTPUT
 
+          # URL Map and Certificate Related (Common)
           echo "url_map_name=${{ inputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
           echo "path_matcher_name=${{ inputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
 
@@ -63,8 +68,11 @@ jobs:
           echo "cert_map_name=${{ inputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
 
           echo "dns_auth_name=${{ inputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
+          # Proxy name for each environment
           echo "http_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
           echo "https_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
+
+          # Static IP and forwarding rules (common)
           echo "static_ip_name=${{ inputs.app_name }}-ip" >> $GITHUB_OUTPUT
           echo "http_forwarding_rule_name=${{ inputs.app_name }}-http-forwarding-rule" >> $GITHUB_OUTPUT
           echo "https_forwarding_rule_name=${{ inputs.app_name }}-https-forwarding-rule" >> $GITHUB_OUTPUT
