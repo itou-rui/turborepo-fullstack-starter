@@ -49,19 +49,6 @@ spec:
             failureThreshold: 3
             successThreshold: 1
   traffic:
-    # For prod environment
-    - when: ${{ inputs.environment == 'prod' }}
-      config:
-        - tag: ${CLOUD_RUN_REVISION_TAG}
-          percent: 100
-          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
-        - tag: latest
-          percent: 0
-          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
-
-    # For other environments (stage, dev, feature branches)
-    - when: ${{ inputs.environment != 'prod' }}
-      config:
-        - tag: ${CLOUD_RUN_REVISION_TAG} # stage, dev, or branch-name
-          percent: 0
-          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
+    - revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
+      tag: ${CLOUD_RUN_REVISION_TAG}
+      percent: ${TRAFFIC_VALUE}

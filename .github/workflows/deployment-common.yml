@@ -133,6 +133,7 @@ jobs:
           export GOOGLE_CLOUD_PROJECT_NUMBER="${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}"
           export CLOUD_RUN_REVISION_TAG="${{ steps.set-vars.outputs.revision_tag }}"
           export ENVIRONMENT="${{ inputs.environment }}"
+          export TRAFFIC_VALUE="${{ inputs.environment == 'prod' && '100' || '0' }}"
           export CLOUD_RUN_SERVICE_ACCOUNT="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
 
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
@@ -145,4 +146,3 @@ jobs:
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
           tag: ${{ steps.set-vars.outputs.revision_tag }}
-          no_traffic: true
