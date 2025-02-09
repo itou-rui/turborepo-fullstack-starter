@@ -1,27 +1,31 @@
-name: "Setup Google Cloud Load Balancer"
+name: "Setup Load Balancer"
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
-      app_name:
+      sub_domain:
         type: string
-        required: true
-      google_cloud_region:
-        type: string
-        required: true
-      google_cloud_service_env:
-        type: string
-        required: true
+        description: "Subdomain name (Only “-” can be used for special characters)"
+        required: false
+      default_sub_domain:
+        description: "Use the app name as a subdomain (If true, `sub_domain` is ignored)"
+        type: boolean
+        default: false
 
 jobs:
+  get-config:
+    name: Get Config
+    uses: ./.github/workflows/get-config.yml
+    with:
+      trigger: ${{ github.event_name }}
+
   set-variables:
     runs-on: ubuntu-latest
     name: Setup variables
     timeout-minutes: 10
+    needs: [get-config]
     outputs:
-      sub_domain: ${{ steps.set-vars.outputs.sub_domain }}
       host_name: ${{ steps.set-vars.outputs.host_name }}
-      branch_host_name: ${{ steps.set-vars.outputs.branch_host_name }}
       web_cloudrun_service_name: ${{ steps.set-vars.outputs.web_cloudrun_service_name }}
       api_cloudrun_service_name: ${{ steps.set-vars.outputs.api_cloudrun_service_name }}
       web_backend_service_name: ${{ steps.set-vars.outputs.web_backend_service_name }}
@@ -33,6 +37,7 @@ jobs:
       api_path_matcher_name: ${{ steps.set-vars.outputs.api_path_matcher_name }}
       cert_name: ${{ steps.set-vars.outputs.cert_name }}
       cert_map_name: ${{ steps.set-vars.outputs.cert_map_name }}
+      cert_map_entry_name: ${{ steps.set-vars.outputs.cert_map_entry_name }}
       dns_auth_name: ${{ steps.set-vars.outputs.dns_auth_name }}
       http_proxy_name: ${{ steps.set-vars.outputs.http_proxy_name }}
       https_proxy_name: ${{ steps.set-vars.outputs.https_proxy_name }}
@@ -45,76 +50,53 @@ jobs:
         id: set-vars
         run: |
 
-          # Subdomains should be in the form branch-name.service-name.domain
-          echo "sub_domain=${{ inputs.google_cloud_service_env }}.${{ inputs.app_name }}" >> $GITHUB_OUTPUT
-          echo "host_name=${{ inputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
-          echo "branch_host_name=${{ inputs.google_cloud_service_env }}.${{ inputs.app_name }}" >> $GITHUB_OUTPUT
+          # Subdomains should be in the form branch-name.service-name.aomain
+          if [ "${{ github.event.inputs.sub_domain }}" ]; then
+              echo "host_name=${{ needs.get-config.outputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+          else
+            if [ "${{ github.event.inputs.sub_domain }}" ]; then
+              echo "host_name=${{ github.event.inputs.sub_domain }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+            else
+              echo "host_name=${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+            fi
+          fi
 
           # Cloud Run Service Names
-          echo "web_cloudrun_service_name=${{ inputs.app_name }}-web" >> $GITHUB_OUTPUT
-          echo "api_cloudrun_service_name=${{ inputs.app_name }}-api" >> $GITHUB_OUTPUT
+          echo "web_cloudrun_service_name=${{ needs.get-config.outputs.app_name }}-web" >> $GITHUB_OUTPUT
+          echo "api_cloudrun_service_name=${{ needs.get-config.outputs.app_name }}-api" >> $GITHUB_OUTPUT
 
           # NEG name (not necessary to separate for each environment)
-          echo "web_neg_name=${{ inputs.app_name }}-web-neg" >> $GITHUB_OUTPUT
-          echo "api_neg_name=${{ inputs.app_name }}-api-neg" >> $GITHUB_OUTPUT
+          echo "web_neg_name=${{ needs.get-config.outputs.app_name }}-web-neg" >> $GITHUB_OUTPUT
+          echo "api_neg_name=${{ needs.get-config.outputs.app_name }}-api-neg" >> $GITHUB_OUTPUT
 
           # Name of backend service (no need to separate for each environment)
-          echo "web_backend_service_name=${{ inputs.app_name }}-web-backend" >> $GITHUB_OUTPUT
-          echo "api_backend_service_name=${{ inputs.app_name }}-api-backend" >> $GITHUB_OUTPUT
+          echo "web_backend_service_name=${{ needs.get-config.outputs.app_name }}-web-backend" >> $GITHUB_OUTPUT
+          echo "api_backend_service_name=${{ needs.get-config.outputs.app_name }}-api-backend" >> $GITHUB_OUTPUT
 
           # URL Map and Certificate Related (Common)
-          echo "url_map_name=${{ inputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
-          echo "path_matcher_name=${{ inputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
-          echo "cert_name=${{ inputs.app_name }}-cert" >> $GITHUB_OUTPUT
-          echo "cert_map_name=${{ inputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
-          echo "dns_auth_name=${{ inputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
+          echo "url_map_name=${{ needs.get-config.outputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
+          echo "path_matcher_name=${{ needs.get-config.outputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
+          echo "cert_name=${{ needs.get-config.outputs.app_name }}-cert" >> $GITHUB_OUTPUT
+          echo "cert_map_name=${{ needs.get-config.outputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
+          echo "cert_map_entry_name=${{ needs.get-config.outputs.app_name }}-cert-map-entry" >> $GITHUB_OUTPUT
+          echo "dns_auth_name=${{ needs.get-config.outputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
 
           # Proxy name for each environment
-          echo "http_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
-          echo "https_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
+          echo "http_proxy_name=${{ needs.get-config.outputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
+          echo "https_proxy_name=${{ needs.get-config.outputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
 
           # Static IP and forwarding rules (common)
-          echo "static_ip_name=${{ inputs.app_name }}-ip" >> $GITHUB_OUTPUT
-          echo "http_forwarding_rule_name=${{ inputs.app_name }}-http-forwarding-rule" >> $GITHUB_OUTPUT
-          echo "https_forwarding_rule_name=${{ inputs.app_name }}-https-forwarding-rule" >> $GITHUB_OUTPUT
+          echo "static_ip_name=${{ needs.get-config.outputs.app_name }}-ip" >> $GITHUB_OUTPUT
+          echo "http_forwarding_rule_name=${{ needs.get-config.outputs.app_name }}-http-forwarding-rule" >> $GITHUB_OUTPUT
+          echo "https_forwarding_rule_name=${{ needs.get-config.outputs.app_name }}-https-forwarding-rule" >> $GITHUB_OUTPUT
 
-  check-condition:
+  frontend:
     runs-on: ubuntu-latest
-    name: Check Services
+    name: Frontend
     needs: [set-variables]
-    outputs:
-      web_backend_exists: ${{ steps.check-create-backend-services.outputs.web_backend_exists }}
-      api_backend_exists: ${{ steps.check-create-backend-services.outputs.api_backend_exists }}
-      web_neg_exists: ${{ steps.check-create-neg.outputs.web_neg_exists }}
-      api_neg_exists: ${{ steps.check-create-neg.outputs.api_neg_exists }}
-      web_neg_in_backend: ${{ steps.check-add-neg-backend.outputs.web_neg_in_backend }}
-      api_neg_in_backend: ${{ steps.check-add-neg-backend.outputs.api_neg_in_backend }}
-      url_map_exists: ${{ steps.check-create-url-map.outputs.url_map_exists }}
-      api_path_rule_exists: ${{ steps.check-path-rule.outputs.api_path_rule_exists }}
-      host_rule_exists: ${{ steps.check-add-host-rule.outputs.host_rule_exists }}
-      path_matcher_exists: ${{ steps.check-add-host-rule.outputs.path_matcher_exists }}
-      api_path_rewrite_exists: ${{ steps.check-path-rewrite.outputs.api_path_rewrite_exists }}
-      branch_path_rewrite_exists: ${{ steps.check-path-rewrite.outputs.branch_path_rewrite_exists }}
-      cert_exists: ${{ steps.check-ssl-certificates.outputs.cert_exists }}
-      http_proxy_exists: ${{ steps.check-proxies.outputs.http_proxy_exists }}
-      https_proxy_exists: ${{ steps.check-proxies.outputs.https_proxy_exists }}
-      ip_address: ${{ steps.check-static-ip-address.outputs.ip_address }}
-      ip_address_exists: ${{ steps.check-static-ip-address.outputs.ip_address_exists }}
-      http_forwarding_rule_exists: ${{ steps.check-add-forwarding-rules.outputs.http_forwarding_rule_exists }}
-      https_forwarding_rule_exists: ${{ steps.check-add-forwarding-rules.outputs.https_forwarding_rule_exists }}
-      dns_record_exists: ${{ steps.check-add-dns-a-record.outputs.dns_record_exists }}
-      existing_ip: ${{ steps.check-add-dns-a-record.outputs.existing_ip }}
-      ip_matches: ${{ steps.check-add-dns-a-record.outputs.ip_matches }}
-      dns_auth_exists: ${{ steps.check-create-dns-auth.outputs.dns_auth_exists }}
-      dns_cname_record_exists: ${{ steps.check-dns-cname-record.outputs.dns_cname_record_exists }}
-      cname_value_matches: ${{ steps.check-dns-cname-record.outputs.cname_value_matches }}
-      cname_value: ${{ steps.check-dns-cname-record.outputs.cname_value }}
-      cname_name: ${{ steps.check-dns-cname-record.outputs.cname_name }}
-      url_mask_configured: ${{ steps.check-url-mask.outputs.url_mask_configured }}
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Auth GoogleCloud
         id: auth
@@ -122,407 +104,106 @@ jobs:
         with:
           token_format: "access_token"
           workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
-          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          service_account: "${{ needs.get-config.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
           project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
 
-      - name: Check Create Backend Service
-        id: check-create-backend-services
+      - name: Create Backend Service
         run: |
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} --global 2> /dev/null; then
-            echo "web_backend_exists=true" >> $GITHUB_OUTPUT
-            echo "web_backend_exists: true"
+            echo "web backend exists"
           else
-            echo "web_backend_exists=false" >> $GITHUB_OUTPUT
-            echo "web_backend_exists: false"
+            gcloud compute backend-services create ${{ needs.set-variables.outputs.web_backend_service_name }} \
+               --global \
+               --protocol=HTTP2 \
+               --port-name=http \
+               --timeout=30s \
+               --connection-draining-timeout=30s \
+               --enable-cdn \
+               --load-balancing-scheme=EXTERNAL_MANAGED
           fi
 
-          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} --global 2> /dev/null; then
-            echo "api_backend_exists=true" >> $GITHUB_OUTPUT
-            echo "api_backend_exists: true"
-          else
-            echo "api_backend_exists=false" >> $GITHUB_OUTPUT
-            echo "api_backend_exists: false"
-          fi
-
-      - name: Check Create NEG
-        id: check-create-neg
+      - name: Create NEG Backend
         run: |
-          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_name }} --region="${{ inputs.google_cloud_region }}" 2> /dev/null; then
-            echo "web_neg_exists=true" >> $GITHUB_OUTPUT
-            echo "web_neg_exists: true"
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+            echo "web NEG exists"
           else
-            echo "web_neg_exists=false" >> $GITHUB_OUTPUT
-            echo "web_neg_exists: false"
-          fi
-
-          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_name }} --region="${{ inputs.google_cloud_region }}" 2> /dev/null; then
-            echo "api_neg_exists=true" >> $GITHUB_OUTPUT
-            echo "api_neg_exists: true"
-          else
-            echo "api_neg_exists=false" >> $GITHUB_OUTPUT
-            echo "api_neg_exists: false"
-          fi
-
-      - name: Check URL Mask Configuration
-        id: check-url-mask
-        run: |
-          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_name }} \
+            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_name }} \
+              --network-endpoint-type=serverless \
+              --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
               --region="${{ inputs.google_cloud_region }}" \
-              --format="get(urlMask)" | grep -q "^<tag>"; then
-            echo "url_mask_configured=true" >> $GITHUB_OUTPUT
-          else
-            echo "url_mask_configured=false" >> $GITHUB_OUTPUT
+              --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.host_name }}"
           fi
 
-      - name: Check Add NEG to backend
-        id: check-add-neg-backend
+      - name: Add NEG to backend service
         run: |
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} \
               --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.web_neg_name }}'"))' 2> /dev/null; then
-            echo "web_neg_in_backend=true" >> $GITHUB_OUTPUT
-            echo "web_neg_in_backend: true"
+            echo "web NEG exists"
           else
-            echo "web_neg_in_backend=false" >> $GITHUB_OUTPUT
-            echo "web_neg_in_backend: false"
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_service_name }} \
+              --global \
+              --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_name }}" \
+              --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
           fi
 
+  backend:
+    runs-on: ubuntu-latest
+    name: Backend
+    needs: [set-variables]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Auth GoogleCloud
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
+          service_account: "${{ needs.get-config.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+
+      - name: Create Backend Service
+        run: |
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} --global 2> /dev/null; then
+            echo "api backend exists"
+          else
+            gcloud compute backend-services create ${{ needs.set-variables.outputs.api_backend_service_name }} \
+               --global \
+               --protocol=HTTP2 \
+               --port-name=http \
+               --timeout=30s \
+               --connection-draining-timeout=30s \
+               --enable-cdn \
+               --load-balancing-scheme=EXTERNAL_MANAGED
+          fi
+
+      - name: Create NEG Backend
+        run: |
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+            echo "api NEG exists"
+          else
+            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_name }} \
+              --network-endpoint-type=serverless \
+              --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
+              --region="${{ inputs.google_cloud_region }}" \
+              --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.host_name }}"
+          fi
+
+      - name: Add NEG to backend service
+        run: |
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} \
               --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.api_neg_name }}'"))' 2> /dev/null; then
-            echo "api_neg_in_backend=true" >> $GITHUB_OUTPUT
-            echo "api_neg_in_backend: true"
+            echo "api NEG exists"
           else
-            echo "api_neg_in_backend=false" >> $GITHUB_OUTPUT
-            echo "api_neg_in_backend: false"
-          fi
-
-      - name: Check Create URL Map
-        id: check-create-url-map
-        run: |
-          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} --global; then
-            echo "url_map_exists=true" >> $GITHUB_OUTPUT
-            echo "url_map_exists: true"
-          else
-            echo "url_map_exists=false" >> $GITHUB_OUTPUT
-            echo "url_map_exists: false"
-          fi
-
-      - name: Check Add Path Rule
-        id: check-path-rule
-        run: |
-          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-              --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*"))' 2> /dev/null; then
-            echo "api_path_rule_exists=true" >> $GITHUB_OUTPUT
-            echo "api_path_rule_exists: true"
-          else
-            echo "api_path_rule_exists=false" >> $GITHUB_OUTPUT
-            echo "api_path_rule_exists: false"
-          fi
-
-      - name: Check Add Host Rule
-        id: check-add-host-rule
-        run: |
-          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-               --global --format="json" | jq -e '.hostRules[] | select(.hosts[] | contains("'${{ needs.set-variables.outputs.host_name }}'"))' 2> /dev/null; then
-              echo "host_rule_exists=true" >> $GITHUB_OUTPUT
-              echo "host_rule_exists: true"
-
-              if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-                   --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.path_matcher_name }}'")' 2> /dev/null; then
-                 echo "path_matcher_exists=true" >> $GITHUB_OUTPUT
-                 echo "path_matcher_exists: true"
-              else
-                 echo "path_matcher_exists=false" >> $GITHUB_OUTPUT
-                 echo "path_matcher_exists: false"
-              fi
-
-          else
-            echo "host_rule_exists=false" >> $GITHUB_OUTPUT
-            echo "host_rule_exists: false"
-            echo "path_matcher_exists=false" >> $GITHUB_OUTPUT
-            echo "path_matcher_exists: false"
-          fi
-
-      - name: Check URL Map Path Prefix Rewrite
-        id: check-path-rewrite
-        run: |
-          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-              --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*")) | .routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
-            echo "api_path_rewrite_exists=true" >> $GITHUB_OUTPUT
-            echo "api_path_rewrite_exists: true"
-          else
-            echo "api_path_rewrite_exists=false" >> $GITHUB_OUTPUT
-            echo "api_path_rewrite_exists: false"
-          fi
-
-          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-              --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.branch_host_name }}'") | .pathRules[0].routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
-            echo "branch_path_rewrite_exists=true" >> $GITHUB_OUTPUT
-            echo "branch_path_rewrite_exists: true"
-          else
-            echo "branch_path_rewrite_exists=false" >> $GITHUB_OUTPUT
-            echo "branch_path_rewrite_exists: false"
-          fi
-
-      - name: Check SSL Certificates
-        id: check-ssl-certificates
-        run: |
-          if gcloud certificate-manager certificates describe ${{ needs.set-variables.outputs.cert_name }} 2> /dev/null; then
-            echo "cert_exists=true" >> $GITHUB_OUTPUT
-            echo "cert_exists: true"
-          else
-            echo "cert_exists=false" >> $GITHUB_OUTPUT
-            echo "cert_exists: false"
-          fi
-
-      - name: Check Proxies
-        id: check-proxies
-        run: |
-          if [[ $(gcloud compute target-http-proxies describe ${{ needs.set-variables.outputs.http_proxy_name }} --global) ]] 2> /dev/null; then
-            echo "http_proxy_exists=true" >> $GITHUB_OUTPUT
-            echo "http_proxy_exists: true"
-          else
-            echo "http_proxy_exists=false" >> $GITHUB_OUTPUT
-            echo "http_proxy_exists: false"
-          fi
-
-          if [[ $(gcloud compute target-https-proxies describe ${{ needs.set-variables.outputs.https_proxy_name }} --global) ]] 2> /dev/null; then
-            echo "https_proxy_exists=true" >> $GITHUB_OUTPUT
-            echo "https_proxy_exists: true"
-          else
-            echo "https_proxy_exists=false" >> $GITHUB_OUTPUT
-            echo "https_proxy_exists: false"
-          fi
-
-      - name: Check Static IP Address
-        id: check-static-ip-address
-        run: |
-          if gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} --global 2> /dev/null; then
-            echo "ip_address=$(gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} --global --format='get(address)')" >> $GITHUB_OUTPUT
-            echo "ip_address_exists=true" >> $GITHUB_OUTPUT
-            echo "ip_address_exists: true"
-          else
-            echo "ip_address_exists=false" >> $GITHUB_OUTPUT
-            echo "ip_address=" >> $GITHUB_OUTPUT
-            echo "ip_address_exists: false"
-          fi
-
-      - name: Check Add Forwarding Rules
-        id: check-add-forwarding-rules
-        run: |
-          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.http_forwarding_rule_name }} --global 2>/dev/null) ]]; then
-            echo "http_forwarding_rule_exists=true" >> $GITHUB_OUTPUT
-            echo "http_forwarding_rule_exists: true"
-          else
-            echo "http_forwarding_rule_exists=false" >> $GITHUB_OUTPUT
-            echo "http_forwarding_rule_exists: false"
-          fi
-
-          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.https_forwarding_rule_name }} --global 2>/dev/null) ]]; then
-            echo "https_forwarding_rule_exists=true" >> $GITHUB_OUTPUT
-            echo "https_forwarding_rule_exists: true"
-          else
-            echo "https_forwarding_rule_exists=false" >> $GITHUB_OUTPUT
-            echo "https_forwarding_rule_exists: false"
-          fi
-
-      - name: Check DNS Authorizations
-        id: check-create-dns-auth
-        run: |
-          if gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json 2>/dev/null; then
-            echo "dns_auth_exists=true" >> $GITHUB_OUTPUT
-            echo "dns_auth_exists: true"
-          else
-            echo "dns_auth_exists=false" >> $GITHUB_OUTPUT
-            echo "dns_auth_exists: false"
-          fi
-
-      - name: Check DNS CNAME Record
-        id: check-dns-cname-record
-        run: |
-          ZONE_NAME="${{ vars.DOMAIN }}"
-          ZONE_NAME=${ZONE_NAME//./-}
-
-          if [ "${{ steps.check-create-dns-auth.outputs.dns_auth_exists }}" == "true" ]; then
-            DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json)
-            CNAME_NAME=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')
-            EXPECTED_VALUE=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')
-
-            echo "cname_name=$CNAME_NAME" >> $GITHUB_OUTPUT
-            echo "cname_value=$EXPECTED_VALUE" >> $GITHUB_OUTPUT
-            echo "cname_name: $CNAME_NAME"
-            echo "cname_value: $EXPECTED_VALUE"
-
-            EXISTING_RECORD=$(gcloud dns record-sets list \
-              --zone=$ZONE_NAME \
-              --name="$CNAME_NAME" \
-              --type=CNAME \
-              --format="get(name,rrdatas[0])" 2>/dev/null || true)
-
-            if [ ! -z "$EXISTING_RECORD" ]; then
-              echo "dns_cname_record_exists=true" >> $GITHUB_OUTPUT
-              echo "dns_cname_record_exists: true"
-
-              EXISTING_VALUE=$(echo "$EXISTING_RECORD" | awk '{print $2}')
-              echo "cname_value=$EXISTING_VALUE" >> $GITHUB_OUTPUT
-              echo "cname_value: $EXISTING_VALUE"
-
-              if [ "$EXISTING_VALUE" == "$EXPECTED_VALUE" ]; then
-                echo "cname_value_matches=true" >> $GITHUB_OUTPUT
-                echo "cname_value_matches: true"
-              else
-                echo "cname_value_matches=false" >> $GITHUB_OUTPUT
-                echo "cname_value_matches: false"
-              fi
-            else
-              echo "dns_cname_record_exists=false" >> $GITHUB_OUTPUT
-              echo "dns_cname_record_exists: false"
-              echo "cname_value=" >> $GITHUB_OUTPUT
-              echo "cname_value_matches=false" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "dns_cname_record_exists=false" >> $GITHUB_OUTPUT
-            echo "dns_cname_record_exists: false"
-            echo "cname_value=" >> $GITHUB_OUTPUT
-            echo "cname_value_matches=false" >> $GITHUB_OUTPUT
-            echo "cname_name=" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Check Add DNS A Record
-        id: check-add-dns-a-record
-        run: |
-          ZONE_NAME=${ZONE_NAME//./-}
-          BRANCH_HOST="${{ needs.set-variables.outputs.branch_host_name }}"
-          FULL_DOMAIN="$BRANCH_HOST.${{ vars.DOMAIN }}"
-          EXPECTED_IP="${{ steps.check-static-ip-address.outputs.ip_address }}"
-
-          echo "Checking DNS record for $FULL_DOMAIN"
-
-          EXISTING_RECORD=$(gcloud dns record-sets list \
-            --zone=$ZONE_NAME \
-            --name="$FULL_DOMAIN" \
-            --type=A \
-            --format="get(name,rrdatas[0])" 2>/dev/null || true)
-
-          if [ ! -z "$EXISTING_RECORD" ]; then
-            echo "dns_record_exists=true" >> $GITHUB_OUTPUT
-            echo "dns_record_exists: true"
-
-            EXISTING_IP=$(echo "$EXISTING_RECORD" | awk '{print $2}')
-            echo "existing_ip=$EXISTING_IP" >> $GITHUB_OUTPUT
-            echo "existing_ip: $EXISTING_IP"
-
-            if [ "$EXISTING_IP" == "$EXPECTED_IP" ]; then
-              echo "ip_matches=true" >> $GITHUB_OUTPUT
-              echo "ip_matches: true"
-            else
-              echo "ip_matches=false" >> $GITHUB_OUTPUT
-              echo "ip_matches: false"
-            fi
-          else
-            echo "dns_record_exists=false" >> $GITHUB_OUTPUT
-            echo "dns_record_exists: false"
-            echo "existing_ip=" >> $GITHUB_OUTPUT
-            echo "existing_ip: "
-            echo "ip_matches=false" >> $GITHUB_OUTPUT
-            echo "ip_matches: false"
-          fi
-
-  web:
-    runs-on: ubuntu-latest
-    name: Setup Web
-    needs: [set-variables, check-condition]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Auth GoogleCloud
-        id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          token_format: "access_token"
-          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
-          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
-          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
-
-      - name: Create Backend Service
-        if: needs.check-condition.outputs.web_backend_exists == 'false'
-        run: |
-          gcloud compute backend-services create ${{ needs.set-variables.outputs.web_backend_service_name }} \
-             --global \
-             --protocol=HTTP2 \
-             --port-name=http \
-             --timeout=30s \
-             --connection-draining-timeout=30s \
-             --enable-cdn \
-             --load-balancing-scheme=EXTERNAL_MANAGED
-
-      - name: Create NEG Backend
-        if: needs.check-condition.outputs.web_neg_exists == 'false'
-        run: |
-          gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_name }} \
-            --network-endpoint-type=serverless \
-            --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
-            --region="${{ inputs.google_cloud_region }}" \
-            --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.host_name }}"
-
-      - name: Add NEG to backend service
-        if: needs.check-condition.outputs.web_neg_in_backend == 'false'
-        run: |
-          gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_service_name }} \
-            --global \
-            --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_name }}" \
-            --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
-
-  api:
-    runs-on: ubuntu-latest
-    name: Setup Api
-    needs: [set-variables, check-condition]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Auth GoogleCloud
-        id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          token_format: "access_token"
-          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
-          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
-          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
-
-      - name: Create Backend Service
-        if: needs.check-condition.outputs.api_backend_exists == 'false'
-        run: |
-          gcloud compute backend-services create ${{ needs.set-variables.outputs.api_backend_service_name }} \
-             --global \
-             --protocol=HTTP2 \
-             --port-name=http \
-             --timeout=30s \
-             --connection-draining-timeout=30s \
-             --enable-cdn \
-             --load-balancing-scheme=EXTERNAL_MANAGED
-
-      - name: Create NEG Backend
-        if: needs.check-condition.outputs.api_neg_exists == 'false'
-        run: |
-          gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_name }} \
-            --network-endpoint-type=serverless \
-            --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
-            --region="${{ inputs.google_cloud_region }}" \
-            --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.host_name }}"
-
-      - name: Add NEG to backend service
-        if: needs.check-condition.outputs.api_neg_in_backend == 'false'
-        run: |
-          gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_service_name }} \
-            --global \
-            --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_name }}" \
-            --network-endpoint-group-region="${{ inputs.google_cloud_region }}"
-
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_service_name }} \
+              --global \
+              --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_name }}" \
+              --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
   integration:
     runs-on: ubuntu-latest
-    name: Integration Backend services
-    needs: [set-variables, check-condition, web, api]
+    name: Integration
+    needs: [set-variables, frontend, backend]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -533,44 +214,64 @@ jobs:
         with:
           token_format: "access_token"
           workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
-          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          service_account: "${{ needs.get-config.outputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
           project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
 
       - name: Create URL Map
-        if: needs.check-condition.outputs.url_map_exists == 'false'
         run: |
-          gcloud compute url-maps create ${{ needs.set-variables.outputs.url_map_name }} \
-            --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
-            --global
+          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} --global; then
+            echo "URL Map exists"
+          else
+            gcloud compute url-maps create ${{ needs.set-variables.outputs.url_map_name }} \
+              --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
+              --global
+          fi
 
       - name: Add Path Rule
-        if: needs.check-condition.outputs.api_path_rule_exists == 'false'
         run: |
-          gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
-            --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
-            --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
-            --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_service_name }}" \
-            --global
+          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
+              --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*"))' 2> /dev/null; then
+            echo "Path rule exists"
+          else
+            gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
+              --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
+              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
+              --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_service_name }}" \
+              --global
+          fi
 
       - name: Add Host Rule
-        if: needs.check-condition.outputs.host_rule_exists == 'false' &&
-          needs.check-condition.outputs.path_matcher_exists == 'false'
         run: |
-          gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-            --hosts="*.${{ inputs.app_name }}.${{ vars.DOMAIN }}" \
-            --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
-            --global
+          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
+               --global --format="json" | jq -e '.hostRules[] | select(.hosts[] | contains("'${{ needs.set-variables.outputs.host_name }}'"))' 2> /dev/null; then
+            echo "Host rule exists"
+          else
+            gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
+              --hosts="${{ needs.get-config.outputs.app_name }}.${{ vars.DOMAIN }}" \
+              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
+              --global
+
+            gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
+              --hosts="*.${{ inputs.app_name }}.${{ vars.DOMAIN }}" \
+              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
+              --global
+          fi
 
       - name: Install yq for YAML processing
-        if: needs.check-condition.outputs.api_path_rewrite_exists == 'false' &&
-          needs.check-condition.outputs.branch_path_rewrite_exists == 'false'
+        id: yq-istall
         run: |
-          wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O /usr/local/bin/yq
-          chmod +x /usr/local/bin/yq
+          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
+              --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*")) | .routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
+            echo "Path Rewrite exists"
+            echo "is_install=false" >> $GITHUB_OUTPUT
+          else
+            wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O /usr/local/bin/yq
+            chmod +x /usr/local/bin/yq
+            echo "is_install=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Configure URL Map with Path Rewrite
-        if: needs.check-condition.outputs.api_path_rewrite_exists == 'false' &&
-          needs.check-condition.outputs.branch_path_rewrite_exists == 'false'
+        if: steps.yq-install.outputs.is_install == 'true'
         run: |
           gcloud compute url-maps export ${{ needs.set-variables.outputs.url_map_name }} \
             --destination url_map_config.yaml \
@@ -587,17 +288,14 @@ jobs:
       - name: Reserve Static IP Address
         id: reserve-ip
         run: |
-          if [ "${{ needs.check-condition.outputs.ip_address_exists }}" == "true" ]; then
-              echo "ip_address=${{ needs.check-condition.outputs.ip_address }}" >> $GITHUB_OUTPUT
+          if gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} --global 2> /dev/null; then
+            echo "Static IP Address exists"
+            echo "ip_address=$(gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} --global --format='get(address)')" >> $GITHUB_OUTPUT
           else
-            gcloud compute addresses create ${{ needs.set-variables.outputs.static_ip_name }} \
-              --global \
-              --network-tier=PREMIUM
+            gcloud compute addresses create ${{ needs.set-variables.outputs.static_ip_name }} --global --network-tier=PREMIUM
 
             for i in {1..30}; do
-              IP_ADDRESS=$(gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} \
-                --global \
-                --format='get(address)' 2>/dev/null)
+              IP_ADDRESS=$(gcloud compute addresses describe ${{ needs.set-variables.outputs.static_ip_name }} --global --format='get(address)' 2>/dev/null)
 
               if [ ! -z "$IP_ADDRESS" ]; then
                 echo "ip_address=$IP_ADDRESS" >> $GITHUB_OUTPUT
@@ -614,96 +312,121 @@ jobs:
           fi
 
       - name: Create DNS Authorizations
-        if: needs.check-condition.outputs.dns_auth_exists == 'false'
+        id: create-dns-auth
         run: |
-          gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}"
-
-      - name: Get DNS Authorization Record
-        id: get-dns-auth-record
-        run: |
-          if [ "${{ needs.check-condition.outputs.dns_cname_record_exists }}" == 'true' ]; then 
-            echo "cname_name=${{ needs.check-condition.outputs.cname_name }}" >> $GITHUB_OUTPUT
-            echo "cname_value=${{ needs.check-condition.outputs.cname_value }}" >> $GITHUB_OUTPUT
+          DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json 2>/dev/null)
+          if [ $DNS_AUTH_INFO ]; then
+            echo "DNS Authorizations exists"
+            echo "is_create=false" >> $GITHUB_OUTPUT
+            echo "cname_name=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')" >> $GITHUB_OUTPUT
+            echo "cname_value=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')" >> $GITHUB_OUTPUT
           else
-            DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json)
+            DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}")
+            echo "is_create=true" >> $GITHUB_OUTPUT
             echo "cname_name=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')" >> $GITHUB_OUTPUT
             echo "cname_value=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')" >> $GITHUB_OUTPUT
           fi
 
       - name: Add DNS Record
-        if: needs.check-condition.outputs.dns_cname_record_exists == 'false'
         run: |
           ZONE_NAME="${{ vars.DOMAIN }}"
           ZONE_NAME=${ZONE_NAME//./-}
 
-          gcloud dns record-sets transaction start --zone="$ZONE_NAME"
-          gcloud dns record-sets transaction add "${{ steps.get-dns-auth-record.outputs.cname_value }}" \
-            --name="${{ steps.get-dns-auth-record.outputs.cname_name }}" \
-            --ttl="300" \
-            --type="CNAME" \
-            --zone="$ZONE_NAME"
-          gcloud dns record-sets transaction execute --zone="$ZONE_NAME"
+          EXISTING_RECORD=$(gcloud dns record-sets list \
+            --zone=$ZONE_NAME \
+            --name="$${{ steps.get-dns-auth-record.outputs.cname_name }}" \
+            --type=CNAME \
+            --format="get(name,rrdatas[0])" 2>/dev/null)
+
+          if [ $EXISTING_RECORD ]; then
+            echo "DNS CNAME Record exists"
+          else
+            gcloud dns record-sets transaction start --zone="$ZONE_NAME"
+            gcloud dns record-sets transaction add "${{ steps.get-dns-auth-record.outputs.cname_value }}" \
+              --name="${{ steps.get-dns-auth-record.outputs.cname_name }}" \
+              --ttl="300" \
+              --type="CNAME" \
+              --zone="$ZONE_NAME"
+            gcloud dns record-sets transaction execute --zone="$ZONE_NAME"
+          fi
 
       - name: Create SSL Certificates
-        if: needs.check-condition.outputs.cert_exists == 'false'
         run: |
-          gcloud certificate-manager certificates create ${{ needs.set-variables.outputs.cert_name }} \
-            --domains="*.${{ needs.set-variables.outputs.host_name }}" \
-            --dns-authorizations="${{ needs.set-variables.outputs.dns_auth_name }}" \
-            --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
+          if gcloud certificate-manager certificates describe ${{ needs.set-variables.outputs.cert_name }} 2> /dev/null; then
+            echo "DNS Authorizations exists"
+          else
+            gcloud certificate-manager certificates create ${{ needs.set-variables.outputs.cert_name }} \
+              --domains="*.${{ needs.set-variables.outputs.host_name }}" \
+              --dns-authorizations="${{ needs.set-variables.outputs.dns_auth_name }}" \
+              --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
+          fi
 
-          gcloud certificate-manager maps create ${{ needs.set-variables.outputs.cert_map_name }}
+      - name: Create SSL Certificates Maps
+        run: |
+          if gcloud certificate-manager maps describe ${{ needs.set-variables.outputs.cert_name }} 2> /dev/null; then
+            echo "Certificates Maps exists"
+          else
+            gcloud certificate-manager maps create ${{ needs.set-variables.outputs.cert_map_name }}
 
-          gcloud certificate-manager maps entries create ${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }} \
-            --map="${{ needs.set-variables.outputs.cert_map_name }}" \
-            --certificates="${{ needs.set-variables.outputs.cert_name }}" \
-            --hostname="*.${{ needs.set-variables.outputs.host_name }}"
+            gcloud certificate-manager maps entries create ${{ needs.set-variables.outputs.cert_map_entry_name }} \
+              --map="${{ needs.set-variables.outputs.cert_map_name }}" \
+              --certificates="${{ needs.set-variables.outputs.cert_name }}" \
+              --hostname="*.${{ needs.set-variables.outputs.host_name }}"
+          fi
 
       - name: Create Http Proxy
-        if: needs.check-condition.outputs.http_proxy_exists == 'false'
         run: |
-          gcloud compute target-http-proxies create ${{ needs.set-variables.outputs.http_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
-            --global
+          if [[ $(gcloud compute target-http-proxies describe ${{ needs.set-variables.outputs.http_proxy_name }} --global) ]] 2> /dev/null; then
+            echo "Http Proxy exists"
+          else
+            gcloud compute target-http-proxies create ${{ needs.set-variables.outputs.http_proxy_name }} \
+              --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
+              --global
+          fi
 
       - name: Create Https Proxy
-        if: needs.check-condition.outputs.https_proxy_exists == 'false'
         run: |
-          gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
-            --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
-            --certificate-map="${{ needs.set-variables.outputs.cert_map_name }}" \
-            --global
+          if [[ $(gcloud compute target-https-proxies describe ${{ needs.set-variables.outputs.https_proxy_name }} --global) ]] 2> /dev/null; then
+            echo "Https Proxy exists"
+          else
+            gcloud compute target-https-proxies create ${{ needs.set-variables.outputs.https_proxy_name }} \
+              --url-map="${{ needs.set-variables.outputs.url_map_name }}" \
+              --certificate-map="${{ needs.set-variables.outputs.cert_map_name }}" \
+              --global
+          fi
 
       - name: Add Http Forwarding Rules
-        if: needs.check-condition.outputs.http_forwarding_rule_exists == 'false'
         run: |
-          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.http_forwarding_rule_name }} \
-            --global \
-            --target-http-proxy="${{ needs.set-variables.outputs.http_proxy_name }}" \
-            --ports=80
+          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.http_forwarding_rule_name }} --global 2>/dev/null) ]]; then
+            echo "Http Forwarding Rules exists"
+          else
+            gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.http_forwarding_rule_name }} \
+              --global \
+              --target-http-proxy="${{ needs.set-variables.outputs.http_proxy_name }}" \
+              --ports=80
+          fi
 
       - name: Add Https Forwarding Rules
-        if: needs.check-condition.outputs.https_forwarding_rule_exists == 'false'
         run: |
-          gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.https_forwarding_rule_name }} \
-            --global \
-            --load-balancing-scheme=EXTERNAL_MANAGED \
-            --network-tier=PREMIUM \
-            --address="${{ needs.set-variables.outputs.static_ip_name }}" \
-            --target-https-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
-            --ports=443
+          if [[ $(gcloud compute forwarding-rules describe ${{ needs.set-variables.outputs.https_forwarding_rule_name }} --global 2>/dev/null) ]]; then
+            echo "Https Forwarding Rules exists"
+          else
+            gcloud compute forwarding-rules create ${{ needs.set-variables.outputs.https_forwarding_rule_name }} \
+              --global \
+              --load-balancing-scheme=EXTERNAL_MANAGED \
+              --network-tier=PREMIUM \
+              --address="${{ needs.set-variables.outputs.static_ip_name }}" \
+              --target-https-proxy="${{ needs.set-variables.outputs.https_proxy_name }}" \
+              --ports=443
+          fi
 
       - name: Add DNS A Record
-        if: |
-          needs.check-condition.outputs.dns_record_exists == 'false' || 
-          (needs.check-condition.outputs.dns_record_exists == 'true' && needs.check-condition.outputs.ip_matches == 'false')
         run: |
           ZONE_NAME="${{ vars.DOMAIN }}"
           ZONE_NAME=${ZONE_NAME//./-}
 
           # Set hostname and IP address
-          BRANCH_HOST="${{ needs.set-variables.outputs.branch_host_name }}"
-          FULL_DOMAIN="$BRANCH_HOST.${{ vars.DOMAIN }}"
+          FULL_DOMAIN="*.${{ needs.set-variables.outputs.host_name }}"
           IP_ADDRESS="${{ steps.reserve-ip.outputs.ip_address }}"
 
           echo "Setting up DNS record for $FULL_DOMAIN with IP: $IP_ADDRESS"
@@ -712,30 +435,24 @@ jobs:
           gcloud dns record-sets transaction abort --zone=$ZONE_NAME 2>/dev/null || true
           rm -f transaction.yaml 2>/dev/null || true
 
-          if [ "${{ needs.check-condition.outputs.dns_record_exists }}" == "true" ]; then
-            EXISTING_IP="${{ needs.check-condition.outputs.existing_ip }}"
-            echo "Updating existing DNS record from $EXISTING_IP to $IP_ADDRESS"
+          EXISTING_RECORD=$(gcloud dns record-sets list \
+            --zone=$ZONE_NAME \
+            --name="$FULL_DOMAIN" \
+            --type=A \
+            --format="get(name,rrdatas[0])" 2>/dev/null)
+
+          if [ ! -z "$EXISTING_RECORD" ]; then
+            EXISTING_IP=$(echo "$EXISTING_RECORD" | awk '{print $2}')
 
             # Update existing records
             gcloud dns record-sets transaction start --zone=$ZONE_NAME
-            gcloud dns record-sets transaction remove --zone=$ZONE_NAME \
-              --name="$FULL_DOMAIN." \
-              --ttl=300 \
-              --type=A "$EXISTING_IP"
-
-            gcloud dns record-sets transaction add --zone=$ZONE_NAME \
-              --name="$FULL_DOMAIN." \
-              --ttl=300 \
-              --type=A "$IP_ADDRESS"
-
+            gcloud dns record-sets transaction remove --zone=$ZONE_NAME --name="$FULL_DOMAIN." --ttl=300 --type=A "$EXISTING_IP"
+            gcloud dns record-sets transaction add --zone=$ZONE_NAME --name="$FULL_DOMAIN." --ttl=300 --type=A "$IP_ADDRESS"
           else
 
             # Add new record
             gcloud dns record-sets transaction start --zone=$ZONE_NAME
-            gcloud dns record-sets transaction add --zone=$ZONE_NAME \
-              --name="$FULL_DOMAIN." \
-              --ttl=300 \
-              --type=A "$IP_ADDRESS"
+            gcloud dns record-sets transaction add --zone=$ZONE_NAME --name="$FULL_DOMAIN." --ttl=300 --type=A "$IP_ADDRESS"
           fi
 
           # Execute transaction
