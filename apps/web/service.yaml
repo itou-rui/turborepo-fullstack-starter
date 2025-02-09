@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: ${SERVICE_NAME}
+  name: ${CLOUD_RUN_SERVICE_NAME}
   annotations:
     run.googleapis.com/ingress: 'internal-and-cloud-load-balancing'
     run.googleapis.com/ingress-status: 'internal-and-cloud-load-balancing'
@@ -20,10 +20,18 @@ spec:
               cpu: '1'
               memory: '1Gi'
           env:
+            - name: GITHUB_SHA
+              value: '${GITHUB_SHA}'
+            - name: GOOGLE_CLOUD_PROJECT_ID
+              value: '${GOOGLE_CLOUD_PROJECT_ID}'
+            - name: GOOGLE_CLOUD_PROJECT_NUMBER
+              value: '${GOOGLE_CLOUD_PROJECT_NUMBER}'
+            - name: CLOUD_RUN_SERVICE_NAME
+              value: '${CLOUD_RUN_SERVICE_NAME}'
+            - name: CLOUD_RUN_REVISION_TAG
+              value: '${CLOUD_RUN_REVISION_TAG}'
             - name: ENVIRONMENT
               value: '${ENVIRONMENT}'
-            - name: BASE_URL
-              value: '${BASE_URL}'
           startupProbe:
             httpGet:
               path: /
@@ -34,5 +42,19 @@ spec:
             failureThreshold: 3
             successThreshold: 1
   traffic:
-    - percent: 100
-      latestRevision: true
+    # For prod environment
+    - when: ${{ inputs.environment == 'prod' }}
+      config:
+        - tag: ${CLOUD_RUN_REVISION_TAG} # prod
+          percent: 100
+          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
+
+    # For other environments (stage, dev, feature branches)
+    - when: ${{ inputs.environment != 'prod' }}
+      config:
+        - tag: ${CLOUD_RUN_REVISION_TAG} # stage, dev, or branch-name
+          percent: 100
+          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
+        - tag: latest
+          percent: 0
+          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}

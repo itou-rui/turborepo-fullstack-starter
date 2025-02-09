@@ -1,5 +1,3 @@
-name: "Deploy Common"
-
 on:
   workflow_call:
     inputs:
@@ -21,52 +19,11 @@ on:
       ref_name:
         required: true
         type: string
-      google_cloud_region:
-        required: true
-        type: string
-      google_cloud_service_env:
-        required: true
-        type: string
 
 jobs:
-  artifact-repository:
-    name: Create Artifacts Repository
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Auth GoogleCloud
-        id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          token_format: "access_token"
-          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
-          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
-          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
-
-      - name: Check
-        id: check
-        run: |
-          if gcloud artifacts repositories describe "${{ inputs.repo_name }}" --location="${{ inputs.google_cloud_region }}" --project="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"; then
-            echo "is_created=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_created=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create
-        id: create
-        if: steps.check.outputs.is_created == 'false'
-        run: |
-          gcloud artifacts repositories create ${{ inputs.repo_name }} \
-            --repository-format="docker" \
-            --location="${{ inputs.google_cloud_region }}" \
-            --project="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
-
   build-and-push:
     name: Build and Push
     runs-on: ubuntu-latest
-    needs: [artifact-repository]
     outputs:
       docker_image: ${{ steps.generate_image.outputs.docker_image }}
     steps:
@@ -82,17 +39,32 @@ jobs:
           service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
           project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
 
+      - name: Create Artifacts Repository
+        run: |
+          if gcloud artifacts repositories describe "${{ inputs.repo_name }}" --location="${{ vars.GOOGLE_CLOUD_REGION }}" --project="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"; then
+            echo "Artifacts Repository exists"
+          else
+            gcloud artifacts repositories create ${{ inputs.repo_name }} \
+              --repository-format="docker" \
+              --location="${{ vars.GOOGLE_CLOUD_REGION }}" \
+              --project="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+          fi
+
       - name: Auth Docker
         uses: docker/login-action@v1
         with:
           username: "oauth2accesstoken"
           password: "${{ steps.auth-google-cloud.outputs.access_token }}"
-          registry: "${{ inputs.google_cloud_region }}-docker.pkg.dev"
+          registry: "${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev"
 
       - name: Generate Image
         id: generate_image
         run: |
-          IMAGE_NAME="${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}"
+          if [ "${{ inputs.environment }}" == "prev" ]; then
+            IMAGE_NAME="${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.ref_name }}"
+          else
+            IMAGE_NAME="${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}"
+          fi
           echo "docker_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
       - name: Set up buildx
@@ -122,6 +94,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Setup variables
+        id: set-vars
+        run: |
+          if [ "${{ inputs.environment }}" == "prev" ]; then
+            echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
+            echo "revision_tag=${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "revision_tag=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          fi
+          echo "service_name=${{ inputs.app_name }}-${{ inputs.app }}"
+
       - name: Auth GoogleCloud
         id: auth-google-cloud
         uses: google-github-actions/auth@v1
@@ -133,29 +117,34 @@ jobs:
 
       - name: Create Service declaration
         run: |
-          export CONTAINER_IMAGE="${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}:${{ github.sha }}"
-          export SERVICE_NAME="${{ inputs.app_name }}-${{ inputs.app }}"
-          export PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
-          export REVISION_TAG="${{ github.sha }}/${{ inputs.ref_name }}"
-          export CLOUD_RUN_SA="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
-          export ENVIRONMENT="${{ inputs.environment }}"
-
+          ## Web
           if [ "${{ inputs.app }}" == "web" ]; then
-            export BASE_URL="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}-${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}.${{ inputs.google_cloud_region }}.run.app"
+
+          ## API
           else
             export MONGODB_USER_NAME="${{ secrets.MONGODB_USER_NAME }}"
             export MONGODB_USER_PASSWORD="${{ secrets.MONGODB_USER_PASSWORD }}"
             export MONGODB_HOST_NAME="${{ secrets.MONGODB_HOST_NAME }}"
           fi
 
+          ## Common
+          export GITHUB_SHA="${{ github.sha }}"
+          export CONTAINER_IMAGE="${{ steps.set-vars.outputs.docker_image_name }}:${{ github.sha }}"
+          export CLOUD_RUN_SERVICE_NAME="${{ steps.set-vars.outputs.service_name }}"
+          export GOOGLE_CLOUD_PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+          export GOOGLE_CLOUD_PROJECT_NUMBER="${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}"
+          export CLOUD_RUN_REVISION_TAG="${{ steps.set-vars.outputs.revision_tag }}"
+          export ENVIRONMENT="${{ inputs.environment }}"
+          export CLOUD_RUN_SERVICE_ACCOUNT="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ inputs.app_name }}-${{ inputs.app }}
-          region: ${{ inputs.google_cloud_region }}
+          service: ${{ steps.set-vars.outputs.service_name }}
+          region: ${{ vars.GOOGLE_CLOUD_REGION }}
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-          tag: ${{ inputs.google_cloud_service_env }}
+          tag: ${{ steps.set-vars.outputs.revision_tag }}
           no_traffic: true
