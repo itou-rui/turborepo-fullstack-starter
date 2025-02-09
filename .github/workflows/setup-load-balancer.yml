@@ -371,7 +371,7 @@ jobs:
 
       - name: Create SSL Certificates Maps
         run: |
-          if gcloud certificate-manager maps describe ${{ needs.set-variables.outputs.cert_name }} 2> /dev/null; then
+          if gcloud certificate-manager maps describe ${{ needs.set-variables.outputs.cert_map_name }} 2> /dev/null; then
             echo "Certificates Maps exists"
           else
             gcloud certificate-manager maps create ${{ needs.set-variables.outputs.cert_map_name }}
