@@ -48,13 +48,13 @@ spec:
         - tag: ${CLOUD_RUN_REVISION_TAG} # prod
           percent: 100
           revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
+        - tag: latest
+          percent: 100
+          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
 
     # For other environments (stage, dev, feature branches)
     - when: ${{ inputs.environment != 'prod' }}
       config:
         - tag: ${CLOUD_RUN_REVISION_TAG} # stage, dev, or branch-name
-          percent: 100
-          revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
-        - tag: latest
           percent: 0
           revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA}
