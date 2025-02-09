@@ -134,7 +134,7 @@ jobs:
       - name: Create Service declaration
         run: |
           export CONTAINER_IMAGE="${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}:${{ github.sha }}"
-          export SERVICE_NAME="${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}"
+          export SERVICE_NAME="${{ inputs.app_name }}-${{ inputs.app }}"
           export PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
           export REVISION_TAG="${{ github.sha }}/${{ inputs.ref_name }}"
           export CLOUD_RUN_SA="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
@@ -153,7 +153,12 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.google_cloud_service_env }}
+          service: ${{ inputs.app_name }}-${{ inputs.app }}
           region: ${{ inputs.google_cloud_region }}
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+          tag: ${{ inputs.google_cloud_service_env }}
+          no_traffic: true
+          flags: |
+            --ingress=internal-and-cloud-load-balancing
+            --allow-unauthenticated
