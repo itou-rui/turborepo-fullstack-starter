@@ -93,7 +93,10 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     name: Frontend
-    needs: [set-variables]
+    needs: [get-config, set-variables]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -149,7 +152,10 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     name: Backend
-    needs: [set-variables]
+    needs: [get-config, set-variables]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -203,7 +209,10 @@ jobs:
   integration:
     runs-on: ubuntu-latest
     name: Integration
-    needs: [set-variables, frontend, backend]
+    needs: [get-config, set-variables, frontend, backend]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
