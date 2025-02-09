@@ -51,7 +51,7 @@ jobs:
         run: |
 
           # Subdomains should be in the form branch-name.service-name.aomain
-          if [ "${{ github.event.inputs.sub_domain }}" ]; then
+          if [ "${{ github.event.inputs.default_sub_domain }}" == "true" ]; then
               echo "host_name=${{ needs.get-config.outputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
           else
             if [ "${{ github.event.inputs.sub_domain }}" ]; then
