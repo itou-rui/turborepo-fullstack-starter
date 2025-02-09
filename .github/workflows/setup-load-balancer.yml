@@ -325,20 +325,17 @@ jobs:
       - name: Create DNS Authorizations
         id: create-dns-auth
         run: |
-          DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json 2>/dev/null)
-          if [ $DNS_AUTH_INFO ]; then
-            echo "DNS Authorizations exists"
-            echo "is_create=false" >> $GITHUB_OUTPUT
-            echo "cname_name=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')" >> $GITHUB_OUTPUT
-            echo "cname_value=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')" >> $GITHUB_OUTPUT
-          else
+          if ! DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json 2>/dev/null); then
             DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}")
             echo "is_create=true" >> $GITHUB_OUTPUT
-            echo "cname_name=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')" >> $GITHUB_OUTPUT
-            echo "cname_value=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')" >> $GITHUB_OUTPUT
+          else
+            echo "DNS Authorizations exists"
+            echo "is_create=false" >> $GITHUB_OUTPUT
           fi
+          echo "cname_name=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.name')" >> $GITHUB_OUTPUT
+          echo "cname_value=$(echo $DNS_AUTH_INFO | jq -r '.dnsResourceRecord.data')" >> $GITHUB_OUTPUT
 
-      - name: Add DNS Record
+      - name: Add DNS CNAME Record
         run: |
           ZONE_NAME="${{ vars.DOMAIN }}"
           ZONE_NAME=${ZONE_NAME//./-}
