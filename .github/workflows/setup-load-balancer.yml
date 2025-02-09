@@ -29,7 +29,7 @@ jobs:
       web_neg_name: ${{ steps.set-vars.outputs.web_neg_name }}
       api_neg_name: ${{ steps.set-vars.outputs.api_neg_name }}
       url_map_name: ${{ steps.set-vars.outputs.url_map_name }}
-      web_path_matcher_name: ${{ steps.set-vars.outputs.web_path_matcher_name }}
+      path_matcher_name: ${{ steps.set-vars.outputs.path_matcher_name }}
       api_path_matcher_name: ${{ steps.set-vars.outputs.api_path_matcher_name }}
       cert_name: ${{ steps.set-vars.outputs.cert_name }}
       cert_map_name: ${{ steps.set-vars.outputs.cert_map_name }}
@@ -64,8 +64,7 @@ jobs:
 
           # URL Map and Certificate Related (Common)
           echo "url_map_name=${{ inputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
-          echo "web_path_matcher_name=${{ inputs.app_name }}-web-path-matcher" >> $GITHUB_OUTPUT
-          echo "api_path_matcher_name=${{ inputs.app_name }}-api-path-matcher" >> $GITHUB_OUTPUT
+          echo "path_matcher_name=${{ inputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
           echo "cert_name=${{ inputs.app_name }}-cert" >> $GITHUB_OUTPUT
           echo "cert_map_name=${{ inputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
           echo "dns_auth_name=${{ inputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
@@ -228,7 +227,7 @@ jobs:
               echo "host_rule_exists: true"
 
               if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-                   --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.web_path_matcher_name }}'")' 2> /dev/null; then
+                   --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.path_matcher_name }}'")' 2> /dev/null; then
                  echo "path_matcher_exists=true" >> $GITHUB_OUTPUT
                  echo "path_matcher_exists: true"
               else
@@ -549,25 +548,18 @@ jobs:
         run: |
           gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
             --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
-            --host-rule="hosts=*.${{ inputs.app_name }}.${{ vars.DOMAIN }},pathMatcher=${{ needs.set-variables.outputs.web_path_matcher_name }}" \
-            --path-matcher-name="${{ needs.set-variables.outputs.web_path_matcher_name }}" \
+            --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
             --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_service_name }}" \
             --global
 
-          gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
-            --default-service="${{ needs.set-variables.outputs.api_backend_service_name }}" \
-            --host-rule="hosts=*.${{ inputs.app_name }}.${{ vars.DOMAIN }},pathMatcher=${{ needs.set-variables.outputs.api_path_matcher_name }}" \
-            --path-matcher-name="${{ needs.set-variables.outputs.api_path_matcher_name }}" \
+      - name: Add Host Rule
+        if: needs.check-condition.outputs.host_rule_exists == 'false' &&
+          needs.check-condition.outputs.path_matcher_exists == 'false'
+        run: |
+          gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
+            --hosts="*.${{ inputs.app_name }}.${{ vars.DOMAIN }}" \
+            --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
             --global
-
-      # - name: Add Host Rule
-      #   if: needs.check-condition.outputs.host_rule_exists == 'false' &&
-      #     needs.check-condition.outputs.path_matcher_exists == 'false'
-      #   run: |
-      #     gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-      #       --hosts="${{ needs.set-variables.outputs.branch_host_name }}.${{ vars.DOMAIN }}" \
-      #       --path-matcher-name="${{ needs.set-variables.outputs.web_path_matcher_name }}" \
-      #       --global
 
       - name: Install yq for YAML processing
         if: needs.check-condition.outputs.api_path_rewrite_exists == 'false' &&
