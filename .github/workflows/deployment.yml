@@ -95,13 +95,14 @@ jobs:
 
   deploy-web:
     name: Web
-    needs: [get-config, get-change-paths]
+    needs: [get-config, check-param, get-change-paths]
     permissions:
       id-token: write
       contents: read
     if: |
       always() && 
         needs.get-config.result == 'success' && 
+        needs.check-param.result == 'success' &&
         (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
         (
           github.event_name == 'workflow_dispatch' || 
@@ -121,13 +122,14 @@ jobs:
 
   deploy-api:
     name: Api
-    needs: [get-config, get-change-paths]
+    needs: [get-config, check-param, get-change-paths]
     permissions:
       id-token: write
       contents: read
     if: |
       always() && 
       needs.get-config.result == 'success' && 
+      needs.check-param.result == 'success' &&
       (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
       (
         github.event_name == 'workflow_dispatch' || 
