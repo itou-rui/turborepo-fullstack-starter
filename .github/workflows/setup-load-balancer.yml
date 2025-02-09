@@ -133,7 +133,7 @@ jobs:
             gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
-              --region="${{ inputs.google_cloud_region }}" \
+              --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
               --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.host_name }}"
           fi
 
@@ -192,7 +192,7 @@ jobs:
             gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
-              --region="${{ inputs.google_cloud_region }}" \
+              --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
               --cloud-run-url-mask="<tag>.${{ needs.set-variables.outputs.host_name }}"
           fi
 
@@ -206,6 +206,8 @@ jobs:
               --global \
               --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_name }}" \
               --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
+          fi
+
   integration:
     runs-on: ubuntu-latest
     name: Integration
