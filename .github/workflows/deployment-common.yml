@@ -126,6 +126,7 @@ jobs:
           fi
 
           ## Common
+          export GITHUB_SHA="${{ github.sha }}"
           export CONTAINER_IMAGE="${{ steps.set-vars.outputs.docker_image_name }}:${{ github.sha }}"
           export CLOUD_RUN_SERVICE_NAME="${{ steps.set-vars.outputs.service_name }}"
           export GOOGLE_CLOUD_PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
