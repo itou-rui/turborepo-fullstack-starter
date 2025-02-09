@@ -126,14 +126,11 @@ jobs:
           fi
 
           ## Common
-          export GITHUB_SHA_SHORT=$(echo ${{ github.sha }} | cut -c1-7)
           export CONTAINER_IMAGE="${{ steps.set-vars.outputs.docker_image_name }}:${{ github.sha }}"
           export CLOUD_RUN_SERVICE_NAME="${{ steps.set-vars.outputs.service_name }}"
           export GOOGLE_CLOUD_PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
           export GOOGLE_CLOUD_PROJECT_NUMBER="${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}"
-          export CLOUD_RUN_REVISION_TAG="${{ steps.set-vars.outputs.revision_tag }}"
           export ENVIRONMENT="${{ inputs.environment }}"
-          export TRAFFIC_VALUE="${{ inputs.environment == 'prod' && '100' || '0' }}"
           export CLOUD_RUN_SERVICE_ACCOUNT="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
 
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
@@ -146,3 +143,4 @@ jobs:
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
           tag: ${{ steps.set-vars.outputs.revision_tag }}
+          no_traffic: ${{ inputs.environment == 'prod' && true || false }}

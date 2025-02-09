@@ -41,7 +41,3 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
             successThreshold: 1
-  traffic:
-    - revisionName: ${CLOUD_RUN_SERVICE_NAME}-${CLOUD_RUN_REVISION_TAG}-${GITHUB_SHA_SHORT}
-      tag: ${CLOUD_RUN_REVISION_TAG}
-      percent: ${TRAFFIC_VALUE}
