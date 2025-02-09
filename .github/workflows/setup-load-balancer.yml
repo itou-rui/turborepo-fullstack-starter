@@ -29,7 +29,8 @@ jobs:
       web_neg_name: ${{ steps.set-vars.outputs.web_neg_name }}
       api_neg_name: ${{ steps.set-vars.outputs.api_neg_name }}
       url_map_name: ${{ steps.set-vars.outputs.url_map_name }}
-      path_matcher_name: ${{ steps.set-vars.outputs.path_matcher_name }}
+      web_path_matcher_name: ${{ steps.set-vars.outputs.web_path_matcher_name }}
+      api_path_matcher_name: ${{ steps.set-vars.outputs.api_path_matcher_name }}
       cert_name: ${{ steps.set-vars.outputs.cert_name }}
       cert_map_name: ${{ steps.set-vars.outputs.cert_map_name }}
       dns_auth_name: ${{ steps.set-vars.outputs.dns_auth_name }}
@@ -43,6 +44,7 @@ jobs:
       - name: Set variables
         id: set-vars
         run: |
+
           # Subdomains should be in the form branch-name.service-name.domain
           echo "sub_domain=${{ inputs.google_cloud_service_env }}.${{ inputs.app_name }}" >> $GITHUB_OUTPUT
           echo "host_name=${{ inputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
@@ -62,12 +64,12 @@ jobs:
 
           # URL Map and Certificate Related (Common)
           echo "url_map_name=${{ inputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
-          echo "path_matcher_name=${{ inputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
-
+          echo "web_path_matcher_name=${{ inputs.app_name }}-web-path-matcher" >> $GITHUB_OUTPUT
+          echo "api_path_matcher_name=${{ inputs.app_name }}-api-path-matcher" >> $GITHUB_OUTPUT
           echo "cert_name=${{ inputs.app_name }}-cert" >> $GITHUB_OUTPUT
           echo "cert_map_name=${{ inputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
-
           echo "dns_auth_name=${{ inputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
+
           # Proxy name for each environment
           echo "http_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-http" >> $GITHUB_OUTPUT
           echo "https_proxy_name=${{ inputs.app_name }}-${{ inputs.google_cloud_service_env }}-https" >> $GITHUB_OUTPUT
@@ -109,6 +111,7 @@ jobs:
       cname_value_matches: ${{ steps.check-dns-cname-record.outputs.cname_value_matches }}
       cname_value: ${{ steps.check-dns-cname-record.outputs.cname_value }}
       cname_name: ${{ steps.check-dns-cname-record.outputs.cname_name }}
+      url_mask_configured: ${{ steps.check-url-mask.outputs.url_mask_configured }}
 
     steps:
       - name: Checkout repository
@@ -159,6 +162,17 @@ jobs:
           else
             echo "api_neg_exists=false" >> $GITHUB_OUTPUT
             echo "api_neg_exists: false"
+          fi
+
+      - name: Check URL Mask Configuration
+        id: check-url-mask
+        run: |
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_name }} \
+              --region="${{ inputs.google_cloud_region }}" \
+              --format="get(urlMask)" | grep -q "^<tag>"; then
+            echo "url_mask_configured=true" >> $GITHUB_OUTPUT
+          else
+            echo "url_mask_configured=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Check Add NEG to backend
@@ -214,7 +228,7 @@ jobs:
               echo "host_rule_exists: true"
 
               if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-                   --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.path_matcher_name }}'")' 2> /dev/null; then
+                   --global --format="json" | jq -e '.pathMatchers[] | select(.name == "'${{ needs.set-variables.outputs.web_path_matcher_name }}'")' 2> /dev/null; then
                  echo "path_matcher_exists=true" >> $GITHUB_OUTPUT
                  echo "path_matcher_exists: true"
               else
@@ -449,7 +463,8 @@ jobs:
           gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_name }} \
             --network-endpoint-type=serverless \
             --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
-            --region="${{ inputs.google_cloud_region }}"
+            --region="${{ inputs.google_cloud_region }}" \
+            --url-mask="<tag>.${{ needs.set-variables.outputs.web_cloudrun_service_name }}"
 
       - name: Add NEG to backend service
         if: needs.check-condition.outputs.web_neg_in_backend == 'false'
@@ -494,7 +509,8 @@ jobs:
           gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_name }} \
             --network-endpoint-type=serverless \
             --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
-            --region="${{ inputs.google_cloud_region }}"
+            --region="${{ inputs.google_cloud_region }}" \
+            --url-mask="<tag>.${{ needs.set-variables.outputs.api_cloudrun_service_name }}"
 
       - name: Add NEG to backend service
         if: needs.check-condition.outputs.api_neg_in_backend == 'false'
@@ -532,19 +548,26 @@ jobs:
         if: needs.check-condition.outputs.api_path_rule_exists == 'false'
         run: |
           gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
-            --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
             --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
+            --host-rule="hosts=*.${{ inputs.app_name }}.${{ vars.DOMAIN }},pathMatcher=${{ needs.set-variables.outputs.web_path_matcher_name }}" \
+            --path-matcher-name="${{ needs.set-variables.outputs.web_path_matcher_name }}" \
             --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_service_name }}" \
             --global
 
-      - name: Add Host Rule
-        if: needs.check-condition.outputs.host_rule_exists == 'false' &&
-          needs.check-condition.outputs.path_matcher_exists == 'false'
-        run: |
-          gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-            --hosts="${{ needs.set-variables.outputs.branch_host_name }}.${{ vars.DOMAIN }}" \
-            --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
+          gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
+            --default-service="${{ needs.set-variables.outputs.api_backend_service_name }}" \
+            --host-rule="hosts=*.${{ inputs.app_name }}.${{ vars.DOMAIN }},pathMatcher=${{ needs.set-variables.outputs.api_path_matcher_name }}" \
+            --path-matcher-name="${{ needs.set-variables.outputs.api_path_matcher_name }}" \
             --global
+
+      # - name: Add Host Rule
+      #   if: needs.check-condition.outputs.host_rule_exists == 'false' &&
+      #     needs.check-condition.outputs.path_matcher_exists == 'false'
+      #   run: |
+      #     gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
+      #       --hosts="${{ needs.set-variables.outputs.branch_host_name }}.${{ vars.DOMAIN }}" \
+      #       --path-matcher-name="${{ needs.set-variables.outputs.web_path_matcher_name }}" \
+      #       --global
 
       - name: Install yq for YAML processing
         if: needs.check-condition.outputs.api_path_rewrite_exists == 'false' &&
