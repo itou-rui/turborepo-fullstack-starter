@@ -50,19 +50,36 @@ jobs:
           echo "docker_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
       - name: Remove Docker Images
-        id: remove_docker_images
         run: |
+          # Generate the correct image path format
+          FORMATTED_PATH=$(echo "${{ steps.generate_image.outputs.docker_image }}" | \
+            sed -E "s|projects/([^/]+)/locations/([^/]+)/repositories/([^/]+)/dockerImages/|${{ inputs.google_cloud_region }}-docker.pkg.dev/\1/\3/|g" | \
+            sed "s|%2F|/|g")
+
+          echo "Formatted path: ${FORMATTED_PATH}"
+
           # List images in the Artifact Registry
-          hashs=$(gcloud artifacts docker images list ${{ steps.generate_image.outputs.docker_image }} --include-tags --format="get(metadata.name)" --project ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }})
+          images=$(gcloud artifacts docker images list "${FORMATTED_PATH}" \
+            --include-tags \
+            --format="get(metadata.name)" \
+            --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}) || true
 
           # Loop through each image and delete it
-          if [ -n "$hashs" ]; then
-            for hash in $hashs; do
-              gcloud artifacts docker images delete "${{ steps.generate_image.outputs.docker_image }}@$hash" --delete-tags --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} --quiet
-              echo "Remove: ${{ steps.generate_image.outputs.docker_image }}@$hash"
+          if [ -n "$images" ]; then
+            for hash in $images; do
+              echo "Deleting image: ${FORMATTED_PATH}@${hash}"
+              gcloud artifacts docker images delete "${FORMATTED_PATH}@${hash}" \
+                --delete-tags \
+                --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} \
+                --quiet || true
             done
 
-            gcloud artifacts docker images delete "${{ steps.generate_image.outputs.docker_image }}" --delete-tags --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} --quiet
+            # Delete the parent image
+            echo "Deleting parent image: ${FORMATTED_PATH}"
+            gcloud artifacts docker images delete "${FORMATTED_PATH}" \
+              --delete-tags \
+              --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} \
+              --quiet || true
           fi
 
   build-cache:
