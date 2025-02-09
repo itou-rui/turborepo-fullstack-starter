@@ -269,7 +269,7 @@ jobs:
           fi
 
       - name: Install yq for YAML processing
-        id: yq-istall
+        id: yq-install
         run: |
           if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
               --global --format="json" | jq -e '.pathMatchers[].pathRules[] | select(.paths[] | contains("/api/*")) | .routeAction.urlRewrite.pathPrefixRewrite == "/"' 2> /dev/null; then
