@@ -346,7 +346,7 @@ jobs:
             --type=CNAME \
             --format="get(name,rrdatas[0])" 2>/dev/null)
 
-          if [ $EXISTING_RECORD ]; then
+          if [ -n "$EXISTING_RECORD" ]; then
             echo "DNS CNAME Record exists"
           else
             gcloud dns record-sets transaction start --zone="$ZONE_NAME"
