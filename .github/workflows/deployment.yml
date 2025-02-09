@@ -49,12 +49,66 @@ jobs:
             fi
           fi
 
+  get-change-paths:
+    runs-on: ubuntu-latest
+    name: Get ChangePaths
+    if: github.event_name != 'workflow_dispatch'
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+      critters: ${{ steps.filter.outputs.critters }}
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Paths filter
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - '!apps/web/src/tests/**'
+              - '!apps/web/critters/**'
+              - '!apps/web/.*'
+              - '!apps/web/*.md'
+              - '!apps/web/*.config.mjs'
+              - '!apps/web/components.json'
+            api:
+              - 'apps/api/**'
+              - '!apps/api/tests/**'
+              - '!apps/api/**/*.*.spec.ts'
+              - '!apps/api/.*'
+              - '!apps/api/*.md'
+            critters:
+              - 'packages/critters/**'
+              - '!packages/critters/.*'
+              - '!packages/critters/*.md'
+              - '!packages/critters/*.mjs'
+            ui:
+              - 'packages/ui/**'
+              - '!packages/ui/.*'
+              - '!packages/ui/*.md'
+              - '!packages/ui/eslint.config.mjs'
+              - '!packages/ui/components.json'
+
   deploy-web:
     name: Web
     needs: [get-config, get-change-paths]
     permissions:
       id-token: write
       contents: read
+    if: |
+      always() && 
+        needs.get-config.result == 'success' && 
+        (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
+        (
+          github.event_name == 'workflow_dispatch' || 
+          needs.get-change-paths.outputs.web == 'true' || 
+          needs.get-change-paths.outputs.critters == 'true' || 
+          needs.get-change-paths.outputs.ui == 'true'
+        )
     uses: ./.github/workflows/deployment-common.yml
     with:
       environment: ${{ needs.get-config.outputs.environment }}
@@ -71,6 +125,14 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    if: |
+      always() && 
+      needs.get-config.result == 'success' && 
+      (needs.get-change-paths.result == 'success' || needs.get-change-paths.result == 'skipped') &&
+      (
+        github.event_name == 'workflow_dispatch' || 
+        needs.get-change-paths.outputs.api == 'true'
+      )
     uses: ./.github/workflows/deployment-common.yml
     with:
       environment: ${{ needs.get-config.outputs.environment }}
