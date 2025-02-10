@@ -1,3 +1,5 @@
+name: "Cleanup Common"
+
 on:
   workflow_call:
     inputs:
@@ -19,17 +21,18 @@ on:
       ref_name:
         required: true
         type: string
-      google_cloud_region:
+      execute_artifact_repository:
         required: true
-        type: string
-      google_cloud_service_env:
+        type: boolean
+      execute_github_cache:
         required: true
-        type: string
+        type: boolean
 
 jobs:
   artifact-repository:
     name: Delete Artifact Repository
     runs-on: ubuntu-latest
+    if: inputs.execute_artifact_repository == "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -46,14 +49,18 @@ jobs:
       - name: Generate Image
         id: generate_image
         run: |
-          IMAGE_NAME="${{ inputs.google_cloud_region }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.google_cloud_service_env }}"
+          if [ "${{ inputs.environment }}" == "prev" ]; then
+            IMAGE_NAME="${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.ref_name }}"
+          else
+            IMAGE_NAME="${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}"
+          fi
           echo "docker_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
-      - name: Remove Docker Images
+      - name: Docker Images
         run: |
           # Generate the correct image path format
           FORMATTED_PATH=$(echo "${{ steps.generate_image.outputs.docker_image }}" | \
-            sed -E "s|projects/([^/]+)/locations/([^/]+)/repositories/([^/]+)/dockerImages/|${{ inputs.google_cloud_region }}-docker.pkg.dev/\1/\3/|g" | \
+            sed -E "s|projects/([^/]+)/locations/([^/]+)/repositories/([^/]+)/dockerImages/|${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/\1/\3/|g" | \
             sed "s|%2F|/|g")
 
           echo "Formatted path: ${FORMATTED_PATH}"
@@ -83,29 +90,33 @@ jobs:
           fi
 
   build-cache:
-    name: Delete Build Cache
+    name: Github Build Cache
     runs-on: ubuntu-latest
+    if: inputs.execute_github_cache == "true"
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       - name: Delete GitHub Actions Cache
-        run: |
-          gh extension install actions/gh-actions-cache
-
-          REPO="${{ github.repository }}"
-          BRANCH="${{ inputs.ref_name }}"
-
-          echo "Fetching list of cache key"
-          cacheKeys=$(gh actions-cache list -R $REPO -B $BRANCH | cut -f 1 )
-
-          ## Setting this to not fail the workflow while deleting cache
-          set +e
-          echo "Deleting caches..."
-          for cacheKey in $cacheKeys
-          do
-              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
-          done
-          echo "Done"
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(`About to clear cache for app: ${{ inputs.app }} and branch: ${{ inputs.ref_name }}`);
+            let page = 1;
+            let caches;
+            do {
+              caches = await github.rest.actions.getActionsCacheList({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+                page: page,
+                key: `${{ inputs.app }}-${{ inputs.ref_name }}`
+              });
+              for (const cache of caches.data.actions_caches) {
+                console.log(cache);
+                await github.rest.actions.deleteActionsCacheById({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  cache_id: cache.id,
+                });
+              }
+              page++;
+            } while (caches.data.actions_caches.length === 100);
+            console.log(`Cache clear completed for app: ${{ inputs.app }} and branch: ${{ inputs.ref_name }}`);

@@ -1,0 +1,83 @@
+name: Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+  workflow_dispatch:
+    inputs:
+      artifact-repository:
+        description: "Delete all build images in the Google cloud artifact repository for the specified branch"
+        type: boolean
+        default: false
+      github-cache:
+        description: "Delete all Github caches for the specified branch"
+        type: boolean
+        default: true
+
+jobs:
+  get-config:
+    name: Get Config
+    uses: ./.github/workflows/get-config.yml
+    with:
+      trigger: ${{ github.event_name }}
+
+  check-param:
+    runs-on: ubuntu-latest
+    name: Check Parameter
+    needs: [get-config]
+    steps:
+      - name: Check param
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ "${{ needs.get-config.outputs.ref_name_lowercase }}" == "main" ]; then 
+              if [ "${{ github.event.inputs.artifact-repository }}" == "true" ]; then
+                echo "::error::Cannot cleanup to main branch directly via workflow_dispatch"
+                exit 1
+              fi
+            fi
+          fi
+
+  web:
+    name: Web
+    permissions:
+      id-token: write
+      contents: read
+    needs: [get-config, check-param]
+    if: |
+      always() &&
+      needs.get-config.result == 'success' &&
+      needs.check-param.result == 'success'
+    uses: ./.github/workflows/cleanup-common.yml
+    with:
+      environment: ${{ needs.get-config.outputs.environment }}
+      app: web
+      app_name: ${{ needs.get-config.outputs.app_name }}
+      app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
+      repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
+      ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
+      execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact-repository == 'true' }}
+      execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github-cache == 'true' }}
+    secrets: inherit
+
+  api:
+    name: Api
+    permissions:
+      id-token: write
+      contents: read
+    needs: [get-config, check-param]
+    if: |
+      always() &&
+      needs.get-config.result == 'success' &&
+      needs.check-param.result == 'success'
+    uses: ./.github/workflows/cleanup-common.yml
+    with:
+      environment: ${{ needs.get-config.outputs.environment }}
+      app: api
+      app_name: ${{ needs.get-config.outputs.app_name }}
+      app_version: ${{ needs.get-config.outputs.api_lowercase_version }}
+      repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
+      ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
+      execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact-repository == 'true' }}
+      execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github-cache == 'true' }}
+    secrets: inherit
