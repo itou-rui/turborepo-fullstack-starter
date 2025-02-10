@@ -99,20 +99,28 @@ jobs:
       - name: Setup variables
         id: set-vars
         run: |
+          # If the environment is 'prev', set the docker image name, revision tag, and traffic percentages accordingly
           if [ "${{ inputs.environment }}" == "prev" ]; then
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
             echo "revision_traffic_percent=0" >> $GITHUB_OUTPUT
+            echo "revision_traffic_remaining=100" >> $GITHUB_OUTPUT
           else
+            # For other environments, set the docker image name, revision tag, and traffic percentages accordingly
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.environment }}" >> $GITHUB_OUTPUT
 
+            # If the environment is 'prod', set the traffic percentages to 100% for the new revision
             if [ "${{ inputs.environment }}" == "prod" ]; then
               echo "revision_traffic_percent=100" >> $GITHUB_OUTPUT
+              echo "revision_traffic_remaining=0" >> $GITHUB_OUTPUT
             else
+              # For other environments, set the traffic percentages to 0% for the new revision
               echo "revision_traffic_percent=0" >> $GITHUB_OUTPUT
+              echo "revision_traffic_remaining=100" >> $GITHUB_OUTPUT
             fi
           fi
+          # Set the service name and revision name based on the app name, app version, and GitHub SHA
           echo "service_name=${{ inputs.app_name }}-${{ inputs.app }}" >> $GITHUB_OUTPUT
           echo "revision_name=${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.app_version }}-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
@@ -127,6 +135,7 @@ jobs:
 
       - name: Create Service declaration
         run: |
+          ## App
           if [ "${{ inputs.app }}" == "web" ]; then
             echo "There are no environment variables on the Web."
           else
@@ -135,13 +144,14 @@ jobs:
             export MONGODB_HOST_NAME="${{ secrets.MONGODB_HOST_NAME }}"
           fi
 
-          ## Common
+          ## Common (System)
           export GITHUB_SHA="${{ github.sha }}"
           export CONTAINER_IMAGE="${{ steps.set-vars.outputs.docker_image_name }}:${{ github.sha }}"
           export CLOUD_RUN_SERVICE_NAME="${{ steps.set-vars.outputs.service_name }}"
           export CLOUD_RUN_REVISION_NAME="${{ steps.set-vars.outputs.revision_name }}"
           export CLOUD_RUN_REVISION_TAG="${{ steps.set-vars.outputs.revision_tag }}"
           export CLOUD_RUN_REVISION_TRAFFIC_PERCENT="${{ steps.set-vars.outputs.revision_traffic_percent }}"
+          export CLOUD_RUN_REVISION_TRAFFIC_REMAINING="${{ steps.set-vars.outputs.revision_traffic_remaining }}"
           export GOOGLE_CLOUD_PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
           export GOOGLE_CLOUD_PROJECT_NUMBER="${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}"
           export ENVIRONMENT="${{ inputs.environment }}"
