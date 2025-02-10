@@ -38,6 +38,7 @@ jobs:
       cert_name: ${{ steps.set-vars.outputs.cert_name }}
       cert_map_name: ${{ steps.set-vars.outputs.cert_map_name }}
       cert_map_entry_name: ${{ steps.set-vars.outputs.cert_map_entry_name }}
+      cert_map_entry_wildcard_name: ${{ steps.set-vars.outputs.cert_map_entry_wildcard_name }}
       dns_auth_name: ${{ steps.set-vars.outputs.dns_auth_name }}
       http_proxy_name: ${{ steps.set-vars.outputs.http_proxy_name }}
       https_proxy_name: ${{ steps.set-vars.outputs.https_proxy_name }}
@@ -79,6 +80,7 @@ jobs:
           echo "cert_name=${{ needs.get-config.outputs.app_name }}-cert" >> $GITHUB_OUTPUT
           echo "cert_map_name=${{ needs.get-config.outputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
           echo "cert_map_entry_name=${{ needs.get-config.outputs.app_name }}-cert-map-entry" >> $GITHUB_OUTPUT
+          echo "cert_map_entry_wildcard_name=${{ needs.get-config.outputs.app_name }}-cert-map-entry-wildcard" >> $GITHUB_OUTPUT
           echo "dns_auth_name=${{ needs.get-config.outputs.app_name }}-cert-auth" >> $GITHUB_OUTPUT
 
           # Proxy name for each environment
@@ -359,7 +361,7 @@ jobs:
             echo "DNS Authorizations exists"
           else
             gcloud certificate-manager certificates create ${{ needs.set-variables.outputs.cert_name }} \
-              --domains="*.${{ needs.set-variables.outputs.host_name }}" \
+              --domains="${{ needs.set-variables.outputs.host_name }},*.${{ needs.set-variables.outputs.host_name }}" \
               --dns-authorizations="${{ needs.set-variables.outputs.dns_auth_name }}" \
               --description="Wildcard certificate for ${{ needs.set-variables.outputs.host_name }}"
           fi
@@ -372,6 +374,11 @@ jobs:
             gcloud certificate-manager maps create ${{ needs.set-variables.outputs.cert_map_name }}
 
             gcloud certificate-manager maps entries create ${{ needs.set-variables.outputs.cert_map_entry_name }} \
+              --map="${{ needs.set-variables.outputs.cert_map_name }}" \
+              --certificates="${{ needs.set-variables.outputs.cert_name }}" \
+              --hostname="${{ needs.set-variables.outputs.host_name }}"
+
+            gcloud certificate-manager maps entries create ${{ needs.set-variables.outputs.cert_map_entry_wildcard_name }} \
               --map="${{ needs.set-variables.outputs.cert_map_name }}" \
               --certificates="${{ needs.set-variables.outputs.cert_name }}" \
               --hostname="*.${{ needs.set-variables.outputs.host_name }}"
@@ -429,37 +436,47 @@ jobs:
           ZONE_NAME=${ZONE_NAME//./-}
 
           # Set hostname and IP address
-          FULL_DOMAIN="*.${{ needs.set-variables.outputs.host_name }}"
+          BASE_DOMAIN="${{ needs.set-variables.outputs.host_name }}"
+          WILDCARD_DOMAIN="*.${{ needs.set-variables.outputs.host_name }}"
           IP_ADDRESS="${{ steps.reserve-ip.outputs.ip_address }}"
 
-          echo "Setting up DNS record for $FULL_DOMAIN with IP: $IP_ADDRESS"
+          echo "Setting up DNS records for $BASE_DOMAIN and $WILDCARD_DOMAIN with IP: $IP_ADDRESS"
 
           # Pre-transaction cleanup
           gcloud dns record-sets transaction abort --zone=$ZONE_NAME 2>/dev/null || true
           rm -f transaction.yaml 2>/dev/null || true
 
-          EXISTING_RECORD=$(gcloud dns record-sets list \
+          # Start transaction
+          gcloud dns record-sets transaction start --zone=$ZONE_NAME
+
+          # Handle base domain
+          EXISTING_BASE_RECORD=$(gcloud dns record-sets list \
             --zone=$ZONE_NAME \
-            --name="$FULL_DOMAIN" \
+            --name="$BASE_DOMAIN" \
             --type=A \
             --format="get(name,rrdatas[0])" 2>/dev/null)
 
-          if [ ! -z "$EXISTING_RECORD" ]; then
-            EXISTING_IP=$(echo "$EXISTING_RECORD" | awk '{print $2}')
-
-            # Update existing records
-            gcloud dns record-sets transaction start --zone=$ZONE_NAME
-            gcloud dns record-sets transaction remove --zone=$ZONE_NAME --name="$FULL_DOMAIN." --ttl=300 --type=A "$EXISTING_IP"
-            gcloud dns record-sets transaction add --zone=$ZONE_NAME --name="$FULL_DOMAIN." --ttl=300 --type=A "$IP_ADDRESS"
-          else
-
-            # Add new record
-            gcloud dns record-sets transaction start --zone=$ZONE_NAME
-            gcloud dns record-sets transaction add --zone=$ZONE_NAME --name="$FULL_DOMAIN." --ttl=300 --type=A "$IP_ADDRESS"
+          if [ ! -z "$EXISTING_BASE_RECORD" ]; then
+            EXISTING_IP=$(echo "$EXISTING_BASE_RECORD" | awk '{print $2}')
+            gcloud dns record-sets transaction remove --zone=$ZONE_NAME --name="$BASE_DOMAIN." --ttl=300 --type=A "$EXISTING_IP"
           fi
+          gcloud dns record-sets transaction add --zone=$ZONE_NAME --name="$BASE_DOMAIN." --ttl=300 --type=A "$IP_ADDRESS"
+
+          # Handle wildcard domain
+          EXISTING_WILDCARD_RECORD=$(gcloud dns record-sets list \
+            --zone=$ZONE_NAME \
+            --name="$WILDCARD_DOMAIN" \
+            --type=A \
+            --format="get(name,rrdatas[0])" 2>/dev/null)
+
+          if [ ! -z "$EXISTING_WILDCARD_RECORD" ]; then
+            EXISTING_IP=$(echo "$EXISTING_WILDCARD_RECORD" | awk '{print $2}')
+            gcloud dns record-sets transaction remove --zone=$ZONE_NAME --name="$WILDCARD_DOMAIN." --ttl=300 --type=A "$EXISTING_IP"
+          fi
+          gcloud dns record-sets transaction add --zone=$ZONE_NAME --name="$WILDCARD_DOMAIN." --ttl=300 --type=A "$IP_ADDRESS"
 
           # Execute transaction
           if ! gcloud dns record-sets transaction execute --zone=$ZONE_NAME; then
-            echo "Failed to update DNS record"
+            echo "Failed to update DNS records"
             exit 1
           fi
