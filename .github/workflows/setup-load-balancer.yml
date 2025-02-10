@@ -336,32 +336,17 @@ jobs:
             echo "Path rule exists"
           else
             gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
+              --new-hosts="${{ needs.set-variables.outputs.host_name }}" \
               --default-service="${{ needs.set-variables.outputs.web_backend_default_service_name }}" \
               --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_default_name }}" \
               --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_default_service_name }}" \
               --global
 
             gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
+              --new-hosts="*.${{ needs.set-variables.outputs.host_name }}" \
               --default-service="${{ needs.set-variables.outputs.web_backend_tagged_service_name }}" \
               --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_tagged_name }}" \
               --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_tagged_service_name }}" \
-              --global
-          fi
-
-      - name: Add Host Rule
-        run: |
-          if gcloud compute url-maps describe ${{ needs.set-variables.outputs.url_map_name }} \
-               --global --format="json" | jq -e '.hostRules[] | select(.hosts[] | contains("'${{ needs.set-variables.outputs.host_name }}'"))' 2> /dev/null; then
-            echo "Host rule exists"
-          else
-            gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-              --hosts="${{ needs.set-variables.outputs.host_name }}" \
-              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_default_name }}" \
-              --global
-
-            gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-              --hosts="*.${{ needs.set-variables.outputs.host_name }}" \
-              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_tagged_name }}" \
               --global
           fi
 
@@ -385,7 +370,7 @@ jobs:
             --destination url_map_config.yaml \
             --global
 
-          yq eval '.pathMatchers[0].pathRules[0].routeAction.urlRewrite.pathPrefixRewrite = "/"' -i url_map_config.yaml
+          yq eval '.pathMatchers[].pathRules[].routeAction.urlRewrite.pathPrefixRewrite = "/"' -i url_map_config.yaml
 
           gcloud compute url-maps import ${{ needs.set-variables.outputs.url_map_name }} \
             --source url_map_config.yaml \
