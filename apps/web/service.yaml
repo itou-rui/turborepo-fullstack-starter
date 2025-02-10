@@ -41,3 +41,7 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
             successThreshold: 1
+      traffic:
+        - percent: ${CLOUD_RUN_REVISION_TRAFFIC_PERCENT}
+          tag: ${CLOUD_RUN_REVISION_TAG}
+          latestRevision: true

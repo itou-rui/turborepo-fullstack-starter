@@ -102,11 +102,19 @@ jobs:
           if [ "${{ inputs.environment }}" == "prev" ]; then
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
+            echo "revision_traffic_percent=0" >> $GITHUB_OUTPUT
           else
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+
+            if [ "${{ inputs.environment }}" == "prod" ]; then
+              echo "revision_traffic_percent=100" >> $GITHUB_OUTPUT
+            else
+              echo "revision_traffic_percent=0" >> $GITHUB_OUTPUT
+            fi
           fi
           echo "service_name=${{ inputs.app_name }}-${{ inputs.app }}" >> $GITHUB_OUTPUT
+          echo "revision_name=${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.app_version }}" >> $GITHUB_OUTPUT
 
       - name: Auth GoogleCloud
         id: auth-google-cloud
@@ -131,7 +139,9 @@ jobs:
           export GITHUB_SHA="${{ github.sha }}"
           export CONTAINER_IMAGE="${{ steps.set-vars.outputs.docker_image_name }}:${{ github.sha }}"
           export CLOUD_RUN_SERVICE_NAME="${{ steps.set-vars.outputs.service_name }}"
+          export CLOUD_RUN_REVISION_NAME="${{ steps.set-vars.outputs.revision_name }}"
           export CLOUD_RUN_REVISION_TAG="${{ steps.set-vars.outputs.revision_tag }}"
+          export CLOUD_RUN_REVISION_TRAFFIC_PERCENT="${{ steps.set-vars.outputs.revision_traffic_percent }}"
           export GOOGLE_CLOUD_PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
           export GOOGLE_CLOUD_PROJECT_NUMBER="${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}"
           export ENVIRONMENT="${{ inputs.environment }}"
@@ -147,5 +157,3 @@ jobs:
           region: ${{ vars.GOOGLE_CLOUD_REGION }}
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-          tag: ${{ steps.set-vars.outputs.revision_tag }}
-          no_traffic: ${{ inputs.environment == 'prod' && false || true }}
