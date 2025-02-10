@@ -72,15 +72,15 @@ jobs:
           echo "web_cloudrun_service_name=${{ needs.get-config.outputs.app_name }}-web" >> $GITHUB_OUTPUT
           echo "api_cloudrun_service_name=${{ needs.get-config.outputs.app_name }}-api" >> $GITHUB_OUTPUT
 
+          # Name of backend service (no need to separate for each environment)
+          echo "web_backend_service_name=${{ needs.get-config.outputs.app_name }}-web-backend" >> $GITHUB_OUTPUT
+          echo "api_backend_service_name=${{ needs.get-config.outputs.app_name }}-api-backend" >> $GITHUB_OUTPUT
+
           # NEG name (not necessary to separate for each environment)
           echo "web_neg_default_name=${{ needs.get-config.outputs.app_name }}-web-neg-default" >> $GITHUB_OUTPUT
           echo "web_neg_tagged_name=${{ needs.get-config.outputs.app_name }}-web-neg-tagged" >> $GITHUB_OUTPUT
           echo "api_neg_default_name=${{ needs.get-config.outputs.app_name }}-api-neg-default" >> $GITHUB_OUTPUT
           echo "api_neg_tagged_name=${{ needs.get-config.outputs.app_name }}-api-neg-tagged" >> $GITHUB_OUTPUT
-
-          # Name of backend service (no need to separate for each environment)
-          echo "web_backend_service_name=${{ needs.get-config.outputs.app_name }}-web-backend" >> $GITHUB_OUTPUT
-          echo "api_backend_service_name=${{ needs.get-config.outputs.app_name }}-api-backend" >> $GITHUB_OUTPUT
 
           # URL Map and Certificate Related (Common)
           echo "url_map_name=${{ needs.get-config.outputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
