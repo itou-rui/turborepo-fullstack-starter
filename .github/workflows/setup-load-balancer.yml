@@ -264,6 +264,7 @@ jobs:
 
             gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
               --hosts="*.${{ needs.set-vars.outputs.host_name }}" \
+              --hosts="*.${{ needs.set-variables.outputs.host_name }}" \
               --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
               --global
           fi
