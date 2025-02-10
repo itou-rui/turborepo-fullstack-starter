@@ -11,6 +11,10 @@ on:
         description: "Use the app name as a subdomain (If true, `sub_domain` is ignored)"
         type: boolean
         default: true
+      allow_update_host:
+        description: "Allow host configuration (If true, update SSL and DNS according to current settings)"
+        type: boolean
+        default: false
 
 jobs:
   get-config:
@@ -323,7 +327,7 @@ jobs:
         id: create-dns-auth
         run: |
           if ! DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations describe "${{ needs.set-variables.outputs.dns_auth_name }}" --format=json 2>/dev/null); then
-            DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}")
+            DNS_AUTH_INFO=$(gcloud certificate-manager dns-authorizations create "${{ needs.set-variables.outputs.dns_auth_name }}" --domain="${{ needs.set-variables.outputs.host_name }}" --format=json)
             echo "is_create=true" >> $GITHUB_OUTPUT
           else
             echo "DNS Authorizations exists"
