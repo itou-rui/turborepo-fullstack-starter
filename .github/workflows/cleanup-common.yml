@@ -32,7 +32,7 @@ jobs:
   artifact-repository:
     name: Delete Artifact Repository
     runs-on: ubuntu-latest
-    if: inputs.execute_artifact_repository == "true"
+    if: inputs.execute_artifact_repository == true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -92,7 +92,7 @@ jobs:
   build-cache:
     name: Github Build Cache
     runs-on: ubuntu-latest
-    if: inputs.execute_github_cache == "true"
+    if: inputs.execute_github_cache == true
     steps:
       - name: Delete GitHub Actions Cache
         uses: actions/github-script@v7
