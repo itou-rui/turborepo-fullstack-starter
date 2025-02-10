@@ -83,7 +83,7 @@ jobs:
             ${{ steps.generate_image.outputs.docker_image }}:${{ github.sha }}
             ${{ steps.generate_image.outputs.docker_image }}:latest
           cache-from: |
-            type=gha,scope=${{ inputs.app }}
+            type=gha,scope=${{ inputs.app }}-${{ inputs.ref_name }}
             type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:latest
           cache-to: type=gha,mode=max,scope=${{ inputs.app }}-${{ inputs.ref_name }}
           platforms: linux/amd64
