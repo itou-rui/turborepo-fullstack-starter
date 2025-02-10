@@ -148,4 +148,4 @@ jobs:
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
           tag: ${{ steps.set-vars.outputs.revision_tag }}
-          no_traffic: ${{ inputs.environment == 'prod' && true || false }}
+          no_traffic: ${{ inputs.environment == 'prod' && false || true }}
