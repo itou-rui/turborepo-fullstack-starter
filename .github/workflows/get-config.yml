@@ -1,4 +1,4 @@
-name: "Prepare Deploy"
+name: "Get Config"
 
 on:
   workflow_call:
