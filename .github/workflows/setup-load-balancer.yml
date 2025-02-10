@@ -34,8 +34,10 @@ jobs:
       api_cloudrun_service_name: ${{ steps.set-vars.outputs.api_cloudrun_service_name }}
       web_backend_service_name: ${{ steps.set-vars.outputs.web_backend_service_name }}
       api_backend_service_name: ${{ steps.set-vars.outputs.api_backend_service_name }}
-      web_neg_name: ${{ steps.set-vars.outputs.web_neg_name }}
-      api_neg_name: ${{ steps.set-vars.outputs.api_neg_name }}
+      web_neg_default_name: ${{ steps.set-vars.outputs.web_neg_default_name }}
+      web_neg_tagged_name: ${{ steps.set-vars.outputs.web_neg_tagged_name }}
+      api_neg_default_name: ${{ steps.set-vars.outputs.api_neg_default_name }}
+      api_neg_tagged_name: ${{ steps.set-vars.outputs.api_neg_tagged_name }}
       url_map_name: ${{ steps.set-vars.outputs.url_map_name }}
       path_matcher_name: ${{ steps.set-vars.outputs.path_matcher_name }}
       api_path_matcher_name: ${{ steps.set-vars.outputs.api_path_matcher_name }}
@@ -71,8 +73,10 @@ jobs:
           echo "api_cloudrun_service_name=${{ needs.get-config.outputs.app_name }}-api" >> $GITHUB_OUTPUT
 
           # NEG name (not necessary to separate for each environment)
-          echo "web_neg_name=${{ needs.get-config.outputs.app_name }}-web-neg" >> $GITHUB_OUTPUT
-          echo "api_neg_name=${{ needs.get-config.outputs.app_name }}-api-neg" >> $GITHUB_OUTPUT
+          echo "web_neg_default_name=${{ needs.get-config.outputs.app_name }}-web-neg-default" >> $GITHUB_OUTPUT
+          echo "web_neg_tagged_name=${{ needs.get-config.outputs.app_name }}-web-neg-tagged" >> $GITHUB_OUTPUT
+          echo "api_neg_default_name=${{ needs.get-config.outputs.app_name }}-api-neg-default" >> $GITHUB_OUTPUT
+          echo "api_neg_tagged_name=${{ needs.get-config.outputs.app_name }}-api-neg-tagged" >> $GITHUB_OUTPUT
 
           # Name of backend service (no need to separate for each environment)
           echo "web_backend_service_name=${{ needs.get-config.outputs.app_name }}-web-backend" >> $GITHUB_OUTPUT
@@ -133,10 +137,15 @@ jobs:
 
       - name: Create NEG Backend
         run: |
-          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_tagged_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
             echo "web NEG exists"
           else
-            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_name }} \
+            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_default_name }} \
+              --network-endpoint-type=serverless \
+              --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
+              --region="${{ vars.GOOGLE_CLOUD_REGION }}"
+
+            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_tagged_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
               --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
@@ -146,12 +155,17 @@ jobs:
       - name: Add NEG to backend service
         run: |
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} \
-              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.web_neg_name }}'"))' 2> /dev/null; then
+              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.web_neg_tagged_name }}'"))' 2> /dev/null; then
             echo "web NEG exists"
           else
             gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_service_name }} \
               --global \
-              --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_name }}" \
+              --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_default_name }}" \
+              --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
+
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_service_name }} \
+              --global \
+              --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_tagged_name }}" \
               --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
           fi
 
@@ -192,10 +206,15 @@ jobs:
 
       - name: Create NEG Backend
         run: |
-          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_tagged_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
             echo "api NEG exists"
           else
-            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_name }} \
+            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_default_name }} \
+              --network-endpoint-type=serverless \
+              --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
+              --region="${{ vars.GOOGLE_CLOUD_REGION }}"
+
+            gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_tagged_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
               --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
@@ -205,12 +224,17 @@ jobs:
       - name: Add NEG to backend service
         run: |
           if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} \
-              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.api_neg_name }}'"))' 2> /dev/null; then
+              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.api_neg_tagged_name }}'"))' 2> /dev/null; then
             echo "api NEG exists"
           else
             gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_service_name }} \
               --global \
-              --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_name }}" \
+              --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_default_name }}" \
+              --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
+
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_service_name }} \
+              --global \
+              --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_tagged_name }}" \
               --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
           fi
 
@@ -264,7 +288,7 @@ jobs:
             echo "Host rule exists"
           else
             gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-              --hosts="*.${{ needs.set-variables.outputs.host_name }}" \
+              --hosts="${{ needs.set-variables.outputs.host_name }},*.${{ needs.set-variables.outputs.host_name }}" \
               --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
               --global
           fi
