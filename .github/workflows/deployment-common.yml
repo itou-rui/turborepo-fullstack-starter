@@ -78,15 +78,18 @@ jobs:
           context: .
           file: ./apps/${{ inputs.app }}/Dockerfile
           push: true
+          platforms: linux/amd64
           tags: |
             ${{ steps.generate_image.outputs.docker_image }}:${{ inputs.app_version }}
             ${{ steps.generate_image.outputs.docker_image }}:${{ github.sha }}
             ${{ steps.generate_image.outputs.docker_image }}:latest
           cache-from: |
             type=gha,scope=${{ inputs.app }}-${{ inputs.ref_name }}
-            type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:latest
-          cache-to: type=gha,mode=max,scope=${{ inputs.app }}-${{ inputs.ref_name }}
-          platforms: linux/amd64
+            type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:cache
+          cache-to: |
+            type=gha,mode=max,scope=${{ inputs.app }}-${{ inputs.ref_name }}
+            type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:cache,mode=max
+          inline-cache: true
 
   deploy-cloudrun:
     name: CloudRun
