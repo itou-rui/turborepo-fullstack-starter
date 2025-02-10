@@ -104,20 +104,21 @@ jobs:
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
             echo "revision_traffic_percent=0" >> $GITHUB_OUTPUT
-            echo "revision_traffic_remaining=100" >> $GITHUB_OUTPUT
+            echo "revision_tag_traffic_percent=100" >> $GITHUB_OUTPUT
           else
             # For other environments, set the docker image name, revision tag, and traffic percentages accordingly
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}" >> $GITHUB_OUTPUT
-            echo "revision_tag=${{ inputs.environment }}" >> $GITHUB_OUTPUT
 
             # If the environment is 'prod', set the traffic percentages to 100% for the new revision
             if [ "${{ inputs.environment }}" == "prod" ]; then
+              echo "revision_tag=" >> $GITHUB_OUTPUT
               echo "revision_traffic_percent=100" >> $GITHUB_OUTPUT
-              echo "revision_traffic_remaining=0" >> $GITHUB_OUTPUT
+              echo "revision_tag_traffic_percent=0" >> $GITHUB_OUTPUT
             else
               # For other environments, set the traffic percentages to 0% for the new revision
+              echo "revision_tag=${{ inputs.environment }}" >> $GITHUB_OUTPUT
               echo "revision_traffic_percent=0" >> $GITHUB_OUTPUT
-              echo "revision_traffic_remaining=100" >> $GITHUB_OUTPUT
+              echo "revision_tag_traffic_percent=100" >> $GITHUB_OUTPUT
             fi
           fi
           # Set the service name and revision name based on the app name, app version, and GitHub SHA
@@ -151,7 +152,7 @@ jobs:
           export CLOUD_RUN_REVISION_NAME="${{ steps.set-vars.outputs.revision_name }}"
           export CLOUD_RUN_REVISION_TAG="${{ steps.set-vars.outputs.revision_tag }}"
           export CLOUD_RUN_REVISION_TRAFFIC_PERCENT="${{ steps.set-vars.outputs.revision_traffic_percent }}"
-          export CLOUD_RUN_REVISION_TRAFFIC_REMAINING="${{ steps.set-vars.outputs.revision_traffic_remaining }}"
+          export CLOUD_RUN_REVISION_TAG_TRAFFIC_PERCENT="${{ steps.set-vars.outputs.revision_tag_traffic_percent }}"
           export GOOGLE_CLOUD_PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
           export GOOGLE_CLOUD_PROJECT_NUMBER="${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}"
           export ENVIRONMENT="${{ inputs.environment }}"
