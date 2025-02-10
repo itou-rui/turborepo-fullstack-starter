@@ -28,6 +28,8 @@ spec:
               value: '${GOOGLE_CLOUD_PROJECT_NUMBER}'
             - name: CLOUD_RUN_SERVICE_NAME
               value: '${CLOUD_RUN_SERVICE_NAME}'
+            - name: CLOUD_RUN_REVISION_TAG
+              value: '${CLOUD_RUN_REVISION_TAG}'
             - name: ENVIRONMENT
               value: '${ENVIRONMENT}'
             - name: MONGODB_USER_NAME
@@ -36,7 +38,6 @@ spec:
               value: '${MONGODB_USER_PASSWORD}'
             - name: MONGODB_HOST_NAME
               value: '${MONGODB_HOST_NAME}'
-
           startupProbe:
             httpGet:
               path: /
