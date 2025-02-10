@@ -32,15 +32,17 @@ jobs:
       host_name: ${{ steps.set-vars.outputs.host_name }}
       web_cloudrun_service_name: ${{ steps.set-vars.outputs.web_cloudrun_service_name }}
       api_cloudrun_service_name: ${{ steps.set-vars.outputs.api_cloudrun_service_name }}
-      web_backend_service_name: ${{ steps.set-vars.outputs.web_backend_service_name }}
-      api_backend_service_name: ${{ steps.set-vars.outputs.api_backend_service_name }}
+      web_backend_default_service_name: ${{ steps.set-vars.outputs.web_backend_default_service_name }}
+      web_backend_tagged_service_name: ${{ steps.set-vars.outputs.web_backend_tagged_service_name }}
+      api_backend_default_service_name: ${{ steps.set-vars.outputs.api_backend_default_service_name }}
+      api_backend_tagged_service_name: ${{ steps.set-vars.outputs.api_backend_tagged_service_name }}
       web_neg_default_name: ${{ steps.set-vars.outputs.web_neg_default_name }}
       web_neg_tagged_name: ${{ steps.set-vars.outputs.web_neg_tagged_name }}
       api_neg_default_name: ${{ steps.set-vars.outputs.api_neg_default_name }}
       api_neg_tagged_name: ${{ steps.set-vars.outputs.api_neg_tagged_name }}
       url_map_name: ${{ steps.set-vars.outputs.url_map_name }}
-      path_matcher_name: ${{ steps.set-vars.outputs.path_matcher_name }}
-      api_path_matcher_name: ${{ steps.set-vars.outputs.api_path_matcher_name }}
+      path_matcher_default_name: ${{ steps.set-vars.outputs.path_matcher_default_name }}
+      path_matcher_tagged_name: ${{ steps.set-vars.outputs.path_matcher_tagged_name }}
       cert_name: ${{ steps.set-vars.outputs.cert_name }}
       cert_map_name: ${{ steps.set-vars.outputs.cert_map_name }}
       cert_map_entry_name: ${{ steps.set-vars.outputs.cert_map_entry_name }}
@@ -73,8 +75,10 @@ jobs:
           echo "api_cloudrun_service_name=${{ needs.get-config.outputs.app_name }}-api" >> $GITHUB_OUTPUT
 
           # Name of backend service (no need to separate for each environment)
-          echo "web_backend_service_name=${{ needs.get-config.outputs.app_name }}-web-backend" >> $GITHUB_OUTPUT
-          echo "api_backend_service_name=${{ needs.get-config.outputs.app_name }}-api-backend" >> $GITHUB_OUTPUT
+          echo "web_backend_default_service_name=${{ needs.get-config.outputs.app_name }}-web-backend-default" >> $GITHUB_OUTPUT
+          echo "web_backend_tagged_service_name=${{ needs.get-config.outputs.app_name }}-web-backend-tagged" >> $GITHUB_OUTPUT
+          echo "api_backend_default_service_name=${{ needs.get-config.outputs.app_name }}-api-backend-default" >> $GITHUB_OUTPUT
+          echo "api_backend_tagged_service_name=${{ needs.get-config.outputs.app_name }}-api-backend-tagged" >> $GITHUB_OUTPUT
 
           # NEG name (not necessary to separate for each environment)
           echo "web_neg_default_name=${{ needs.get-config.outputs.app_name }}-web-neg-default" >> $GITHUB_OUTPUT
@@ -84,7 +88,8 @@ jobs:
 
           # URL Map and Certificate Related (Common)
           echo "url_map_name=${{ needs.get-config.outputs.app_name }}-load-balancer" >> $GITHUB_OUTPUT
-          echo "path_matcher_name=${{ needs.get-config.outputs.app_name }}-path-matcher" >> $GITHUB_OUTPUT
+          echo "path_matcher_default_name=${{ needs.get-config.outputs.app_name }}-path-matcher-default" >> $GITHUB_OUTPUT
+          echo "path_matcher_tagged_name=${{ needs.get-config.outputs.app_name }}-path-matcher-tagged" >> $GITHUB_OUTPUT
           echo "cert_name=${{ needs.get-config.outputs.app_name }}-cert" >> $GITHUB_OUTPUT
           echo "cert_map_name=${{ needs.get-config.outputs.app_name }}-cert-map" >> $GITHUB_OUTPUT
           echo "cert_map_entry_name=${{ needs.get-config.outputs.app_name }}-cert-map-entry" >> $GITHUB_OUTPUT
@@ -122,10 +127,25 @@ jobs:
 
       - name: Create Backend Service
         run: |
-          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} --global 2> /dev/null; then
-            echo "web backend exists"
+          # Default backend service
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_default_service_name }} --global 2> /dev/null; then
+            echo "web default backend exists"
           else
-            gcloud compute backend-services create ${{ needs.set-variables.outputs.web_backend_service_name }} \
+            gcloud compute backend-services create ${{ needs.set-variables.outputs.web_backend_default_service_name }} \
+               --global \
+               --protocol=HTTP2 \
+               --port-name=http \
+               --timeout=30s \
+               --connection-draining-timeout=30s \
+               --enable-cdn \
+               --load-balancing-scheme=EXTERNAL_MANAGED
+          fi
+
+          # Tagged backend service
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_tagged_service_name }} --global 2> /dev/null; then
+            echo "web tagged backend exists"
+          else
+            gcloud compute backend-services create ${{ needs.set-variables.outputs.web_backend_tagged_service_name }} \
                --global \
                --protocol=HTTP2 \
                --port-name=http \
@@ -137,14 +157,20 @@ jobs:
 
       - name: Create NEG Backend
         run: |
-          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_tagged_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
-            echo "web NEG exists"
+          # Default backend service
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_default_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+            echo "web default NEG exists"
           else
             gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_default_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
               --region="${{ vars.GOOGLE_CLOUD_REGION }}"
+          fi
 
+          # Tagged backend service
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.web_neg_tagged_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+            echo "web tagged NEG exists"
+          else
             gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.web_neg_tagged_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.web_cloudrun_service_name }}" \
@@ -154,16 +180,23 @@ jobs:
 
       - name: Add NEG to backend service
         run: |
-          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_service_name }} \
-              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.web_neg_tagged_name }}'"))' 2> /dev/null; then
-            echo "web NEG exists"
+          # Default
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_default_service_name }} \
+              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.web_neg_default_name }}'"))' 2> /dev/null; then
+            echo "web default NEG exists"
           else
-            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_service_name }} \
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_default_service_name }} \
               --global \
               --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_default_name }}" \
               --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
+          fi
 
-            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_service_name }} \
+          # Tagged
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.web_backend_tagged_service_name }} \
+              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.web_neg_tagged_name }}'"))' 2> /dev/null; then
+            echo "web tagged NEG exists"
+          else
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.web_backend_tagged_service_name }} \
               --global \
               --network-endpoint-group="${{ needs.set-variables.outputs.web_neg_tagged_name }}" \
               --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
@@ -191,10 +224,25 @@ jobs:
 
       - name: Create Backend Service
         run: |
-          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} --global 2> /dev/null; then
-            echo "api backend exists"
+          # Default backend service
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_default_service_name }} --global 2> /dev/null; then
+            echo "api default backend exists"
           else
-            gcloud compute backend-services create ${{ needs.set-variables.outputs.api_backend_service_name }} \
+            gcloud compute backend-services create ${{ needs.set-variables.outputs.api_backend_default_service_name }} \
+               --global \
+               --protocol=HTTP2 \
+               --port-name=http \
+               --timeout=30s \
+               --connection-draining-timeout=30s \
+               --enable-cdn \
+               --load-balancing-scheme=EXTERNAL_MANAGED
+          fi
+
+          # Tagged backend service
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_tagged_service_name }} --global 2> /dev/null; then
+            echo "api tagged backend exists"
+          else
+            gcloud compute backend-services create ${{ needs.set-variables.outputs.api_backend_tagged_service_name }} \
                --global \
                --protocol=HTTP2 \
                --port-name=http \
@@ -206,14 +254,20 @@ jobs:
 
       - name: Create NEG Backend
         run: |
-          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_tagged_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
-            echo "api NEG exists"
+          # Default backend service
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_default_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+            echo "api default NEG exists"
           else
             gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_default_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
               --region="${{ vars.GOOGLE_CLOUD_REGION }}"
+          fi
 
+          # Tagged backend service
+          if gcloud compute network-endpoint-groups describe ${{ needs.set-variables.outputs.api_neg_tagged_name }} --region="${{ vars.GOOGLE_CLOUD_REGION }}" 2> /dev/null; then
+            echo "api tagged NEG exists"
+          else
             gcloud compute network-endpoint-groups create ${{ needs.set-variables.outputs.api_neg_tagged_name }} \
               --network-endpoint-type=serverless \
               --cloud-run-service="${{ needs.set-variables.outputs.api_cloudrun_service_name }}" \
@@ -223,16 +277,23 @@ jobs:
 
       - name: Add NEG to backend service
         run: |
-          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_service_name }} \
-              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.api_neg_tagged_name }}'"))' 2> /dev/null; then
-            echo "api NEG exists"
+          # Default
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_default_service_name }} \
+              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.api_neg_default_name }}'"))' 2> /dev/null; then
+            echo "api default NEG exists"
           else
-            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_service_name }} \
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_default_service_name }} \
               --global \
               --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_default_name }}" \
               --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
+          fi
 
-            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_service_name }} \
+          # Tagged
+          if gcloud compute backend-services describe ${{ needs.set-variables.outputs.api_backend_tagged_service_name }} \
+              --global --format="json" | jq -e '.backends[] | select(.group | contains("'${{ needs.set-variables.outputs.api_neg_tagged_name }}'"))' 2> /dev/null; then
+            echo "api tagged NEG exists"
+          else
+            gcloud compute backend-services add-backend ${{ needs.set-variables.outputs.api_backend_tagged_service_name }} \
               --global \
               --network-endpoint-group="${{ needs.set-variables.outputs.api_neg_tagged_name }}" \
               --network-endpoint-group-region="${{ vars.GOOGLE_CLOUD_REGION }}"
@@ -264,7 +325,7 @@ jobs:
             echo "URL Map exists"
           else
             gcloud compute url-maps create ${{ needs.set-variables.outputs.url_map_name }} \
-              --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
+              --default-service="${{ needs.set-variables.outputs.web_backend_default_service_name }}" \
               --global
           fi
 
@@ -275,9 +336,15 @@ jobs:
             echo "Path rule exists"
           else
             gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
-              --default-service="${{ needs.set-variables.outputs.web_backend_service_name }}" \
-              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
-              --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_service_name }}" \
+              --default-service="${{ needs.set-variables.outputs.web_backend_default_service_name }}" \
+              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_default_name }}" \
+              --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_default_service_name }}" \
+              --global
+
+            gcloud compute url-maps add-path-matcher ${{ needs.set-variables.outputs.url_map_name }} \
+              --default-service="${{ needs.set-variables.outputs.web_backend_tagged_service_name }}" \
+              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_tagged_name }}" \
+              --path-rules="/api/*=${{ needs.set-variables.outputs.api_backend_tagged_service_name }}" \
               --global
           fi
 
@@ -288,8 +355,13 @@ jobs:
             echo "Host rule exists"
           else
             gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
-              --hosts="${{ needs.set-variables.outputs.host_name }},*.${{ needs.set-variables.outputs.host_name }}" \
-              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_name }}" \
+              --hosts="${{ needs.set-variables.outputs.host_name }}" \
+              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_default_name }}" \
+              --global
+
+            gcloud compute url-maps add-host-rule ${{ needs.set-variables.outputs.url_map_name }} \
+              --hosts="*.${{ needs.set-variables.outputs.host_name }}" \
+              --path-matcher-name="${{ needs.set-variables.outputs.path_matcher_tagged_name }}" \
               --global
           fi
 
