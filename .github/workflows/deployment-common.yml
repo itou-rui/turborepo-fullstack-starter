@@ -111,6 +111,9 @@ jobs:
             --format='json' | jq -c '.spec.traffic')
           echo "current_traffic=${CURRENT_TRAFFIC}" >> $GITHUB_OUTPUT
 
+          ## Debug
+          echo "${CURRENT_TRAFFIC}"
+
           # ACTIVE_REVISION=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .revisionName')
           # ACTIVE_TRAFFIC=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .percent')
           #
@@ -135,7 +138,7 @@ jobs:
                 "tag": "prod",
                 "latestRevision": true
               },
-              (.[].[] | select(.tag != null and .tag != "prod" and .latestRevision != true))
+              (.[] | select(.tag != null and .tag != "prod" and .latestRevision != true))
             ]' > traffic.json
           else
             echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c '
@@ -149,10 +152,15 @@ jobs:
                 "tag": "${{ inputs.ref_name }}",
                 "latestRevision": true
               },
-              (.[].[] | select(.tag != null and .tag != "${{ inputs.ref_name }}"))
+              (.[] | select(.tag != null and .tag != "${{ inputs.ref_name }}"))
             ]' > traffic.json
           fi
+
           echo "config=$(cat traffic.json)" >> $GITHUB_OUTPUT
+
+          ## Debug
+          echo "Generated traffic config:"
+          cat traffic.json
 
   deploy-cloudrun:
     name: Deploy Cloudrun
