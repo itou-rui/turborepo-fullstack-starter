@@ -111,9 +111,6 @@ jobs:
             --format='json' | jq -c '.spec.traffic')
           echo "current_traffic=${CURRENT_TRAFFIC}" >> $GITHUB_OUTPUT
 
-          ## Debug
-          echo "${CURRENT_TRAFFIC}"
-
           # ACTIVE_REVISION=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .revisionName')
           # ACTIVE_TRAFFIC=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .percent')
           #
@@ -157,10 +154,6 @@ jobs:
           fi
 
           echo "config=$(cat traffic.json)" >> $GITHUB_OUTPUT
-
-          ## Debug
-          echo "Generated traffic config:"
-          cat traffic.json
 
   deploy-cloudrun:
     name: Deploy Cloudrun

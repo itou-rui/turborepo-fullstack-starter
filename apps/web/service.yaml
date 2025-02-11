@@ -36,8 +36,6 @@ spec:
               value: '${CLOUD_RUN_REVISION_NAME}'
             - name: CLOUD_RUN_REVISION_TAG
               value: '${CLOUD_RUN_REVISION_TAG}'
-            - name: CLOUD_RUN_REVISION_TRAFFIC_PERCENT
-              value: '${CLOUD_RUN_REVISION_TRAFFIC_PERCENT}'
             - name: ENVIRONMENT
               value: '${ENVIRONMENT}'
 
