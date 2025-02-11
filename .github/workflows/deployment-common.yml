@@ -136,9 +136,9 @@ jobs:
               {
                 "percent": 100,
                 "tag": "prod",
-                "latestRevision": true
+                "latestRevision": false
               },
-              (.[] | select(.tag != null and .tag != "prod" and .latestRevision != true))
+              (.[] | select(.tag != null and .tag != "prod") | . + {"latestRevision": false})
             ]' > traffic.json
           else
             echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c '
@@ -150,7 +150,7 @@ jobs:
               {
                 "percent": 0,
                 "tag": "${{ inputs.ref_name }}",
-                "latestRevision": true
+                "latestRevision": false
               },
               (.[] | select(.tag != null and .tag != "${{ inputs.ref_name }}") | . + {"latestRevision": false})
             ]' > traffic.json
