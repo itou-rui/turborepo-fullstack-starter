@@ -219,15 +219,18 @@ jobs:
           export ENVIRONMENT="${{ inputs.environment }}"
           export CLOUD_RUN_SERVICE_ACCOUNT="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
 
-          envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
+          ## Merge to temporary file
+          envsubst < ./apps/${{ inputs.app }}/service.yaml > service-temp.yaml
+
+          ## Combine traffic settings in a temporary file
+          echo '${{ needs.setup-traffic.outputs.traffic_config }}' > traffic.json
           yq eval-all '
             select(fileIndex == 0) * select(fileIndex == 1) |
             .traffic = load("traffic.json")
-          ' service-${{ inputs.environment }}.yaml > temp.yaml
+          ' service-temp.yaml > service-${{ inputs.environment }}.yaml
 
-          ## Debug
-          cat temp.yaml
-          mv temp.yaml service-${{ inputs.environment }}.yaml
+          ## Final service configuration
+          cat service-${{ inputs.environment }}.yaml
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
