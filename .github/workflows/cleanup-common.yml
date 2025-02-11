@@ -32,6 +32,7 @@ jobs:
   artifact-repository:
     name: Delete Artifact Repository
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: inputs.execute_artifact_repository == true
     steps:
       - name: Checkout repository
@@ -92,6 +93,7 @@ jobs:
   build-cache:
     name: Github Build Cache
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: inputs.execute_github_cache == true
     steps:
       - name: Delete GitHub Actions Cache

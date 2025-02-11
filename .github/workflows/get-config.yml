@@ -48,6 +48,7 @@ jobs:
   get-environment:
     name: Get Environment
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     outputs:
       environment: ${{ steps.get_environment.outputs.environment }}
     steps:
@@ -67,6 +68,7 @@ jobs:
   get-app-name:
     name: Get AppName
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     outputs:
       app_name: ${{ steps.get_app_name.outputs.app_name }}
     steps:
@@ -80,6 +82,7 @@ jobs:
   get-app-versions:
     name: Get App Versions
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     outputs:
       web_version: ${{ steps.get_web_version.outputs.web_version }}
       web_lowercase_version: ${{ steps.get_web_version.outputs.web_lowercase_version }}
@@ -104,6 +107,7 @@ jobs:
   get-repository:
     name: Get Repository Info
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     outputs:
       repo_name: ${{ steps.get_repo_info.outputs.repo_name }}
       repo_name_lowercase: ${{ steps.get_repo_info.outputs.repo_name_lowercase }}

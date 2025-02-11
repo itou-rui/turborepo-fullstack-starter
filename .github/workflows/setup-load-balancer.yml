@@ -26,7 +26,7 @@ jobs:
   set-variables:
     runs-on: ubuntu-latest
     name: Setup variables
-    timeout-minutes: 10
+    timeout-minutes: 1
     needs: [get-config]
     outputs:
       host_name: ${{ steps.set-vars.outputs.host_name }}

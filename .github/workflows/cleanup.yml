@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Check Parameter
     needs: [get-config]
+    timeout-minutes: 1
     steps:
       - name: Check param
         run: |
