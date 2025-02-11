@@ -6,11 +6,11 @@ on:
 
   workflow_dispatch:
     inputs:
-      artifact-repository:
+      artifact_repository:
         description: "Delete all build images in the Google cloud artifact repository for the specified branch"
         type: boolean
         default: false
-      github-cache:
+      github_cache:
         description: "Delete all Github caches for the specified branch"
         type: boolean
         default: true
@@ -32,7 +32,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             if [ "${{ needs.get-config.outputs.ref_name_lowercase }}" == "main" ]; then 
-              if [ "${{ github.event.inputs.artifact-repository }}" == "true" ]; then
+              ## DockerImage in production environment cannot be deleted
+              if [ "${{ github.event.inputs.artifact_repository }}" == "true" ]; then
                 echo "::error::Cannot cleanup to main branch directly via workflow_dispatch"
                 exit 1
               fi
@@ -57,8 +58,8 @@ jobs:
       app_version: ${{ needs.get-config.outputs.web_lowercase_version }}
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
-      execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact-repository == 'true' }}
-      execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github-cache == 'true' }}
+      execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact_repository == 'true' }}
+      execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github_cache == 'true' }}
     secrets: inherit
 
   api:
@@ -79,6 +80,6 @@ jobs:
       app_version: ${{ needs.get-config.outputs.api_lowercase_version }}
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
-      execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact-repository == 'true' }}
-      execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github-cache == 'true' }}
+      execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact_repository == 'true' }}
+      execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github_cache == 'true' }}
     secrets: inherit
