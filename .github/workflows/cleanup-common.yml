@@ -118,7 +118,7 @@ jobs:
           else
             tag_name="${{ inputs.environment }}"
           fi
-          gcloud run services update-traffic ${{ inputs.app_name }}-${{ inputs.app }} --remove-tags=$tag_name
+          gcloud run services update-traffic ${{ inputs.app_name }}-${{ inputs.app }} --remove-tags=$tag_name --region="${{ vars.GOOGLE_CLOUD_REGION }}"
 
   build-cache:
     name: Github Build Cache
