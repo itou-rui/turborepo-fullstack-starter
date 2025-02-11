@@ -87,11 +87,76 @@ jobs:
           cache-from: type=gha,scope=${{ inputs.app }}-${{ inputs.ref_name }}
           cache-to: type=gha,mode=max,scope=${{ inputs.app }}-${{ inputs.ref_name }}
 
+  setup-traffic:
+    name: CloudRun
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      traffic_config: ${{ steps.generate_traffic.outputs.config }}
+    steps:
+      - name: Auth GoogleCloud
+        id: auth-google-cloud
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
+          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+
+      - name: Get current traffic config
+        id: get-traffic
+        run: |
+          CURRENT_TRAFFIC=$(gcloud run services describe ${{ steps.set-vars.outputs.service_name }} \
+            --region=${{ vars.GOOGLE_CLOUD_REGION }} \
+            --format='json' | jq -r '.spec.traffic')
+          echo "current_traffic=${CURRENT_TRAFFIC}" >> $GITHUB_OUTPUT
+
+          # ACTIVE_REVISION=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .revisionName')
+          # ACTIVE_TRAFFIC=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .percent')
+          #
+          # LATEST_REVISION=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.latestRevision == true) | .revisionName')
+          # LATEST_TAG=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.latestRevision == true) | .tag // "no-tag"')
+          # LATEST_TRAFFIC=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.latestRevision == true) | .percent // 0')
+          #
+          # echo "current_active_revision=${ACTIVE_REVISION}" >> $GITHUB_OUTPUT
+          # echo "current_active_traffic=${ACTIVE_TRAFFIC}" >> $GITHUB_OUTPUT
+          # echo "latest_revision=${LATEST_REVISION}" >> $GITHUB_OUTPUT
+          # echo "latest_revision_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
+          # echo "latest_revision_traffic=${LATEST_TRAFFIC}" >> $GITHUB_OUTPUT
+
+      - name: Generate traffic config
+        id: generate_traffic
+        run: |
+          if [ "${{ inputs.environment }}" == "prod" ]; then
+            jq -n '[
+              {
+                "percent": 100,
+                "tag": "prod",
+                "latestRevision": true
+              },
+              '"${{ steps.get-traffic.outputs.current_traffic }}"' | .[] | select(.tag != null and .tag != "prod" and .latestRevision != true)
+            ]' > traffic.json
+          else
+            jq -n '[
+              {
+                "percent": 100,
+                "revisionName": "'"$(echo "${{ steps.get-traffic.outputs.current_traffic }}" | jq -r '.[0].revisionName')"'"
+              },
+              {
+                "percent": 0,
+                "tag": "${{ inputs.ref_name }}",
+                "latestRevision": true
+              },
+              '"${{ steps.get-traffic.outputs.current_traffic }}"' | .[] | select(.tag != null and .tag != "${{ inputs.ref_name }}")
+            ]' > traffic.json
+          fi
+          echo "config=$(cat traffic.json)" >> $GITHUB_OUTPUT
+
   deploy-cloudrun:
     name: CloudRun
     runs-on: ubuntu-latest
-    needs: [build-and-push]
     timeout-minutes: 5
+    needs: [build-and-push, setup-traffic]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -145,6 +210,8 @@ jobs:
           export CLOUD_RUN_SERVICE_ACCOUNT="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
 
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
+          echo '${{ needs.setup-traffic.outputs.traffic_config }}' > traffic.json
+          yq eval-all '.traffic = load("traffic.json")' -i service-${{ inputs.environment }}.yaml
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
