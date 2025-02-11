@@ -108,7 +108,7 @@ jobs:
         run: |
           CURRENT_TRAFFIC=$(gcloud run services describe ${{ inputs.app_name }}-${{ inputs.app }} \
             --region=${{ vars.GOOGLE_CLOUD_REGION }} \
-            --format='json' | jq -r '.spec.traffic')
+            --format='json' | jq -c '.spec.traffic')
           echo "current_traffic=${CURRENT_TRAFFIC}" >> $GITHUB_OUTPUT
 
           # ACTIVE_REVISION=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .revisionName')
