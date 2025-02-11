@@ -24,6 +24,9 @@ on:
       execute_artifact_repository:
         required: true
         type: boolean
+      execute_cloudrun_revision_tag:
+        required: true
+        type: boolean
       execute_github_cache:
         required: true
         type: boolean
@@ -89,6 +92,33 @@ jobs:
               --project=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }} \
               --quiet || true
           fi
+
+  cloudrun:
+    name: Delete Cloudrun Revision
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Auth GoogleCloud
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
+          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+
+      - name: Remove Revision Tag
+        if: inputs.execute_cloudrun_revision_tag == true
+        run: |
+          if [ "${{ inputs.environment }}" == "prev" ]; then
+            tag_name="${{ inputs.ref_name }}"
+          else
+            tag_name="${{ inputs.environment }}"
+          fi
+          gcloud run services update-traffic ${{ inputs.app_name }}-${{ inputs.app }} --remove-tags=$tag_name
 
   build-cache:
     name: Github Build Cache
