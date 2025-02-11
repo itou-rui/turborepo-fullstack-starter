@@ -152,7 +152,7 @@ jobs:
                 "tag": "${{ inputs.ref_name }}",
                 "latestRevision": true
               },
-              (.[] | select(.tag != null and .tag != "${{ inputs.ref_name }}"))
+              (.[] | select(.tag != null and .tag != "${{ inputs.ref_name }}") | . + {"latestRevision": false})
             ]' > traffic.json
           fi
 
