@@ -128,26 +128,28 @@ jobs:
         id: generate_traffic
         run: |
           if [ "${{ inputs.environment }}" == "prod" ]; then
-            jq -n '[
+            jq -n --arg current "${{ steps.get-traffic.outputs.current_traffic }}" '
+            [
               {
                 "percent": 100,
                 "tag": "prod",
                 "latestRevision": true
               },
-              '"${{ steps.get-traffic.outputs.current_traffic }}"' | .[] | select(.tag != null and .tag != "prod" and .latestRevision != true)
+              ($current | fromjson | .[] | select(.tag != null and .tag != "prod" and .latestRevision != true))
             ]' > traffic.json
           else
-            jq -n '[
+            jq -n --arg current "${{ steps.get-traffic.outputs.current_traffic }}" --arg ref_name "${{ inputs.ref_name }}" '
+            [
               {
                 "percent": 100,
-                "revisionName": "'"$(echo "${{ steps.get-traffic.outputs.current_traffic }}" | jq -r '.[0].revisionName')"'"
+                "revisionName": ($current | fromjson | .[0].revisionName)
               },
               {
                 "percent": 0,
-                "tag": "${{ inputs.ref_name }}",
+                "tag": $ref_name,
                 "latestRevision": true
               },
-              '"${{ steps.get-traffic.outputs.current_traffic }}"' | .[] | select(.tag != null and .tag != "${{ inputs.ref_name }}")
+              ($current | fromjson | .[] | select(.tag != null and .tag != $ref_name))
             ]' > traffic.json
           fi
           echo "config=$(cat traffic.json)" >> $GITHUB_OUTPUT
