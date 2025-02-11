@@ -84,12 +84,8 @@ jobs:
             ${{ steps.generate_image.outputs.docker_image }}:${{ inputs.app_version }}
             ${{ steps.generate_image.outputs.docker_image }}:${{ github.sha }}
             ${{ steps.generate_image.outputs.docker_image }}:latest
-          cache-from: |
-            type=gha,scope=${{ inputs.app }}-${{ inputs.ref_name }}
-            type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:cache
-          cache-to: |
-            type=gha,mode=max,scope=${{ inputs.app }}-${{ inputs.ref_name }}
-            type=registry,ref=${{ steps.generate_image.outputs.docker_image }}:cache,mode=max
+          cache-from: type=gha,scope=${{ inputs.app }}-${{ inputs.ref_name }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.app }}-${{ inputs.ref_name }}
 
   deploy-cloudrun:
     name: CloudRun
