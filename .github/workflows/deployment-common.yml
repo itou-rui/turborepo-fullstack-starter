@@ -219,13 +219,14 @@ jobs:
           export ENVIRONMENT="${{ inputs.environment }}"
           export CLOUD_RUN_SERVICE_ACCOUNT="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
 
-          echo '${{ needs.setup-traffic.outputs.traffic_config }}' > traffic.json
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
-          yq eval-all '.traffic = load("traffic.json")' service-${{ inputs.environment }}.yaml > temp.yaml
+          yq eval-all '
+            select(fileIndex == 0) * select(fileIndex == 1) |
+            .traffic = load("traffic.json")
+          ' service-${{ inputs.environment }}.yaml > temp.yaml
 
           ## Debug
           cat temp.yaml
-
           mv temp.yaml service-${{ inputs.environment }}.yaml
 
       - name: Deploy to Cloud Run
