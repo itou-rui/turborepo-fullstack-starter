@@ -118,7 +118,17 @@ jobs:
           else
             tag_name="${{ inputs.environment }}"
           fi
-          gcloud run services update-traffic ${{ inputs.app_name }}-${{ inputs.app }} --remove-tags=$tag_name --region="${{ vars.GOOGLE_CLOUD_REGION }}"
+
+          revisions_with_tag=$(gcloud run services describe ${{ inputs.app_name }}-${{ inputs.app }} \
+            --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
+            --format='json' | jq -r '.spec.traffic[] | select(.tag=="'$tag_name'") | .revisionName')
+
+          for revision in $revisions_with_tag; do
+            echo "Removing tag $tag_name from revision $revision"
+            gcloud run services update-traffic ${{ inputs.app_name }}-${{ inputs.app }} \
+              --remove-tags=$tag_name \
+              --region="${{ vars.GOOGLE_CLOUD_REGION }}"
+          done
 
   build-cache:
     name: Github Build Cache
