@@ -25,4 +25,6 @@ export const config = {
   ],
 };
 
-export default chain([addCustomHeader]);
+export default chain([
+  addCustomHeader, // Execute at the end
+]);
