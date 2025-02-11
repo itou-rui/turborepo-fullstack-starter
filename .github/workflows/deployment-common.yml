@@ -221,20 +221,13 @@ jobs:
 
           ## Merge to temporary file
           envsubst < ./apps/${{ inputs.app }}/service.yaml > service-temp.yaml
-          echo "=== service-temp.yaml ==="
-          cat service-temp.yaml
 
           ## Combine traffic settings in a temporary file
           echo '${{ needs.setup-traffic.outputs.traffic_config }}' > traffic.json
-          echo "=== traffic.json ==="
-          cat traffic.json
-
-          yq eval-all 'select(fileIndex == 0)' service-temp.yaml |
-          yq eval '.spec.traffic = load("traffic.json")' > service-${{ inputs.environment }}.yaml
 
           ## Final service configuration
-          echo "=== service-${{ inputs.environment }}.yaml ==="
-          cat service-${{ inputs.environment }}.yaml
+          yq eval-all 'select(fileIndex == 0)' service-temp.yaml |
+          yq eval '.spec.traffic = load("traffic.json")' > service-${{ inputs.environment }}.yaml
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
