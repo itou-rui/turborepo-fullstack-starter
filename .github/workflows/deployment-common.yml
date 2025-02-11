@@ -229,10 +229,8 @@ jobs:
           echo "=== traffic.json ==="
           cat traffic.json
 
-          yq eval-all '
-            select(fileIndex == 0) * select(fileIndex == 1) |
-            .traffic = load("traffic.json")
-          ' service-temp.yaml > service-${{ inputs.environment }}.yaml
+          yq eval-all 'select(fileIndex == 0)' service-temp.yaml |
+          yq eval '.spec.traffic = load("traffic.json")' > service-${{ inputs.environment }}.yaml
 
           ## Final service configuration
           echo "=== service-${{ inputs.environment }}.yaml ==="
