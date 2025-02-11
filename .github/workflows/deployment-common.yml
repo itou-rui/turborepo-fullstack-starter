@@ -106,7 +106,7 @@ jobs:
       - name: Get current traffic config
         id: get-traffic
         run: |
-          CURRENT_TRAFFIC=$(gcloud run services describe ${{ steps.set-vars.outputs.service_name }} \
+          CURRENT_TRAFFIC=$(gcloud run services describe ${{ inputs.app_name }}-${{ inputs.app }} \
             --region=${{ vars.GOOGLE_CLOUD_REGION }} \
             --format='json' | jq -r '.spec.traffic')
           echo "current_traffic=${CURRENT_TRAFFIC}" >> $GITHUB_OUTPUT
