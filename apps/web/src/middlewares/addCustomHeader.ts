@@ -1,4 +1,4 @@
-import { type NextFetchEvent, type NextMiddleware, NextRequest } from 'next/server';
+import { type NextFetchEvent, type NextMiddleware, NextRequest, NextResponse } from 'next/server';
 
 /**
  * Middleware to add custom headers to the request.
@@ -10,6 +10,10 @@ export function addCustomHeader(middleware: NextMiddleware): NextMiddleware {
   return async (request: NextRequest, event: NextFetchEvent) => {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-pathname', request.nextUrl.pathname);
-    return middleware(new NextRequest(request, { headers: requestHeaders }), event);
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   };
 }
