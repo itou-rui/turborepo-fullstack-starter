@@ -87,11 +87,79 @@ jobs:
           cache-from: type=gha,scope=${{ inputs.app }}-${{ inputs.ref_name }}
           cache-to: type=gha,mode=max,scope=${{ inputs.app }}-${{ inputs.ref_name }}
 
-  deploy-cloudrun:
-    name: CloudRun
+  setup-traffic:
+    name: Setup Cloudrun Revision
     runs-on: ubuntu-latest
-    needs: [build-and-push]
+    timeout-minutes: 10
+    outputs:
+      traffic_config: ${{ steps.generate_traffic.outputs.config }}
+    steps:
+      - name: Auth GoogleCloud
+        id: auth-google-cloud
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.GOOGLE_CLOUD_IDENTITY_POOL_ID }}/providers/${{ secrets.GOOGLE_CLOUD_IDENTITY_PROVIDER_ID }}"
+          service_account: "${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
+          project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
+
+      - name: Get current traffic config
+        id: get-traffic
+        run: |
+          CURRENT_TRAFFIC=$(gcloud run services describe ${{ inputs.app_name }}-${{ inputs.app }} \
+            --region=${{ vars.GOOGLE_CLOUD_REGION }} \
+            --format='json' | jq -c '.spec.traffic')
+          echo "current_traffic=${CURRENT_TRAFFIC}" >> $GITHUB_OUTPUT
+
+          # ACTIVE_REVISION=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .revisionName')
+          # ACTIVE_TRAFFIC=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.percent > 0) | .percent')
+          #
+          # LATEST_REVISION=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.latestRevision == true) | .revisionName')
+          # LATEST_TAG=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.latestRevision == true) | .tag // "no-tag"')
+          # LATEST_TRAFFIC=$(echo "$TRAFFIC_INFO" | jq -r '.[] | select(.latestRevision == true) | .percent // 0')
+          #
+          # echo "current_active_revision=${ACTIVE_REVISION}" >> $GITHUB_OUTPUT
+          # echo "current_active_traffic=${ACTIVE_TRAFFIC}" >> $GITHUB_OUTPUT
+          # echo "latest_revision=${LATEST_REVISION}" >> $GITHUB_OUTPUT
+          # echo "latest_revision_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
+          # echo "latest_revision_traffic=${LATEST_TRAFFIC}" >> $GITHUB_OUTPUT
+
+      - name: Generate traffic config
+        id: generate_traffic
+        run: |
+          if [ "${{ inputs.environment }}" == "prod" ]; then
+            echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c '
+            [
+              {
+                "percent": 100,
+                "tag": "prod",
+                "latestRevision": true
+              },
+              (.[] | select(.tag != null and .tag != "prod" and .latestRevision != true))
+            ]' > traffic.json
+          else
+            echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c '
+            [
+              {
+                "percent": 100,
+                "revisionName": (.[0].revisionName)
+              },
+              {
+                "percent": 0,
+                "tag": "${{ inputs.ref_name }}",
+                "latestRevision": true
+              },
+              (.[] | select(.tag != null and .tag != "${{ inputs.ref_name }}"))
+            ]' > traffic.json
+          fi
+
+          echo "config=$(cat traffic.json)" >> $GITHUB_OUTPUT
+
+  deploy-cloudrun:
+    name: Deploy Cloudrun
+    runs-on: ubuntu-latest
     timeout-minutes: 5
+    needs: [build-and-push, setup-traffic]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -99,14 +167,19 @@ jobs:
       - name: Setup variables
         id: set-vars
         run: |
+          # If the environment is 'prev', set the docker image name, revision tag, and traffic percentages accordingly
           if [ "${{ inputs.environment }}" == "prev" ]; then
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
           else
+            # For other environments, set the docker image name, revision tag, and traffic percentages accordingly
             echo "docker_image_name=${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ inputs.repo_name }}/${{ inputs.app }}/${{ inputs.environment }}" >> $GITHUB_OUTPUT
             echo "revision_tag=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           fi
+
+          # Set the service name and revision name based on the app name, app version, and GitHub SHA
           echo "service_name=${{ inputs.app_name }}-${{ inputs.app }}" >> $GITHUB_OUTPUT
+          echo "revision_name=${{ inputs.app_name }}-${{ inputs.app }}-${{ inputs.app_version }}-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Auth GoogleCloud
         id: auth-google-cloud
@@ -119,6 +192,7 @@ jobs:
 
       - name: Create Service declaration
         run: |
+          ## App
           if [ "${{ inputs.app }}" == "web" ]; then
             echo "There are no environment variables on the Web."
           else
@@ -127,16 +201,26 @@ jobs:
             export MONGODB_HOST_NAME="${{ secrets.MONGODB_HOST_NAME }}"
           fi
 
-          ## Common
+          ## Common (System)
           export GITHUB_SHA="${{ github.sha }}"
           export CONTAINER_IMAGE="${{ steps.set-vars.outputs.docker_image_name }}:${{ github.sha }}"
           export CLOUD_RUN_SERVICE_NAME="${{ steps.set-vars.outputs.service_name }}"
+          export CLOUD_RUN_REVISION_NAME="${{ steps.set-vars.outputs.revision_name }}"
+          export CLOUD_RUN_REVISION_TAG="${{ steps.set-vars.outputs.revision_tag }}"
           export GOOGLE_CLOUD_PROJECT_ID="${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
           export GOOGLE_CLOUD_PROJECT_NUMBER="${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}"
           export ENVIRONMENT="${{ inputs.environment }}"
           export CLOUD_RUN_SERVICE_ACCOUNT="${{ inputs.app_name }}-app-sa@${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}.iam.gserviceaccount.com"
 
-          envsubst < ./apps/${{ inputs.app }}/service.yaml > service-${{ inputs.environment }}.yaml
+          ## Merge to temporary file
+          envsubst < ./apps/${{ inputs.app }}/service.yaml > service-temp.yaml
+
+          ## Combine traffic settings in a temporary file
+          echo '${{ needs.setup-traffic.outputs.traffic_config }}' > traffic.json
+
+          ## Final service configuration
+          yq eval-all 'select(fileIndex == 0)' service-temp.yaml |
+          yq eval '.spec.traffic = load("traffic.json")' > service-${{ inputs.environment }}.yaml
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
@@ -146,5 +230,3 @@ jobs:
           region: ${{ vars.GOOGLE_CLOUD_REGION }}
           metadata: service-${{ inputs.environment }}.yaml
           project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-          tag: ${{ steps.set-vars.outputs.revision_tag }}
-          no_traffic: ${{ inputs.environment == 'prod' && true || false }}

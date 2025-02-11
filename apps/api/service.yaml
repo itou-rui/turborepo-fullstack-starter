@@ -1,3 +1,5 @@
+# https://cloud.google.com/run/docs/reference/yaml/v1
+
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
@@ -8,6 +10,7 @@ metadata:
 spec:
   template:
     metadata:
+      name: ${CLOUD_RUN_REVISION_NAME}
       annotations:
         autoscaling.knative.dev/maxScale: '10'
         autoscaling.knative.dev/minScale: '1'
@@ -20,6 +23,7 @@ spec:
               cpu: '1'
               memory: '1Gi'
           env:
+            ## System
             - name: GITHUB_SHA
               value: '${GITHUB_SHA}'
             - name: GOOGLE_CLOUD_PROJECT_ID
@@ -28,15 +32,20 @@ spec:
               value: '${GOOGLE_CLOUD_PROJECT_NUMBER}'
             - name: CLOUD_RUN_SERVICE_NAME
               value: '${CLOUD_RUN_SERVICE_NAME}'
+            - name: CLOUD_RUN_REVISION_NAME
+              value: '${CLOUD_RUN_REVISION_NAME}'
+            - name: CLOUD_RUN_REVISION_TAG
+              value: '${CLOUD_RUN_REVISION_TAG}'
             - name: ENVIRONMENT
               value: '${ENVIRONMENT}'
+
+            ## App
             - name: MONGODB_USER_NAME
               value: '${MONGODB_USER_NAME}'
             - name: MONGODB_USER_PASSWORD
               value: '${MONGODB_USER_PASSWORD}'
             - name: MONGODB_HOST_NAME
               value: '${MONGODB_HOST_NAME}'
-
           startupProbe:
             httpGet:
               path: /
