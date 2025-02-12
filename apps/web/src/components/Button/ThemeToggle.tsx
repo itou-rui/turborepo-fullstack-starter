@@ -10,44 +10,44 @@ interface ThemeToggleProps {
 }
 
 export const ThemeSlideToggle = ({ className }: ThemeToggleProps) => {
-  const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const { setTheme } = useTheme();
 
   return (
     <div
       className={cn(
         'flex w-16 h-8 p-1 rounded-full cursor-pointer transition-all duration-300',
-        isDark ? 'bg-zinc-950 border border-zinc-800' : 'bg-white border border-zinc-200',
+        'dark:bg-zinc-950 dark:border-zinc-800 bg-white border border-zinc-200',
+        'active:scale-95',
+        'hover:ring-1 hover:ring-zinc-300 dark:hover:ring-zinc-600',
         className,
       )}
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      onClick={() => setTheme((theme) => (theme === 'light' ? 'dark' : 'light'))}
       role='button'
       tabIndex={0}
     >
-      <div className='flex justify-between items-center w-full'>
+      <div className='relative flex justify-between items-center w-full'>
         <div
           className={cn(
-            'flex justify-center items-center w-6 h-6 rounded-full transition-transform duration-300',
-            isDark ? 'transform translate-x-0 bg-zinc-800' : 'transform translate-x-8 bg-gray-200',
+            'absolute flex justify-center items-center w-6 h-6 rounded-full',
+            'transform transition-all duration-500 ease-in-out',
+            'dark:bg-zinc-800 bg-gray-200',
+            'dark:translate-x-0 translate-x-8',
           )}
         >
-          {isDark ? (
-            <Moon className='w-4 h-4 text-white' strokeWidth={1.5} />
-          ) : (
-            <Sun className='w-4 h-4 text-gray-700' strokeWidth={1.5} />
-          )}
-        </div>
-        <div
-          className={cn(
-            'flex justify-center items-center w-6 h-6 rounded-full transition-transform duration-300',
-            isDark ? 'bg-transparent' : 'transform -translate-x-8',
-          )}
-        >
-          {isDark ? (
-            <Sun className='w-4 h-4 text-gray-500' strokeWidth={1.5} />
-          ) : (
-            <Moon className='w-4 h-4 text-black' strokeWidth={1.5} />
-          )}
+          <Sun
+            className={cn(
+              'absolute w-4 h-4 transition-transform duration-500',
+              'dark:rotate-[-180deg] dark:opacity-0 dark:scale-0 rotate-0 opacity-100 scale-100',
+            )}
+            strokeWidth={1.5}
+          />
+          <Moon
+            className={cn(
+              'absolute w-4 h-4 transition-transform duration-500',
+              'dark:rotate-0 dark:opacity-100 dark:scale-100 rotate-180 opacity-0 scale-0',
+            )}
+            strokeWidth={1.5}
+          />
         </div>
       </div>
     </div>
