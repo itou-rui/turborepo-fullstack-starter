@@ -1,7 +1,7 @@
 import { type Metadata } from 'next';
 import { type LayoutProps } from '@/types';
-import { TurbelightNavBar } from '@/components/Navbar';
 import { Home, User, Briefcase, FileText } from '@/components/Icons';
+import { TurbelightNavBar } from '@/components/Navbar';
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default async function RootPageLayout(props: LayoutProps) {
   return (
-    <div className='relative min-h-screen bg-gradient-to-b from-zinc-900 dark:from-zinc-900 from-zinc-50 dark:to-black to-white'>
+    <div className='relative min-h-screen bg-gradient-to-b from-white dark:from-black to-white dark:to-black'>
       <TurbelightNavBar
         className='fixed'
         items={[
