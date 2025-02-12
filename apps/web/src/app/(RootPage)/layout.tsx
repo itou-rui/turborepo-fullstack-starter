@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default async function RootPageLayout(props: LayoutProps) {
   return (
-    <div className='relative min-h-screen bg-gradient-to-b from-zinc-900 to-black'>
+    <div className='relative min-h-screen bg-gradient-to-b from-zinc-900 dark:from-zinc-900 from-zinc-50 dark:to-black to-white'>
       <TurbelightNavBar
         className='fixed'
         items={[
