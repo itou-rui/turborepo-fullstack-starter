@@ -6,13 +6,13 @@ import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@workspace/ui/lib/utils';
 
-interface NavItem {
+export interface NavItem {
   name: string;
   url: string;
   icon: LucideIcon;
 }
 
-interface NavBarProps {
+export interface NavBarProps {
   items: NavItem[];
   className?: string;
 }
