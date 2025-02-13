@@ -67,8 +67,8 @@ export default async function RootLayout(props: LayoutProps): Promise<JSX.Elemen
   return (
     <html lang='en' suppressHydrationWarning>
       <head>{isCriticalCSSMode ? criticalCSS : cssLinks}</head>
-      <body className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}>
-        <ThemeProvider>
+      <body className={`${fontSans.variable} ${fontMono.variable} font-sans`}>
+        <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           <ReduxProvider>
             {props.children}
             {isCriticalCSSMode && cssLinks}
