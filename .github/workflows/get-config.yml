@@ -55,14 +55,27 @@ jobs:
       - name: Get Environment
         id: get_environment
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" == "refs/heads/stage" ]; then
-            echo "environment=stage" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            echo "environment=dev" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" == 'pull_request' ]; then
+            PR_HEAD_REF="${{ github.head_ref }}"
+            if [ "$PR_HEAD_REF" == "main" ]; then
+              echo "environment=prod" >> $GITHUB_OUTPUT
+            elif [ "$PR_HEAD_REF" == "stage" ]; then
+              echo "environment=stage" >> $GITHUB_OUTPUT
+            elif [ "$PR_HEAD_REF" == "dev" ]; then
+              echo "environment=dev" >> $GITHUB_OUTPUT
+            else
+              echo "environment=prev" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "environment=prev" >> $GITHUB_OUTPUT
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "environment=prod" >> $GITHUB_OUTPUT
+            elif [ "${{ github.ref }}" == "refs/heads/stage" ]; then
+              echo "environment=stage" >> $GITHUB_OUTPUT
+            elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+              echo "environment=dev" >> $GITHUB_OUTPUT
+            else
+              echo "environment=prev" >> $GITHUB_OUTPUT
+            fi
           fi
 
   get-app-name:

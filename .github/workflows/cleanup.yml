@@ -23,8 +23,6 @@ jobs:
   get-config:
     name: Get Config
     uses: ./.github/workflows/get-config.yml
-    with:
-      trigger: ${{ github.event_name }}
 
   check-param:
     runs-on: ubuntu-latest
