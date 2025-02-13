@@ -1,4 +1,5 @@
-import { Metadata } from 'next';
+import { type Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { LayoutProps } from '@/types';
 import { NavMain, NavProjects, NavUser, TeamSwitcher } from '@/components/Sidebar';
 import {
@@ -9,7 +10,18 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarRail,
+  SidebarTrigger,
 } from '@workspace/ui/components/sidebar';
+import { Separator } from '@workspace/ui/components/separator';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@workspace/ui/components/breadcrumb';
+
 import { userDetail, navMainDetails, projectsDetails, teamDetails } from './details';
 
 export const metadata: Metadata = {
@@ -28,8 +40,10 @@ export const metadata: Metadata = {
  * Detafetch: https://ui.shadcn.com/docs/components/sidebar#data-fetching
  */
 export default async function DashboardPageLayout(props: LayoutProps) {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <Sidebar collapsible='icon' {...props}>
         <SidebarHeader>
           <TeamSwitcher teams={teamDetails} />
@@ -43,7 +57,26 @@ export default async function DashboardPageLayout(props: LayoutProps) {
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
-      <SidebarInset>{props.children}</SidebarInset>
+      <SidebarInset>
+        <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
+          <div className='flex items-center gap-2 px-4'>
+            <SidebarTrigger className='-ml-1' />
+            <Separator orientation='vertical' className='mr-2 h-4' />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className='hidden md:block'>
+                  <BreadcrumbLink href='#'>Building Your Application</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className='hidden md:block' />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
+        {props.children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }
