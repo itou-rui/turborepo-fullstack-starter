@@ -84,7 +84,6 @@
     @apply border-border;
   }
   body {
-    background-color: black;
-    @apply bg-background text-foreground;
+    @apply antialiased bg-background text-foreground;
   }
 }
