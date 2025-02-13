@@ -1,8 +1,11 @@
-'use client';
+import { type ThemeProviderProps } from 'next-themes';
+import dynamic from 'next/dynamic';
 
-import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from 'next-themes';
+const NextThemesProvider = dynamic(() => import('next-themes').then((e) => e.ThemeProvider), {
+  ssr: true,
+});
 
-export const ThemeProvider = (props: ThemeProviderProps) => {
+export const ThemeProvider = async (props: ThemeProviderProps) => {
   return (
     <NextThemesProvider
       attribute={props.attribute || 'class'}
