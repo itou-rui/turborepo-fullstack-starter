@@ -1,4 +1,4 @@
-import { NextMiddleware, NextResponse } from 'next/server';
+import { type NextMiddleware, NextResponse } from 'next/server';
 
 /**
  * A factory function type that takes a middleware and returns a middleware.

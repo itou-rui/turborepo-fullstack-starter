@@ -1,6 +1,6 @@
 'use client';
 
-import { LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
@@ -65,7 +65,7 @@ export const SimpleFooter = ({
           <div>
             <h3 className='mb-4 text-lg font-semibold'>Quick Links</h3>
             <nav className='space-y-2 text-sm'>
-              {quickLinks.map((link, index) => (
+              {quickLinks?.map((link, index) => (
                 <a key={index} href={link.href} className='block transition-colors hover:text-primary'>
                   {link.label}
                 </a>
@@ -75,17 +75,15 @@ export const SimpleFooter = ({
           <div>
             <h3 className='mb-4 text-lg font-semibold'>Contact Us</h3>
             <address className='space-y-2 text-sm not-italic'>
-              {contact.address.map((line, index) => (
-                <p key={index}>{line}</p>
-              ))}
-              <p>Phone: {contact.phone}</p>
-              <p>Email: {contact.email}</p>
+              {contact?.address.map((line, index) => <p key={index}>{line}</p>)}
+              <p>Phone: {contact?.phone}</p>
+              <p>Email: {contact?.email}</p>
             </address>
           </div>
           <div className='relative'>
             <h3 className='mb-4 text-lg font-semibold'>Follow Us</h3>
             <div className='mb-6 flex space-x-4'>
-              {socialLinks.map((social, index) => (
+              {socialLinks?.map((social, index) => (
                 <TooltipProvider key={index}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -114,7 +112,7 @@ export const SimpleFooter = ({
             © {new Date().getFullYear()} {companyName}. All rights reserved.
           </p>
           <nav className='flex gap-4 text-sm'>
-            {privacyLinks.map((link, index) => (
+            {privacyLinks?.map((link, index) => (
               <a key={index} href={link.href} className='transition-colors hover:text-primary'>
                 {link.label}
               </a>

@@ -5,7 +5,7 @@ export const ServerHello = async () => {
     const res = await fetch('http://localhost/api/');
 
     if (res.ok) {
-      const data = await res.json().catch((e) => ({ message: 'Error' }));
+      const data = await res.json().catch(() => ({ message: 'Error' }));
       return <>{data.message}</>;
     }
 

@@ -1,4 +1,4 @@
-import { NavBarProps } from '@/components/Navbar';
+import { type NavBarProps } from '@/components/Navbar';
 import { type FooterProps } from '@/components/Footer';
 import { Home, User, Briefcase, FileText, Facebook, Instagram, Linkedin, Twitter } from '@/components/Icons';
 

@@ -1,6 +1,6 @@
 import { type Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { LayoutProps } from '@/types';
+import { type LayoutProps } from '@/types';
 import { NavMain, NavProjects, NavUser, TeamSwitcher } from '@/components/Sidebar';
 import {
   Sidebar,
