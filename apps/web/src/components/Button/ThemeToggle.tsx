@@ -74,12 +74,14 @@ export const ThemeToggle = ({ className, iconClassName, variant = 'outline', siz
     >
       <Sun
         className={cn('h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0', iconClassName)}
+        data-testid='sun-icon'
       />
       <Moon
         className={cn(
           'absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100',
           iconClassName,
         )}
+        data-testid='moon-icon'
       />
       <span className='sr-only'>Switch color mode</span>
     </Button>
