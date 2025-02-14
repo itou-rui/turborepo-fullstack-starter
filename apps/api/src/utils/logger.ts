@@ -3,10 +3,23 @@ import { NestStructuredLogger, type LoggerOptions } from '@workspace/logger';
 
 @Injectable()
 export class StructuredLogger extends NestStructuredLogger implements LoggerService {
+  /**
+   * Creates an instance of StructuredLogger.
+   * @param options - The options for the logger.
+   * @param options.name - The name of the logger.
+   * @param options.level - The log level of the logger.
+   * @param options.format - The format of the log messages.
+   * @param options.enabled - Whether the logger is enabled.
+   */
   constructor(options: LoggerOptions = {}) {
     super({ name: 'API', ...options });
   }
 
+  /**
+   * Logs a message at the 'log' level.
+   * @param message - The message to log.
+   * @param optionalParams - Additional parameters.
+   */
   log(message: any, ...optionalParams: any[]): void {
     const context = this.getContext(optionalParams);
     if (typeof message === 'string') {
@@ -16,6 +29,11 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
     }
   }
 
+  /**
+   * Logs a message at the 'error' level.
+   * @param message - The message to log.
+   * @param optionalParams - Additional parameters.
+   */
   error(message: any, ...optionalParams: any[]): void {
     const { trace, context } = this.getTraceAndContext(optionalParams);
     if (message instanceof Error) {
@@ -27,6 +45,11 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
     }
   }
 
+  /**
+   * Logs a message at the 'warn' level.
+   * @param message - The message to log.
+   * @param optionalParams - Additional parameters.
+   */
   warn(message: any, ...optionalParams: any[]): void {
     const context = this.getContext(optionalParams);
     if (typeof message === 'string') {
@@ -36,6 +59,11 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
     }
   }
 
+  /**
+   * Logs a message at the 'debug' level.
+   * @param message - The message to log.
+   * @param optionalParams - Additional parameters.
+   */
   debug(message: any, ...optionalParams: any[]): void {
     const context = this.getContext(optionalParams);
     if (typeof message === 'string') {
@@ -45,6 +73,11 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
     }
   }
 
+  /**
+   * Extracts the context from the optional parameters.
+   * @param params - The optional parameters.
+   * @returns The context if present, otherwise undefined.
+   */
   private getContext(params: any[]): string | undefined {
     if (params.length > 0) {
       const lastParam = params[params.length - 1];
@@ -55,6 +88,11 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
     return undefined;
   }
 
+  /**
+   * Extracts the trace and context from the optional parameters.
+   * @param params - The optional parameters.
+   * @returns An object containing the trace and context if present.
+   */
   private getTraceAndContext(params: any[]): { trace?: string; context?: string } {
     if (params.length === 0) return {};
     if (params.length === 1) return { trace: typeof params[0] === 'string' ? params[0] : undefined };

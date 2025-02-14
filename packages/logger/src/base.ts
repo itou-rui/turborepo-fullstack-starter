@@ -15,20 +15,47 @@ function isPlainObject(obj: unknown): obj is Record<string, unknown> {
 }
 
 export abstract class BaseLogger {
+  /**
+   * The logging level.
+   */
   protected logLevel: LogLevel;
+
+  /**
+   * The format of the log messages.
+   */
   protected format: LogFormat;
+
+  /**
+   * The name of the logger.
+   */
   protected name: string;
 
+  /**
+   * Creates an instance of the logger.
+   * @param options - The options for the logger.
+   * @param options.logLevel - The logging level.
+   * @param options.format - The format of the log messages.
+   * @param options.name - The name of the logger.
+   */
   constructor(options: { logLevel: LogLevel; format: LogFormat; name: string }) {
     this.logLevel = options.logLevel;
     this.format = options.format;
     this.name = options.name;
   }
 
+  /**
+   * Checks if the specified log level is enabled.
+   * @param level - The log level to check.
+   * @returns True if the log level is enabled, false otherwise.
+   */
   protected isLevelEnabled(level: LogLevel): boolean {
     return logLevels[level] >= logLevels[this.logLevel];
   }
 
+  /**
+   * Prints the log message based on the specified format.
+   * @param args - The arguments for the log message.
+   */
   protected printMessage(args: PrintMessageArgs): void {
     switch (this.format) {
       case 'json':
@@ -77,10 +104,26 @@ export abstract class BaseLogger {
     this.print(this.formatJson(output));
   }
 
+  /**
+   * Prints the log message in JSON format.
+   * @param message - The log message.
+   * @param params - Additional parameters for the log message.
+   * @param context - The context of the log message.
+   * @param severity - The severity level of the log message.
+   * @param stack - The stack trace of the log message.
+   */
   protected formatJson(output: Record<string, unknown>): string {
     return JSON.stringify(output);
   }
 
+  /**
+   * Prints the log message in text format.
+   * @param message - The log message.
+   * @param params - Additional parameters for the log message.
+   * @param context - The context of the log message.
+   * @param severity - The severity level of the log message.
+   * @param stack - The stack trace of the log message.
+   */
   protected printText({ message, params, context, severity, stack }: PrintMessageArgs) {
     const output: string[] = [
       this.colorize(severity.toUpperCase(), this.getColorNameByLogLevel(severity)),
@@ -108,6 +151,12 @@ export abstract class BaseLogger {
     process.stdout.write(str + '\n');
   }
 
+  /**
+   * Formats an object into a string representation.
+   * @param obj - The object to format.
+   * @param parentKey - The parent key for nested objects.
+   * @returns The formatted string representation of the object.
+   */
   protected formatObject(obj: Record<string, unknown>, parentKey = ''): string {
     const values: string[] = [];
     for (const [key, value] of Object.entries(obj)) {
@@ -156,6 +205,11 @@ export abstract class BaseLogger {
     }
   }
 
+  /**
+   * Extracts the message, parameters, and context from the provided messages.
+   * @param messages - The array of messages to extract from.
+   * @returns An object containing the extracted message, parameters, and context.
+   */
   protected extractMessagesWithStack(args: unknown[]): {
     message: string;
     params: unknown[];
