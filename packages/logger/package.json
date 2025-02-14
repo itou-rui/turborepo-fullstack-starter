@@ -1,7 +1,7 @@
 {
   "name": "@workspace/logger",
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
   "private": true,
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -22,5 +22,12 @@
     "@workspace/prettier": "*",
     "@workspace/tsconfig": "*",
     "tsup": "^8.3.6"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
   }
 }

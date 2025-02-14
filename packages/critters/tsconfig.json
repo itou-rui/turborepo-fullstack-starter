@@ -1,5 +1,5 @@
 {
-	"extends": "@workspace/tsconfig/nextjs.json",
-	"include": ["."],
-	"exclude": ["dist", "build", "node_modules"]
+  "extends": "@workspace/tsconfig/base.json",
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
 }
