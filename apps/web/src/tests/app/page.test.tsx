@@ -1,4 +1,4 @@
-import { render, screen, userEvent, waitFor } from '../jest.setup';
+import { render, screen, act } from '../jest.setup';
 import '@testing-library/jest-dom';
 import RootPage from '@/app/(RootPage)/page';
 
@@ -6,85 +6,67 @@ describe('RootPage', () => {
   /**
    * Test to check if the hero section renders correctly.
    */
-  it('renders hero section correctly', () => {
-    render(<RootPage />);
-    expect(screen.getByText('Turborepo Powered')).toBeInTheDocument();
-    expect(
-      screen.getByText((content, element) => {
-        return element?.tagName.toLowerCase() === 'h1' && content.includes('Modern');
-      }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Monorepo')).toBeInTheDocument();
-    expect(
-      screen.getByText((content, element) => {
-        return element?.tagName.toLowerCase() === 'h1' && content.includes('Full Stack Development Environment');
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((content, element) => {
-        return (
-          element?.tagName.toLowerCase() === 'p' &&
-          content.includes('A high-performance application platform combining Next.js, Nest.js, and Nginx')
-        );
-      }),
-    ).toBeInTheDocument();
-  });
-
-  /**
-   * Test to check if all application cards render correctly.
-   */
-  it('renders all application cards', () => {
-    render(<RootPage />);
-    expect(screen.getByText('Next.js')).toBeInTheDocument();
-    expect(screen.getByText('Nest.js')).toBeInTheDocument();
-    expect(screen.getByText('Nginx')).toBeInTheDocument();
-  });
-
-  /**
-   * Test to check if all package cards render correctly when the packages tab is selected.
-   */
-  it('renders all package cards when packages tab is selected', async () => {
-    render(<RootPage />);
-    await userEvent.click(screen.getByRole('tab', { name: /Packages/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Shared Packages')).toBeInTheDocument();
-      expect(screen.getByText('TypeScript Config')).toBeInTheDocument();
-      expect(screen.getByText('UI Components')).toBeInTheDocument();
+  it('renders hero section correctly', async () => {
+    await act(async () => {
+      render(await RootPage());
     });
+    expect(screen.getByText('Turborepo Starter Kit')).toBeInTheDocument();
+    expect(screen.getByText(/Production-ready full-stack monorepo starter/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Get Started' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Documentation' })).toBeInTheDocument();
   });
 
   /**
-   * Test to check if action buttons in the feature section render correctly.
+   * Test to check if all feature cards render correctly.
    */
-  it('renders action buttons in feature section', () => {
-    render(<RootPage />);
-    expect(screen.getByText('Quick Start')).toBeInTheDocument();
-    expect(screen.getByText('Setup Guide')).toBeInTheDocument();
-  });
-
-  /**
-   * Test to check if tabs switch correctly.
-   */
-  it('switches tabs correctly', async () => {
-    render(<RootPage />);
-    const appsTab = screen.getByRole('tab', { name: /Applications/i });
-    const packagesTab = screen.getByRole('tab', { name: /Packages/i });
-
-    // More robust way of checking initial state
-    const initialAppsTabSelected = appsTab.getAttribute('aria-selected') === 'true';
-    const initialPackagesTabSelected = packagesTab.getAttribute('aria-selected') === 'true';
-
-    expect(initialAppsTabSelected).toBe(true);
-    expect(initialPackagesTabSelected).toBe(false);
-
-    // Use userEvent for more natural interaction
-    await userEvent.click(packagesTab);
-
-    // Wait for potential async updates
-    await waitFor(() => {
-      expect(appsTab).toHaveAttribute('aria-selected', 'false');
-      expect(packagesTab).toHaveAttribute('aria-selected', 'true');
+  it('renders all feature cards', async () => {
+    await act(async () => {
+      render(await RootPage());
     });
+    expect(screen.getByText('Next.js 14')).toBeInTheDocument();
+    expect(screen.getByText('NestJS Backend')).toBeInTheDocument();
+    expect(screen.getByText('TailwindCSS')).toBeInTheDocument();
+    expect(screen.getByText('Cloud Ready')).toBeInTheDocument();
+  });
+
+  /**
+   * Test to check if all bento features render correctly.
+   */
+  it('renders all bento features', async () => {
+    await act(async () => {
+      render(await RootPage());
+    });
+    expect(screen.getByText('Monorepo Structure')).toBeInTheDocument();
+    expect(screen.getByText('Shared Packages')).toBeInTheDocument();
+    expect(screen.getByText('Full Stack Ready')).toBeInTheDocument();
+    expect(screen.getByText('Development Tools')).toBeInTheDocument();
+    expect(screen.getByText('CI/CD Ready')).toBeInTheDocument();
+  });
+
+  /**
+   * Test to check if the hero section links are working correctly.
+   */
+  it('renders hero section links with correct attributes', async () => {
+    await act(async () => {
+      render(await RootPage());
+    });
+    const getStartedLink = screen.getByRole('link', { name: 'Get Started' });
+    const documentationLink = screen.getByRole('link', { name: 'Documentation' });
+
+    expect(getStartedLink).toHaveAttribute('href', 'https://github.com/itou-rui/turborepo-fullstack-starter');
+    expect(documentationLink).toHaveAttribute('href', '#');
+  });
+
+  /**
+   * Test to check if feature descriptions are rendered correctly.
+   */
+  it('renders feature descriptions correctly', async () => {
+    await act(async () => {
+      render(await RootPage());
+    });
+    expect(screen.getByText(/Built with the latest Next.js features/)).toBeInTheDocument();
+    expect(screen.getByText(/Enterprise-ready backend with TypeORM/)).toBeInTheDocument();
+    expect(screen.getByText(/Modern UI with shadcn\/ui components/)).toBeInTheDocument();
+    expect(screen.getByText(/Deployment configurations for Google Cloud Run/)).toBeInTheDocument();
   });
 });
