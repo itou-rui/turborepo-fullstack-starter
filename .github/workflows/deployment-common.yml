@@ -131,36 +131,39 @@ jobs:
         id: generate_traffic
         run: |
           if [ "${{ inputs.environment }}" == "prod" ]; then
-            echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c '
-            [
-              {
-                "percent": 100,
-                "tag": "prod",
-                "revisionName": null,
-                "latestRevision": true
-              },
-              (.[] | select(.tag != null and .tag != "prod") | . + {"latestRevision": false, "percent": 0})
-            ]' > traffic.json
+            echo "Fetching existing traffic settings..."
+            existing_traffic=$(gcloud run services describe ${{ inputs.app_name }}-${{ inputs.app }} \
+              --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
+              --format='json' | jq '[.spec.traffic[] | {revisionName, tag, percent, latestRevision}]')
+
+            echo "Updating traffic settings for prod..."
+            updated_traffic=$(echo "$existing_traffic" | jq 'map(
+              .percent = if .tag == "prod" then 100 else 0 end
+            )')
           else
-            echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c '
-            [
-              (. | map(select(.tag == "prod"))[0] | {
-                "percent": 100,
-                "revisionName": .revisionName,
-                "latestRevision": false
-              }),
-              {
-                "percent": 0,
-                "tag": "${{ inputs.ref_name }}",
-                "latestRevision": false
-              },
-              (.[] | select(.tag != null and .tag != "${{ inputs.ref_name }}") | . + {"latestRevision": false, "percent": 0})
-            ]' > traffic.json
+            echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c --arg ref "${{ inputs.ref_name }}" '
+              (
+                ([ .[] | select(.tag == "prod") ] | first)
+                // { "revisionName": null, "tag": "prod", "percent": 100, "latestRevision": false }
+                | .percent = 100 | .latestRevision = false
+              )
+              as $prod
+              |
+              (
+                [ .[] | select(.tag != "prod") ]
+                | map({ revisionName: .revisionName, tag: .tag, percent: 0, latestRevision: false })
+              )
+              as $nonProd
+              |
+              ($nonProd | map(select(.tag == $ref)) | length) as $refExists
+              |
+              $nonProd + (if $refExists == 0 then [ { "revisionName": null, "tag": $ref, "percent": 0, "latestRevision": false } ] else [] end)
+              |
+              [$prod] + .
+            ' > traffic.json
           fi
 
           echo "config=$(cat traffic.json)" >> $GITHUB_OUTPUT
-
-          ## Debug
           cat traffic.json
 
   deploy-cloudrun:
