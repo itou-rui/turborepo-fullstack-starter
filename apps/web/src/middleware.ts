@@ -1,4 +1,4 @@
-import { chain, addCustomHeader } from './middlewares';
+import { chain } from './middlewares';
 
 /**
  * Configuration object for middleware.
@@ -25,6 +25,4 @@ export const config = {
   ],
 };
 
-export default chain([
-  addCustomHeader, // Execute at the end
-]);
+export default chain([]);

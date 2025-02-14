@@ -1,1 +1,1 @@
-export * from './SwitchModeButton';
+export * from './ThemeToggle';
