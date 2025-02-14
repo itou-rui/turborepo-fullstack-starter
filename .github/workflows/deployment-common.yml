@@ -136,8 +136,8 @@ jobs:
               {
                 "percent": 100,
                 "tag": "prod",
-                "revisionName": (.[0].revisionName),
-                "latestRevision": false
+                "revisionName": null,
+                "latestRevision": true
               },
               (.[] | select(.tag != null and .tag != "prod") | . + {"latestRevision": false, "percent": 0})
             ]' > traffic.json
