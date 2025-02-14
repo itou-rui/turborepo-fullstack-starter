@@ -130,18 +130,10 @@ jobs:
       - name: Generate traffic config
         id: generate_traffic
         run: |
-          if [ "${{ inputs.environment }}" == "prod" ]; then
-            echo "Fetching existing traffic settings..."
-            existing_traffic=$(gcloud run services describe ${{ inputs.app_name }}-${{ inputs.app }} \
-              --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
-              --format='json' | jq '[.spec.traffic[] | {revisionName, tag, percent, latestRevision}]')
-
-            echo "Updating traffic settings for prod..."
-            updated_traffic=$(echo "$existing_traffic" | jq 'map(
-              .percent = if .tag == "prod" then 100 else 0 end
-            )')
-          else
-            echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c --arg ref "${{ inputs.ref_name }}" '
+          echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c --arg ref "${{ inputs.ref_name }}" '
+            if "${{ inputs.environment }}" == "prod" then
+              map(.percent = if .tag == "prod" then 100 else 0 end)
+            else
               (
                 ([ .[] | select(.tag == "prod") ] | first)
                 // { "revisionName": null, "tag": "prod", "percent": 100, "latestRevision": false }
@@ -160,8 +152,8 @@ jobs:
               $nonProd + (if $refExists == 0 then [ { "revisionName": null, "tag": $ref, "percent": 0, "latestRevision": false } ] else [] end)
               |
               [$prod] + .
-            ' > traffic.json
-          fi
+            end
+          ' > traffic.json
 
           echo "config=$(cat traffic.json)" >> $GITHUB_OUTPUT
           cat traffic.json
