@@ -8,7 +8,7 @@ import { PanelLeft } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
 import { Separator } from './separator';
-import { Sheet, SheetContent, SheetTitle } from './sheet';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from './sheet';
 import { Skeleton } from './skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
 
@@ -160,7 +160,11 @@ const Sidebar = React.forwardRef<
         <SheetContent
           data-sidebar='sidebar'
           data-mobile='true'
-          className='w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden'
+          /**
+           * MEMO: Addressing the issue of transparent sidebar on mobile
+           * https://github.com/shadcn-ui/ui/issues/6002#issuecomment-2542560340
+           */
+          className='w-[--sidebar-width] bg-accent p-0 text-sidebar-foreground [&>button]:hidden'
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -168,8 +172,13 @@ const Sidebar = React.forwardRef<
           }
           side={side}
         >
+          {/*
+           * MEMO: Obey warnings
+           * https://github.com/shadcn-ui/ui/issues/6002#issuecomment-2539751773
+           */}
           <VisuallyHidden>
-            <SheetTitle>SidebarMenu</SheetTitle>
+            <SheetTitle></SheetTitle>
+            <SheetDescription></SheetDescription>
           </VisuallyHidden>
           <div className='flex h-full w-full flex-col'>{children}</div>
         </SheetContent>
