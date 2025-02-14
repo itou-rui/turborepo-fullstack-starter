@@ -1,4 +1,4 @@
-import { render, screen, act } from '../jest.setup';
+import { render, screen, act } from '../../jest.setup';
 import '@testing-library/jest-dom';
 import RootPage from '@/app/(RootPage)/page';
 
