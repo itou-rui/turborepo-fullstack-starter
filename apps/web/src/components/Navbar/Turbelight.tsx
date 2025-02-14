@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 import { cn } from '@workspace/ui/lib/utils';
 
 export interface NavItem {
@@ -19,7 +19,7 @@ export interface NavBarProps {
 
 export const TurbelightNavBar = ({ items, className }: NavBarProps) => {
   const [activeTab, setActiveTab] = useState(items[0].name);
-  const [isMobile, setIsMobile] = useState(false);
+  const [, setIsMobile] = useState(false);
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 

@@ -1,0 +1,33 @@
+{
+  "name": "@workspace/logger",
+  "version": "0.0.0",
+  "type": "commonjs",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@workspace/esbuild": "*",
+    "@workspace/eslint": "*",
+    "@workspace/prettier": "*",
+    "@workspace/tsconfig": "*",
+    "tsup": "^8.3.6"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  }
+}

@@ -1,12 +1,56 @@
-import { Logger } from '@nestjs/common';
+/**
+ * Entry point for the NestJS application.
+ * This file sets up the application, including middleware, CORS, validation, logging, and Swagger documentation.
+ */
+
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
+import { StructuredLogger } from './utils';
+import { LogFormat } from '@workspace/logger';
 
 declare const module: any;
+
+/**
+ * Bootstrap function to initialize the NestJS application.
+ */
 async function bootstrap() {
   const logger = new Logger('EntryPoint');
   const app = await NestFactory.create(AppModule);
+
+  app.use(helmet());
+
+  /**
+   * Enable Cross-Origin Resource Sharing (CORS) with specified options.
+   */
+  app.enableCors({
+    origin: process.env.BASE_URL || 'http://localhost:8080',
+    credentials: true,
+  });
+
+  /**
+   * Use global validation pipes with specified options.
+   */
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+    }),
+  );
+
+  /**
+   * Use structured logging with specified options.
+   */
+  app.useLogger(
+    new StructuredLogger({
+      name: 'bootstrap',
+      level: 'info',
+      format: process.env.LOG_FORMAT as LogFormat,
+      enabled: true,
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Leaves Tracker')

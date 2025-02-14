@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 
 export class BaseDocument extends Document {
   @Prop({ type: Types.ObjectId, auto: true })
-  _id!: Types.ObjectId;
+  declare _id: Types.ObjectId;
 
   @Prop({ default: Date.now })
   createdAt!: Date;
