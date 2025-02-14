@@ -205,14 +205,29 @@ jobs:
         run: |
           ## App
           if [ "${{ inputs.app }}" == "web" ]; then
+            ## Web
             echo "There are no environment variables on the Web."
           else
+            ## Api
             export MONGODB_USER_NAME="${{ secrets.MONGODB_USER_NAME }}"
             export MONGODB_USER_PASSWORD="${{ secrets.MONGODB_USER_PASSWORD }}"
             export MONGODB_HOST_NAME="${{ secrets.MONGODB_HOST_NAME }}"
           fi
 
-          ## Common (System)
+          ## Common
+          if [ "${{ inputs.environment }}" == "prod" ]; then
+            export BASE_URL="https://${{ inputs.app }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+          else
+            if [ "${{ inputs.environment }}" == "prev" ]; then
+              export BASE_URL="https://${{ inputs.ref_name }}.${{ inputs.app }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+            else
+              ## dev or stage
+              export BASE_URL="https://${{ inputs.environment }}.${{ inputs.app }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+            fi
+          fi
+          export LOG_FORMAT="json"
+
+          ## System
           export GITHUB_SHA="${{ github.sha }}"
           export CONTAINER_IMAGE="${{ steps.set-vars.outputs.docker_image_name }}:${{ github.sha }}"
           export CLOUD_RUN_SERVICE_NAME="${{ steps.set-vars.outputs.service_name }}"

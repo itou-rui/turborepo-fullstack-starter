@@ -46,6 +46,12 @@ spec:
               value: '${MONGODB_USER_PASSWORD}'
             - name: MONGODB_HOST_NAME
               value: '${MONGODB_HOST_NAME}'
+
+            ## Common
+            - name: LOG_FORMAT
+              value: '${LOG_FORMAT}'
+            - name: BASE_URL
+              value: '${BASE_URL}'
           startupProbe:
             httpGet:
               path: /
