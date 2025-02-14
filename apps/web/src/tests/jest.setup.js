@@ -1,9 +1,11 @@
 /* eslint-disable no-undef */
+
 import React from 'react';
 import 'whatwg-fetch';
 import '@testing-library/jest-dom';
 import { render, act } from '@testing-library/react';
 import { ReduxProvider, ThemeProvider } from '../components/Providers';
+import { RenderOptions, RenderResult } from '@testing-library/react';
 
 // Setup for React 18's concurrent features
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -25,7 +27,12 @@ window.matchMedia =
     };
   };
 
-// Custom render with providers that returns the rendered UI plus additional helper methods
+/**
+ * Custom render function with providers
+ * @param {import('react').ReactElement} ui - The React component to render
+ * @param {import('@testing-library/react').RenderOptions} [options={}] - Additional render options
+ * @returns {import('@testing-library/react').RenderResult} The rendered component and helper methods
+ */
 const customRender = (ui, options = {}) => {
   const Wrapper = ({ children }) => (
     <ReduxProvider>
