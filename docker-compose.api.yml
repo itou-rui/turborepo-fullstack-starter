@@ -7,10 +7,9 @@ services:
       dockerfile: ./apps/api/Dockerfile
     env_file:
       - ./apps/api/.env
-    # environment:
-    #   MONGODB_USER_NAME: ${MONGODB_USER_NAME}
-    #   MONGODB_USER_PASSWORD: ${MONGODB_USER_PASSWORD}
-    #   MONGODB_HOST_NAME: ${MONGODB_HOST_NAME}
+    environment:
+      - BASE_URL=http://localhost
+      - LOF_FORMAT=text
     stop_signal: SIGINT
     ports:
       - 5002:5002
