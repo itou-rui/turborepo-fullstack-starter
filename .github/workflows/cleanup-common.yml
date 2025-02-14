@@ -24,7 +24,7 @@ on:
       execute_artifact_repository:
         required: true
         type: boolean
-      execute_cloudrun_revision_tag:
+      execute_cloudrun_revision:
         required: true
         type: boolean
       execute_github_cache:
@@ -111,7 +111,7 @@ jobs:
           project_id: "${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}"
 
       - name: Remove Revision Tag
-        if: inputs.execute_cloudrun_revision_tag == true
+        if: inputs.execute_cloudrun_revision == true
         run: |
           if [ "${{ inputs.environment }}" == "prev" ]; then
             tag_name="${{ inputs.ref_name }}"
@@ -128,6 +128,29 @@ jobs:
             gcloud run services update-traffic ${{ inputs.app_name }}-${{ inputs.app }} \
               --remove-tags=$tag_name \
               --region="${{ vars.GOOGLE_CLOUD_REGION }}"
+          done
+
+      - name: Delete Revisions with Removed Tag
+        if: inputs.execute_cloudrun_revision == true
+        run: |
+          if [ "${{ inputs.environment }}" == "prev" ]; then
+            tag_name="${{ inputs.ref_name }}"
+          else
+            tag_name="${{ inputs.environment }}"
+          fi
+
+          echo "Fetching revisions with tag $tag_name that have 0% traffic..."
+
+          # Here, only those with percent of 0 from traffic information are targeted for deletion.
+          revisions_to_delete=$(gcloud run services describe ${{ inputs.app_name }}-${{ inputs.app }} \
+            --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
+            --format='json' | jq -r '.spec.traffic[] | select(.tag=="'$tag_name'" and .percent==0) | .revisionName')
+
+          for revision in $revisions_to_delete; do
+            echo "Deleting revision $revision with tag $tag_name"
+            gcloud run revisions delete $revision \
+              --region="${{ vars.GOOGLE_CLOUD_REGION }}" \
+              --quiet || echo "Failed to delete revision $revision"
           done
 
   build-cache:

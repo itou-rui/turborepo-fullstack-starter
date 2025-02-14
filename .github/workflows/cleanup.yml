@@ -14,8 +14,8 @@ on:
         description: "Delete all Github caches for the specified branch"
         type: boolean
         default: true
-      execute_cloudrun_revision_tag:
-        description: "Remove tags from Cloudrun revisions"
+      execute_cloudrun_revision:
+        description: "Remove from Cloudrun revisions"
         type: boolean
         default: false
 
@@ -42,7 +42,7 @@ jobs:
               fi
 
               ## Revision Tag in production environment cannot be deleted
-              if [ "${{ github.event.inputs.execute_cloudrun_revision_tag }}" == "true" ]; then
+              if [ "${{ github.event.inputs.execute_cloudrun_revision }}" == "true" ]; then
                 echo "::error::Cannot cleanup to main branch directly via workflow_dispatch"
                 exit 1
               fi
@@ -68,7 +68,7 @@ jobs:
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact_repository == 'true' }}
-      execute_cloudrun_revision_tag: ${{ github.event_name == 'pull_request' || github.event.inputs.execute_cloudrun_revision_tag == 'true' }}
+      execute_cloudrun_revision: ${{ github.event_name == 'pull_request' || github.event.inputs.execute_cloudrun_revision == 'true' }}
       execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github_cache == 'true' }}
     secrets: inherit
 
@@ -91,6 +91,6 @@ jobs:
       repo_name: ${{ needs.get-config.outputs.repo_name_lowercase }}
       ref_name: ${{ needs.get-config.outputs.ref_name_lowercase }}
       execute_artifact_repository: ${{ github.event_name == 'pull_request' || github.event.inputs.artifact_repository == 'true' }}
-      execute_cloudrun_revision_tag: ${{ github.event_name == 'pull_request' || github.event.inputs.execute_cloudrun_revision_tag == 'true' }}
+      execute_cloudrun_revision: ${{ github.event_name == 'pull_request' || github.event.inputs.execute_cloudrun_revision == 'true' }}
       execute_github_cache: ${{ github.event_name == 'pull_request' || github.event.inputs.github_cache == 'true' }}
     secrets: inherit
