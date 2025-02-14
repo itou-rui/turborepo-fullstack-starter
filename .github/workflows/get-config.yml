@@ -141,10 +141,11 @@ jobs:
           repo_owner_lowercase=$(echo "$repo_owner" | tr '[:upper:]' '[:lower:]')
 
           ## If the trigger is a pull request, the method of obtaining the branch name is different
-          ref_name=$(echo '${{ github.ref_name }}' | tr '[:upper:]' '[:lower:]')
-          ref_name_lowercase=$(echo "$ref_name" | tr '/' '-')
-          if [ "${{ inputs.trigger }}" = "pull_request" ]; then
+          if [ "${{ github.event_name }}" == 'pull_request' ]; then
             ref_name=$(echo '${{ github.event.pull_request.head.ref }}' | tr '[:upper:]' '[:lower:]')
+            ref_name_lowercase=$(echo "$ref_name" | tr '/' '-')
+          else
+            ref_name=$(echo '${{ github.ref_name }}' | tr '[:upper:]' '[:lower:]')
             ref_name_lowercase=$(echo "$ref_name" | tr '/' '-')
           fi
 
