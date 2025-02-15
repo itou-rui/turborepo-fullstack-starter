@@ -26,7 +26,7 @@ async function bootstrap() {
    * Enable Cross-Origin Resource Sharing (CORS) with specified options.
    */
   app.enableCors({
-    origin: process.env.BASE_URL || 'http://localhost:8080',
+    origin: process.env.BASE_URL as string,
     credentials: true,
   });
 
@@ -63,8 +63,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  const PORT = process.env.PORT || 5002;
-  const HOSTNAME = process.env.HOSTNAME || 'localhost';
+  const PORT = process.env.PORT as string;
+  const HOSTNAME = process.env.HOSTNAME as string;
 
   await app.listen(PORT, HOSTNAME);
 
