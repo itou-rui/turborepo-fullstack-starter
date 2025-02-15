@@ -8,7 +8,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { StructuredLogger } from './utils';
+import { ResponseInterceptor, StructuredLogger } from './utils';
 import { LogFormat } from '@workspace/logger';
 
 declare const module: any;
@@ -51,6 +51,8 @@ async function bootstrap() {
       enabled: true,
     }),
   );
+
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Leaves Tracker')
