@@ -35,6 +35,7 @@
     "@workspace/jest": "*",
     "@workspace/prettier": "*",
     "@workspace/tsconfig": "*",
+    "@workspace/types": "*",
     "copy-webpack-plugin": "^12.0.2",
     "jest-environment-jsdom": "^29.6.2",
     "next-transpile-modules": "10.0.1",
