@@ -130,28 +130,27 @@ jobs:
       - name: Generate traffic config
         id: generate_traffic
         run: |
-          echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c --arg ref "${{ inputs.ref_name }}" '
-            if "${{ inputs.environment }}" == "prod" then
-              map(.percent = if .tag == "prod" then 100 else 0 end)
+          ENV="${{ inputs.environment }}"
+          echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c --arg ref "${{ inputs.ref_name }}" --arg env "$ENV" '
+            if $env == "prod" then
+               ( [ .[] | select(.tag != "prod") ] ) as $others |
+               { revisionName: null, tag: "prod", percent: 100, latestRevision: true } as $prod |
+               [ $prod ] + $others
             else
-              (
-                ([ .[] | select(.tag == "prod") ] | first)
-                // { "revisionName": null, "tag": "prod", "percent": 100, "latestRevision": false }
-                | .percent = 100 | .latestRevision = false
-              )
-              as $prod
-              |
-              (
-                [ .[] | select(.tag != "prod") ]
-                | map({ revisionName: .revisionName, tag: .tag, percent: 0, latestRevision: false })
-              )
-              as $nonProd
-              |
-              ($nonProd | map(select(.tag == $ref)) | length) as $refExists
-              |
-              $nonProd + (if $refExists == 0 then [ { "revisionName": null, "tag": $ref, "percent": 0, "latestRevision": false } ] else [] end)
-              |
-              [$prod] + .
+               ( ([ .[] | select(.tag == "prod") ] | first)
+                 // { revisionName: null, tag: "prod", percent: 0, latestRevision: false }
+                 | .percent = 0 | .latestRevision = false
+               ) as $prod
+               |
+               ( [ .[] | select(.tag != "prod") ]
+                 | map({ revisionName: .revisionName, tag: .tag, percent: 0, latestRevision: false })
+               ) as $nonProd
+               |
+               ($nonProd | map(select(.tag == $ref)) | length) as $refExists
+               |
+               $nonProd + (if $refExists == 0 then [ { revisionName: null, tag: $ref, percent: 0, latestRevision: false } ] else [] end)
+               |
+               [ $prod ] + .
             end
           ' > traffic.json
 
