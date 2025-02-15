@@ -49,6 +49,7 @@
     "@workspace/jest": "*",
     "@workspace/prettier": "*",
     "@workspace/tsconfig": "*",
+    "@workspace/types": "*",
     "eslint-plugin-prettier": "^5.2.3",
     "run-script-webpack-plugin": "^0.2.0",
     "source-map-support": "^0.5.21",

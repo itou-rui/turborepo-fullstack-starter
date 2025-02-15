@@ -1,13 +1,12 @@
-import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty, ValidateNested } from 'class-validator';
-import { CreateProfileDto } from './create-profile.dto';
+import { IsString, IsNotEmpty } from 'class-validator';
+import type { RESTPostAPIUserJSONBody } from '@workspace/types';
 
-export class CreateUserDto {
-  @ValidateNested()
-  @Type(() => CreateProfileDto)
-  profile!: CreateProfileDto;
+export class CreateUserDto implements RESTPostAPIUserJSONBody {
+  @IsString()
+  @IsNotEmpty()
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
-  discordId!: string;
+  password!: string;
 }
