@@ -103,7 +103,7 @@ export const validationSchemaForEnv = Joi.object<EnvironmentVariables, true>({
    * System
    */
   PORT: Joi.string().default('5002'),
-  HOSTNAME: Joi.string().default('localhost'),
+  HOSTNAME: Joi.string().default('0.0.0.0'),
   BASE_URL: Joi.string().default('http://localhost:8080'),
   LOG_FORMAT: Joi.string().default('text'),
 

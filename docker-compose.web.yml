@@ -8,13 +8,13 @@ services:
     env_file:
       - ./apps/web/.env
     environment:
+      - PORT=3000
+      - HOSTNAME="0.0.0.0"
       - NODE_ENV=production
-      - PORT=8080
-      - HOSTNAME=0.0.0.0
       - BASE_URL=http://localhost
       - LOF_FORMAT=text
     stop_signal: SIGINT
     ports:
-      - "8080:8080"
+      - "3000:3000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
