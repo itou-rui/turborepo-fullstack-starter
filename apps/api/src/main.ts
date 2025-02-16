@@ -19,8 +19,14 @@ declare const module: any;
  * Bootstrap function to initialize the NestJS application.
  */
 async function bootstrap() {
-  const logger = new Logger('EntryPoint');
   const app = await NestFactory.create(AppModule);
+
+  /**
+   * Use structured logging with specified options.
+   */
+  app.useLogger(new StructuredLogger({ level: 'info', format: process.env.LOG_FORMAT as LogFormat }));
+
+  const logger = new Logger('EntryPoint');
 
   // Security middleware
   app.use(helmet());
@@ -32,18 +38,6 @@ async function bootstrap() {
     origin: process.env.BASE_URL as string,
     credentials: true,
   });
-
-  /**
-   * Use structured logging with specified options.
-   */
-  app.useLogger(
-    new StructuredLogger({
-      name: 'bootstrap',
-      level: 'info',
-      format: process.env.LOG_FORMAT as LogFormat,
-      enabled: true,
-    }),
-  );
 
   /**
    * Global interceptors for handling success and error responses

@@ -21,11 +21,14 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
    * @param optionalParams - Additional parameters.
    */
   log(message: any, ...optionalParams: any[]): void {
-    const context = this.getContext(optionalParams);
+    const lastParam = optionalParams[optionalParams.length - 1];
+    const context = typeof lastParam === 'string' ? lastParam : undefined;
+    const params = context ? optionalParams.slice(0, -1) : optionalParams;
+
     if (typeof message === 'string') {
-      super.log(message, { context });
+      super.log(message, ...(params.length > 0 ? [...params] : []), context);
     } else {
-      super.log(JSON.stringify(message), { context });
+      super.log(JSON.stringify(message), ...(params.length > 0 ? [...params] : []), context);
     }
   }
 
@@ -35,13 +38,16 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
    * @param optionalParams - Additional parameters.
    */
   error(message: any, ...optionalParams: any[]): void {
-    const { trace, context } = this.getTraceAndContext(optionalParams);
+    const lastParam = optionalParams[optionalParams.length - 1];
+    const context = typeof lastParam === 'string' ? lastParam : undefined;
+    const params = context ? optionalParams.slice(0, -1) : optionalParams;
+
     if (message instanceof Error) {
-      super.error(message, { context });
+      super.error(message, ...(params.length > 0 ? [...params] : []), context);
     } else if (typeof message === 'string') {
-      super.error(message, { trace, context });
+      super.error(message, ...(params.length > 0 ? [...params] : []), context);
     } else {
-      super.error(JSON.stringify(message), { trace, context });
+      super.error(JSON.stringify(message), ...(params.length > 0 ? [...params] : []), context);
     }
   }
 
@@ -51,11 +57,14 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
    * @param optionalParams - Additional parameters.
    */
   warn(message: any, ...optionalParams: any[]): void {
-    const context = this.getContext(optionalParams);
+    const lastParam = optionalParams[optionalParams.length - 1];
+    const context = typeof lastParam === 'string' ? lastParam : undefined;
+    const params = context ? optionalParams.slice(0, -1) : optionalParams;
+
     if (typeof message === 'string') {
-      super.warn(message, { context });
+      super.warn(message, ...(params.length > 0 ? [...params] : []), context);
     } else {
-      super.warn(JSON.stringify(message), { context });
+      super.warn(JSON.stringify(message), ...(params.length > 0 ? [...params] : []), context);
     }
   }
 
@@ -65,40 +74,14 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
    * @param optionalParams - Additional parameters.
    */
   debug(message: any, ...optionalParams: any[]): void {
-    const context = this.getContext(optionalParams);
+    const lastParam = optionalParams[optionalParams.length - 1];
+    const context = typeof lastParam === 'string' ? lastParam : undefined;
+    const params = context ? optionalParams.slice(0, -1) : optionalParams;
+
     if (typeof message === 'string') {
-      super.debug(message, { context });
+      super.debug(message, ...(params.length > 0 ? [...params] : []), context);
     } else {
-      super.debug(JSON.stringify(message), { context });
+      super.debug(JSON.stringify(message), ...(params.length > 0 ? [...params] : []), context);
     }
-  }
-
-  /**
-   * Extracts the context from the optional parameters.
-   * @param params - The optional parameters.
-   * @returns The context if present, otherwise undefined.
-   */
-  private getContext(params: any[]): string | undefined {
-    if (params.length > 0) {
-      const lastParam = params[params.length - 1];
-      if (typeof lastParam === 'string') {
-        return lastParam;
-      }
-    }
-    return undefined;
-  }
-
-  /**
-   * Extracts the trace and context from the optional parameters.
-   * @param params - The optional parameters.
-   * @returns An object containing the trace and context if present.
-   */
-  private getTraceAndContext(params: any[]): { trace?: string; context?: string } {
-    if (params.length === 0) return {};
-    if (params.length === 1) return { trace: typeof params[0] === 'string' ? params[0] : undefined };
-    return {
-      trace: typeof params[0] === 'string' ? params[0] : undefined,
-      context: typeof params[1] === 'string' ? params[1] : undefined,
-    };
   }
 }
