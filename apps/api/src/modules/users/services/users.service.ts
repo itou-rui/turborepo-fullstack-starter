@@ -1,7 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import type { APIUser, RESTGetAPIUserResult, RESTPostAPIUserJSONBody } from '@workspace/types';
-import { User, type UserModel } from '../../../database';
+import { type APIUser, type RESTGetAPIUserResult, type RESTPostAPIUserJSONBody } from '@workspace/types';
+import { User, type UserModel } from 'database/main';
 
 export class UsersService {
   constructor(
@@ -38,12 +38,8 @@ export class UsersService {
    * Retrieves all users from the database.
    */
   async findAll(): Promise<RESTGetAPIUserResult[]> {
-    try {
-      const users = await this.userModel.find().exec();
-      return users.map((user) => this.toAPIUserPublic(this.toAPIUser(user)));
-    } catch (e: unknown) {
-      throw new Error('Failed to fetch users');
-    }
+    const users = await this.userModel.find().exec();
+    return users.map((user) => this.toAPIUserPublic(this.toAPIUser(user)));
   }
 
   /**
@@ -51,12 +47,8 @@ export class UsersService {
    * @param id - The ID of the user to retrieve.
    */
   async findOneById(id: string): Promise<RESTGetAPIUserResult | null> {
-    try {
-      const user = await this.userModel.findById(new Types.ObjectId(id));
-      return user ? this.toAPIUserPublic(this.toAPIUser(user)) : null;
-    } catch (e: unknown) {
-      throw new Error('Failed to fetch user');
-    }
+    const user = await this.userModel.findById(new Types.ObjectId(id));
+    return user ? this.toAPIUserPublic(this.toAPIUser(user)) : null;
   }
 
   /**
@@ -64,11 +56,7 @@ export class UsersService {
    * @param data - The data to create the user with.
    */
   async create(data: RESTPostAPIUserJSONBody): Promise<RESTGetAPIUserResult> {
-    try {
-      const user = await this.userModel.create(data);
-      return this.toAPIUserPublic(this.toAPIUser(user));
-    } catch (e: unknown) {
-      throw new Error('');
-    }
+    const user = await this.userModel.create(data);
+    return this.toAPIUserPublic(this.toAPIUser(user));
   }
 }
