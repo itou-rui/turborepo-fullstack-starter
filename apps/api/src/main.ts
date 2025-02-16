@@ -10,6 +10,7 @@ import helmet from 'helmet';
 import { type LogFormat } from '@workspace/logger';
 import { ResponseInterceptor } from 'utils/interceptors';
 import { StructuredLogger } from 'utils/logger';
+import { AllExceptionsFilter, HttpExceptionFilter } from 'utils/filters';
 import { AppModule } from './app.module';
 
 declare const module: any;
@@ -49,6 +50,18 @@ async function bootstrap() {
    */
   app.useGlobalInterceptors(new ResponseInterceptor());
 
+  /**
+   * Global filter for handling unhandled exceptions
+   */
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(
+    new AllExceptionsFilter(httpAdapter), //
+    new HttpExceptionFilter(), //
+  );
+
+  /**
+   * Swagger documentation setup
+   */
   const config = new DocumentBuilder()
     .setTitle('Leaves Tracker')
     .setDescription('Api Docs for leaves tracker')
