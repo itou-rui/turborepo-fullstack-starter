@@ -133,24 +133,22 @@ jobs:
           ENV="${{ inputs.environment }}"
           echo '${{ steps.get-traffic.outputs.current_traffic }}' | jq -c --arg ref "${{ inputs.ref_name }}" --arg env "$ENV" '
             if $env == "prod" then
-               ( [ .[] | select(.tag != "prod") ] ) as $others |
-               { revisionName: null, tag: "prod", percent: 100, latestRevision: true } as $prod |
-               [ $prod ] + $others
+               ([.[] | select(.tag == "prod")] | first) as $prodRev |
+               ($prodRev.revisionName // "") as $prodRevName |
+               ([.[] | select(.revisionName != $prodRevName)]) as $others |
+               { revisionName: null, tag: "prod", percent: 100, latestRevision: true } as $newProd |
+               [ $newProd ] + $others
             else
-               ( ([ .[] | select(.tag == "prod") ] | first)
-                 // { revisionName: null, tag: "prod", percent: 0, latestRevision: false }
-                 | .percent = 0 | .latestRevision = false
-               ) as $prod
-               |
+               ( ([.[] | select(.tag == "prod")] | first)
+                 // { revisionName: null, tag: "prod", percent: 100, latestRevision: false }
+                 | .percent = 100 | .latestRevision = false
+               ) as $prod |
                ( [ .[] | select(.tag != "prod") ]
                  | map({ revisionName: .revisionName, tag: .tag, percent: 0, latestRevision: false })
-               ) as $nonProd
-               |
-               ($nonProd | map(select(.tag == $ref)) | length) as $refExists
-               |
+               ) as $nonProd |
+               ($nonProd | map(select(.tag == $ref)) | length) as $refExists |
                $nonProd + (if $refExists == 0 then [ { revisionName: null, tag: $ref, percent: 0, latestRevision: false } ] else [] end)
-               |
-               [ $prod ] + .
+               | [ $prod ] + .
             end
           ' > traffic.json
 
