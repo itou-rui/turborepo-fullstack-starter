@@ -3,13 +3,13 @@
  * This file sets up the application, including middleware, CORS, validation, logging, and Swagger documentation.
  */
 
-import { Logger, ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { Logger } from '@nestjs/common';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { type LogFormat } from '@workspace/logger';
+import { StructuredLogger } from 'utils/logger';
 import { AppModule } from './app.module';
-import { ResponseInterceptor, StructuredLogger } from './utils';
-import { LogFormat } from '@workspace/logger';
 
 declare const module: any;
 
@@ -29,16 +29,6 @@ async function bootstrap() {
     origin: process.env.BASE_URL as string,
     credentials: true,
   });
-
-  /**
-   * Use global validation pipes with specified options.
-   */
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-    }),
-  );
 
   /**
    * Use structured logging with specified options.
@@ -72,6 +62,9 @@ async function bootstrap() {
     module.hot.accept();
     module.hot.dispose(() => app.close());
   }
+
   logger.log(`Server running on http://${HOSTNAME}:${PORT}`);
+  logger.log(`Swagger documentation available at http://${HOSTNAME}:${PORT}/docs`);
 }
+
 bootstrap();
