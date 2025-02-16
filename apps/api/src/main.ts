@@ -3,7 +3,7 @@
  * This file sets up the application, including middleware, CORS, validation, logging, and Swagger documentation.
  */
 
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -46,7 +46,18 @@ async function bootstrap() {
   );
 
   /**
-   * Enable Cross-Origin Resource Sharing (CORS) with specified options.
+   * 3. Set up global validation pipes to handle request validation.
+   */
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   /**
    * 4. Enable Cross-Origin Resource Sharing (CORS) with specified options.
