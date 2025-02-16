@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { type LogFormat } from '@workspace/logger';
 import { RESTAPIErrorJSONCodes, RESTAPIErrorResult } from '@workspace/types';
 import { StructuredLogger } from '../logger';
+import { formatUserAgent } from '../formats';
 
 /**
  * Exception filter to handle all uncaught exceptions and format error responses.
@@ -29,16 +30,17 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const shortUserAgent = formatUserAgent(request.headers['user-agent']);
 
     if (exception instanceof Error) {
-      this.logger.error(exception.message, {
+      this.logger.error(`${request.method} ${HttpStatus.INTERNAL_SERVER_ERROR} ${shortUserAgent} ${request.url}`, {
         error: exception,
         body: request.body,
         query: request.query,
         params: request.params,
       });
     } else {
-      this.logger.error('Unknown error occurred', {
+      this.logger.error(`${request.method} ${HttpStatus.INTERNAL_SERVER_ERROR} ${shortUserAgent} ${request.url}`, {
         error: String(exception),
       });
     }
