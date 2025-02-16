@@ -4,6 +4,9 @@ import { type LogFormat } from '@workspace/logger';
 import { RESTAPIErrorJSONCodes, RESTAPIErrorResult } from '@workspace/types';
 import { StructuredLogger } from '../logger';
 
+/**
+ * Exception filter to handle all uncaught exceptions and format error responses.
+ */
 @Catch()
 export class AllExceptionsFilter extends BaseExceptionFilter {
   private readonly logger = new StructuredLogger({
@@ -12,6 +15,11 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     format: process.env.LOG_FORMAT as LogFormat,
   });
 
+  /**
+   * Method to catch and handle all uncaught exceptions.
+   * @param exception - The caught exception.
+   * @param host - The ArgumentsHost containing request and response objects.
+   */
   catch(exception: unknown, host: ArgumentsHost) {
     if (exception instanceof HttpException) {
       return super.catch(exception, host);

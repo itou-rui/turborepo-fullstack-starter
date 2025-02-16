@@ -4,6 +4,9 @@ import { RESTAPIErrorJSONCodes, RESTAPIErrorResult } from '@workspace/types';
 import { StructuredLogger } from '../logger';
 import { type LogFormat } from '@workspace/logger';
 
+/**
+ * Exception filter to handle HTTP exceptions and format error responses.
+ */
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new StructuredLogger({
@@ -12,6 +15,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     format: process.env.LOG_FORMAT as LogFormat,
   });
 
+  /**
+   * Method to catch and handle HTTP exceptions.
+   * @param exception - The caught HttpException.
+   * @param host - The ArgumentsHost containing request and response objects.
+   */
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
