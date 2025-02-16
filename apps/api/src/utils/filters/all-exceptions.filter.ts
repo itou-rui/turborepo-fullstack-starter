@@ -33,9 +33,6 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     if (exception instanceof Error) {
       this.logger.error(exception.message, {
         error: exception,
-        path: request.url,
-        method: request.method,
-        requestId: request.id,
         body: request.body,
         query: request.query,
         params: request.params,
@@ -43,8 +40,6 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     } else {
       this.logger.error('Unknown error occurred', {
         error: String(exception),
-        path: request.url,
-        method: request.method,
       });
     }
 

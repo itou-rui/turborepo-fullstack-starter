@@ -28,9 +28,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const exceptionResponse = exception.getResponse() as any;
 
     this.logger.warn(exception.message, {
-      status,
-      path: request.url,
-      method: request.method,
       error: exceptionResponse,
       body: request.body,
       query: request.query,
