@@ -3,13 +3,15 @@
  * This file sets up the application, including middleware, CORS, validation, logging, and Swagger documentation.
  */
 
-import { Logger, ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { Logger } from '@nestjs/common';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { type LogFormat } from '@workspace/logger';
+import { ResponseInterceptor } from 'utils/interceptors';
+import { StructuredLogger } from 'utils/logger';
+import { AllExceptionsFilter, HttpExceptionFilter } from 'utils/filters';
 import { AppModule } from './app.module';
-import { ResponseInterceptor, StructuredLogger } from './utils';
-import { LogFormat } from '@workspace/logger';
 
 declare const module: any;
 
@@ -17,9 +19,16 @@ declare const module: any;
  * Bootstrap function to initialize the NestJS application.
  */
 async function bootstrap() {
-  const logger = new Logger('EntryPoint');
   const app = await NestFactory.create(AppModule);
 
+  /**
+   * Use structured logging with specified options.
+   */
+  app.useLogger(new StructuredLogger({ level: 'info', format: process.env.LOG_FORMAT as LogFormat }));
+
+  const logger = new Logger('EntryPoint');
+
+  // Security middleware
   app.use(helmet());
 
   /**
@@ -31,33 +40,27 @@ async function bootstrap() {
   });
 
   /**
-   * Use global validation pipes with specified options.
+   * Global interceptors for handling success and error responses
    */
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-    }),
+  app.useGlobalInterceptors(new ResponseInterceptor());
+
+  /**
+   * Global filter for handling unhandled exceptions
+   */
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(
+    new AllExceptionsFilter(httpAdapter), // AllExceptionsFilter handles all uncaught exceptions
+    new HttpExceptionFilter(), // HttpExceptionFilter handles HTTP exceptions
   );
 
   /**
-   * Use structured logging with specified options.
+   * Swagger documentation setup
    */
-  app.useLogger(
-    new StructuredLogger({
-      name: 'bootstrap',
-      level: 'info',
-      format: process.env.LOG_FORMAT as LogFormat,
-      enabled: true,
-    }),
-  );
-
-  app.useGlobalInterceptors(new ResponseInterceptor());
-
   const config = new DocumentBuilder()
     .setTitle('Leaves Tracker')
     .setDescription('Api Docs for leaves tracker')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -72,6 +75,9 @@ async function bootstrap() {
     module.hot.accept();
     module.hot.dispose(() => app.close());
   }
+
   logger.log(`Server running on http://${HOSTNAME}:${PORT}`);
+  logger.log(`Swagger documentation available at http://${HOSTNAME}:${PORT}/docs`);
 }
+
 bootstrap();
