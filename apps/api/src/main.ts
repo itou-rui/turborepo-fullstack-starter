@@ -8,6 +8,7 @@ import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { type LogFormat } from '@workspace/logger';
+import { ResponseInterceptor } from 'utils/interceptors';
 import { StructuredLogger } from 'utils/logger';
 import { AppModule } from './app.module';
 
@@ -20,6 +21,7 @@ async function bootstrap() {
   const logger = new Logger('EntryPoint');
   const app = await NestFactory.create(AppModule);
 
+  // Security middleware
   app.use(helmet());
 
   /**
@@ -42,12 +44,16 @@ async function bootstrap() {
     }),
   );
 
+  /**
+   * Global interceptors for handling success and error responses
+   */
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Leaves Tracker')
     .setDescription('Api Docs for leaves tracker')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
