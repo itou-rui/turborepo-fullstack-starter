@@ -1,4 +1,13 @@
-import { type ColorName, type LogLevel, type Severity, type LogFormat, type PrintMessageArgs } from './types';
+import {
+  type ColorName,
+  type LogLevel,
+  type Severity,
+  type LogFormat,
+  type PrintMessageArgs,
+  HttpRequest,
+  SourceLocation,
+  Operation,
+} from './types';
 
 const logLevels: Record<LogLevel, number> = {
   verbose: 0,
@@ -74,9 +83,18 @@ export abstract class BaseLogger {
       message: string;
       name: string;
       stack_trace?: string;
-      context?: string;
+      context?: unknown;
       params?: unknown[];
-    } & Record<string, unknown> = {
+      httpRequest?: HttpRequest;
+      'logging.googleapis.com/sourceLocation'?: SourceLocation;
+      'logging.googleapis.com/trace'?: string;
+      'logging.googleapis.com/spanId'?: string;
+      'logging.googleapis.com/trace_sampled'?: boolean;
+      'logging.googleapis.com/labels'?: Record<string, string>;
+      'logging.googleapis.com/insertId'?: string;
+      'logging.googleapis.com/operation'?: Operation;
+      [key: string]: unknown;
+    } = {
       severity: severity.toUpperCase(),
       time: new Date().toISOString(),
       name: this.name,
@@ -93,7 +111,25 @@ export abstract class BaseLogger {
     for (const param of params) {
       if (isPlainObject(param)) {
         for (const [k, v] of Object.entries(param)) {
-          output[k] = v;
+          if (k === 'sourceLocation' && isPlainObject(v)) {
+            output['logging.googleapis.com/sourceLocation'] = v as unknown as SourceLocation;
+          } else if (k === 'trace' && typeof v === 'string') {
+            output['logging.googleapis.com/trace'] = v;
+          } else if (k === 'spanId' && typeof v === 'string') {
+            output['logging.googleapis.com/spanId'] = v;
+          } else if (k === 'trace_sampled' && typeof v === 'boolean') {
+            output['logging.googleapis.com/trace_sampled'] = v;
+          } else if (k === 'labels' && isPlainObject(v)) {
+            output['logging.googleapis.com/labels'] = v as Record<string, string>;
+          } else if (k === 'insertId' && typeof v === 'string') {
+            output['logging.googleapis.com/insertId'] = v;
+          } else if (k === 'operation' && isPlainObject(v)) {
+            output['logging.googleapis.com/operation'] = v as unknown as Operation;
+          } else if (k === 'httpRequest' && isPlainObject(v)) {
+            output.httpRequest = v as unknown as HttpRequest;
+          } else {
+            output[k] = v;
+          }
         }
       } else if (param) {
         if (!output.params) output.params = [];
