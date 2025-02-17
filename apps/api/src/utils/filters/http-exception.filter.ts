@@ -1,8 +1,9 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { RESTAPIErrorJSONCodes, RESTAPIErrorResult } from '@workspace/types';
-import { StructuredLogger } from '../logger';
 import { type LogFormat } from '@workspace/logger';
+import { StructuredLogger } from '../logger';
+import { formatUserAgent } from '../formats';
 
 /**
  * Exception filter to handle HTTP exceptions and format error responses.
@@ -26,11 +27,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const status = exception.getStatus();
     const exceptionResponse = exception.getResponse() as any;
+    const shortUserAgent = formatUserAgent(request.headers['user-agent']);
 
-    this.logger.warn(exception.message, {
-      status,
-      path: request.url,
-      method: request.method,
+    this.logger.warn(`${request.method} ${status} ${shortUserAgent} ${request.url}`, {
       error: exceptionResponse,
       body: request.body,
       query: request.query,

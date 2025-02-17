@@ -3,7 +3,7 @@
  * This file sets up the application, including middleware, CORS, validation, logging, and Swagger documentation.
  */
 
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -22,17 +22,45 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   /**
-   * Use structured logging with specified options.
+   * 1. Use structured logging with specified options.
    */
   app.useLogger(new StructuredLogger({ level: 'info', format: process.env.LOG_FORMAT as LogFormat }));
 
   const logger = new Logger('EntryPoint');
 
-  // Security middleware
-  app.use(helmet());
+  /**
+   * 2. Security middleware
+   */
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          scriptSrc: ["'self'"],
+        },
+      },
+      referrerPolicy: { policy: 'no-referrer' },
+    }),
+  );
 
   /**
-   * Enable Cross-Origin Resource Sharing (CORS) with specified options.
+   * 3. Set up global validation pipes to handle request validation.
+   */
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
+
+  /**
+   * 4. Enable Cross-Origin Resource Sharing (CORS) with specified options.
    */
   app.enableCors({
     origin: process.env.BASE_URL as string,
@@ -40,17 +68,20 @@ async function bootstrap() {
   });
 
   /**
-   * Global interceptors for handling success and error responses
+   * 5. Global interceptors for handling success and error responses
    */
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   /**
-   * Global filter for handling unhandled exceptions
+   * 6. Global filter for handling unhandled exceptions
    */
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(
-    new AllExceptionsFilter(httpAdapter), // AllExceptionsFilter handles all uncaught exceptions
-    new HttpExceptionFilter(), // HttpExceptionFilter handles HTTP exceptions
+    // AllExceptionsFilter handles all uncaught exceptions
+    new AllExceptionsFilter(httpAdapter),
+
+    // HttpExceptionFilter handles HTTP exceptions
+    new HttpExceptionFilter(),
   );
 
   /**
