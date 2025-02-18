@@ -1,4 +1,4 @@
-import { type OmmitedBaseModelFields } from '../../common';
-import type { APIUser } from '../models';
+import { OmmitedBaseModelFields } from '../../common';
+import type { IUser } from '../models';
 
-export interface RESTPutAPIUserJSONBody extends Omit<APIUser, OmmitedBaseModelFields> {}
+export interface RESTPutAPIUserJSONBody extends Omit<IUser, OmmitedBaseModelFields> {}

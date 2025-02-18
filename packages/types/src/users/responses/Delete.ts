@@ -1,3 +1,3 @@
-import type { APIUser, APIUserGuardFields } from '../models';
+import type { APIUser } from '../models';
 
-export interface RESTDeleteAPIUserResult extends Omit<APIUser, APIUserGuardFields> {}
+export interface RESTDeleteAPIUserResult extends APIUser {}
