@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CONFIG_DATABASE, databaseConfig } from 'config/database.config';
+import { CONFIG_DATABASE, DatabaseConfig, databaseConfig } from 'config/database.config';
 import { validationSchemaForEnv } from 'config/env-varidation';
 import { UsersModule } from 'modules/users';
 import { AppController } from './app.controller';
@@ -18,8 +18,8 @@ import { AppService } from './app.service';
       imports: [ConfigModule],
       connectionName: 'main',
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get(CONFIG_DATABASE).main.uri,
-        ...configService.get(CONFIG_DATABASE).main.options,
+        uri: configService.get<DatabaseConfig>(CONFIG_DATABASE)!.main.uri,
+        ...configService.get<DatabaseConfig>(CONFIG_DATABASE)!.main.options,
       }),
       inject: [ConfigService],
     }),
