@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
-import { type RESTErrorData, RESTAPIErrorJSONCodes } from '@workspace/types';
+import { type RESTErrorData } from '@workspace/types';
+import { RESTAPIErrorJSONCodes } from '@workspace/constants';
 import { APIException } from './api.exception';
 
 export class ResourceNotFoundException extends APIException {

@@ -1,8 +1,9 @@
 import { Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Request, Response } from 'express';
+import { RESTAPIErrorJSONCodes } from '@workspace/constants';
 import { type LogFormat } from '@workspace/logger';
-import { RESTAPIErrorJSONCodes, RESTAPIErrorResult } from '@workspace/types';
+import { type RESTAPIErrorResult } from '@workspace/types';
 import { StructuredLogger } from '../logger';
 import { formatUserAgent } from '../formats';
 

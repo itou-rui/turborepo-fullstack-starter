@@ -8,10 +8,10 @@ export class BaseDocument extends Document {
   @Prop({ type: Number, default: 1, index: true })
   index!: number;
 
-  @Prop({ type: String, default: () => new Date().toISOString(), transform: (val: Date) => val.toISOString() })
+  @Prop({ type: String, default: () => new Date().toISOString() })
   createdAt!: string;
 
-  @Prop({ type: String, default: () => new Date().toISOString(), transform: (val: Date) => val.toISOString() })
+  @Prop({ type: String, default: () => new Date().toISOString() })
   updatedAt!: string;
 }
 
