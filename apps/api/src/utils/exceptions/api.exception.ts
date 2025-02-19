@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { RESTAPIErrorJSONCodes, type RESTErrorData } from '@workspace/types';
+import { type RESTErrorData } from '@workspace/types';
+import { RESTAPIErrorJSONCodes } from '@workspace/constants';
 
 /**
  * Custom exception class for API errors.

@@ -1,4 +1,4 @@
-import { RESTAPIErrorJSONCodes } from '../errors';
+import type { RESTAPIErrorJSONCodes } from '@workspace/constants';
 import type { RESTAPIResult } from './APIResult';
 
 export type OmmitedRESTAPIErrorResultFields = 'timestamp' | 'path';
