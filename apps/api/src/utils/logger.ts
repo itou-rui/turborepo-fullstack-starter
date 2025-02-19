@@ -12,7 +12,7 @@ export class StructuredLogger extends NestStructuredLogger implements LoggerServ
    * @param options.enabled - Whether the logger is enabled.
    */
   constructor(options: LoggerOptions = {}) {
-    super({ name: 'API', ...options });
+    super(options);
   }
 
   /**
