@@ -18,5 +18,19 @@ module.exports = function (options, webpack) {
       }),
       new RunScriptWebpackPlugin({ name: options.output.filename, autoRestart: false }),
     ],
+    node: {
+      __dirname: false,
+      __filename: false,
+    },
+    module: {
+      ...options.module,
+      rules: [
+        ...(options.module.rules || []),
+        {
+          test: /\.node$/,
+          use: 'node-loader',
+        },
+      ],
+    },
   };
 };
