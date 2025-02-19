@@ -201,7 +201,7 @@ jobs:
             export MONGODB_USER_NAME="${{ secrets.MONGODB_USER_NAME }}"
             export MONGODB_USER_PASSWORD="${{ secrets.MONGODB_USER_PASSWORD }}"
             export MONGODB_HOST_NAME="${{ secrets.MONGODB_HOST_NAME }}"
-            export JWT_SECRET="{{ secrets.JWT_SECRET }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           fi
 
           ## Common
