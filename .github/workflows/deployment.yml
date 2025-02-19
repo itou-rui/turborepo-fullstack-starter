@@ -25,6 +25,7 @@ env:
   MONGODB_USER_NAME: ${{ secrets.MONGODB_USER_NAME }}
   MONGODB_USER_PASSWORD: ${{ secrets.MONGODB_USER_PASSWORD }}
   MONGODB_HOST_NAME: ${{ secrets.MONGODB_HOST_NAME }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
 jobs:
   get-config:

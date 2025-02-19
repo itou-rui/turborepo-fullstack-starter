@@ -39,6 +39,11 @@ export interface EnvironmentVariables {
    * The hostname of the MongoDB server.
    */
   MONGODB_HOST_NAME: string;
+
+  /**
+   * The secret key for JWT authentication.
+   */
+  JWT_SECRET: string;
 }
 
 /**
@@ -93,6 +98,13 @@ export class EnvironmentVariablesDto {
    * The hostname of the MongoDB server.
    */
   MONGODB_HOST_NAME!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  /**
+   * The secret key for JWT authentication.
+   */
+  JWT_SECRET!: string;
 }
 
 /**
@@ -113,4 +125,5 @@ export const validationSchemaForEnv = Joi.object<EnvironmentVariables, true>({
   MONGODB_USER_NAME: Joi.string().required(),
   MONGODB_USER_PASSWORD: Joi.string().required(),
   MONGODB_HOST_NAME: Joi.string().required(),
+  JWT_SECRET: Joi.string().required(),
 });

@@ -46,6 +46,8 @@ spec:
               value: '${MONGODB_USER_PASSWORD}'
             - name: MONGODB_HOST_NAME
               value: '${MONGODB_HOST_NAME}'
+            - name: JWT_SECRET
+              value: '${JWT_SECRET}'
 
             ## Common
             - name: LOG_FORMAT
