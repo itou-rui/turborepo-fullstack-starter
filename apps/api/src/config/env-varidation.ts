@@ -44,6 +44,11 @@ export interface EnvironmentVariables {
    * The secret key for JWT authentication.
    */
   JWT_SECRET: string;
+
+  /**
+   * The token for Discord authentication.
+   */
+  DISCORD_BOT_TOKEN: string;
 }
 
 /**
@@ -105,6 +110,10 @@ export class EnvironmentVariablesDto {
    * The secret key for JWT authentication.
    */
   JWT_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  DISCORD_BOT_TOKEN!: string;
 }
 
 /**
@@ -126,4 +135,5 @@ export const validationSchemaForEnv = Joi.object<EnvironmentVariables, true>({
   MONGODB_USER_PASSWORD: Joi.string().required(),
   MONGODB_HOST_NAME: Joi.string().required(),
   JWT_SECRET: Joi.string().required(),
+  DISCORD_BOT_TOKEN: Joi.string().required(),
 });
