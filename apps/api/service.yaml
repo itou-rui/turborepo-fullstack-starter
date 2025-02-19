@@ -48,6 +48,8 @@ spec:
               value: '${MONGODB_HOST_NAME}'
             - name: JWT_SECRET
               value: '${JWT_SECRET}'
+            - name: '${DISCORD_BOT_TOKEN}'
+              value: '${DISCORD_BOT_TOKEN}'
 
             ## Common
             - name: LOG_FORMAT
