@@ -6,6 +6,7 @@ import { CONFIG_DATABASE, DatabaseConfig, databaseConfig } from 'config/database
 import { validationSchemaForEnv } from 'config/env-varidation';
 import { UsersModule } from './modules/users';
 import { AuthModule } from './modules/auth';
+import { DiscordModule } from 'discord-bot';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -47,6 +48,7 @@ import { AppService } from './app.service';
       }),
       inject: [ConfigService],
     }),
+    DiscordModule,
     UsersModule,
     AuthModule,
   ],
