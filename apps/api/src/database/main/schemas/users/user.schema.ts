@@ -9,10 +9,13 @@ export type UserModel = Model<UserDocument>;
 @Schema()
 export class User extends BaseDocument implements Omit<APIUser, OmmitedBaseModelFields> {
   @Prop({ required: true, unique: true })
-  email!: string;
+  uid!: string;
 
   @Prop({ required: true })
-  password!: string;
+  firstName!: string;
+
+  @Prop({ required: true })
+  secondName!: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

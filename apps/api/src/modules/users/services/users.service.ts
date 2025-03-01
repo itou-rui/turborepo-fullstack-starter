@@ -14,9 +14,7 @@ export class UsersService {
    * @param user - The APIUser object to convert.
    */
   toAPIUser(user: User): APIUser {
-    const plainUser = user.toObject();
-    const { password, ...rest } = plainUser;
-    return rest;
+    return user.toObject();
   }
 
   toIUser(user: User): IUser {

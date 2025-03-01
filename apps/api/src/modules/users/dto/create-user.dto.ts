@@ -4,9 +4,13 @@ import type { RESTPostAPIUserJSONBody } from '@workspace/types';
 export class CreateUserDto implements RESTPostAPIUserJSONBody {
   @IsString()
   @IsNotEmpty()
-  email!: string;
+  uid!: string;
 
   @IsString()
   @IsNotEmpty()
-  password!: string;
+  firstName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  secondName!: string;
 }
