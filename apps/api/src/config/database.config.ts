@@ -29,6 +29,7 @@ const createDatabaseConfig = (userName: string, password: string, hostName: stri
 
 export interface DatabaseConfig {
   main: ReturnType<typeof createDatabaseConfig>;
+  discord: ReturnType<typeof createDatabaseConfig>;
 }
 
 export const databaseConfig = registerAs(CONFIG_DATABASE, () => {
@@ -39,6 +40,9 @@ export const databaseConfig = registerAs(CONFIG_DATABASE, () => {
   return {
     main: createDatabaseConfig(USER_NAME, PASSWORD, HOST_NAME, {
       databaseName: 'main',
+    }),
+    discord: createDatabaseConfig(USER_NAME, PASSWORD, HOST_NAME, {
+      databaseName: 'discord',
     }),
   };
 });

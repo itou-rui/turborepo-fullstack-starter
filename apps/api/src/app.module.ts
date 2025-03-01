@@ -37,6 +37,15 @@ import { AppService } from './app.service';
       },
       inject: [ConfigService],
     }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      connectionName: 'discord',
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<DatabaseConfig>(CONFIG_DATABASE)!.discord.uri,
+        ...configService.get<DatabaseConfig>(CONFIG_DATABASE)!.discord.options,
+      }),
+      inject: [ConfigService],
+    }),
     UsersModule,
     AuthModule,
   ],
