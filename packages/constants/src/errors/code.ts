@@ -7,6 +7,7 @@ export enum RESTAPIErrorJSONCodes {
   AccountDisabled,
   AccountLocked,
   EmailNotVerified,
+  UnknownGuild,
 
   // 20000-20999: Registration Related
   AlreadyAccount = 20001,
