@@ -15,6 +15,13 @@ export class UserNotFoundException extends APIException {
   }
 }
 
+export class GuildNotFoundException extends APIException {
+  constructor(guildId: string, errors?: RESTErrorData) {
+    const message = `Guild with ID ${guildId} not found.`;
+    super(RESTAPIErrorJSONCodes.UnknownGuild, message, HttpStatus.NOT_FOUND, errors);
+  }
+}
+
 export class ResourceAlreadyExistsException extends APIException {
   constructor(code: number, message: string = 'Resource already exists', errors?: RESTErrorData) {
     super(code, message, HttpStatus.CONFLICT, errors);
