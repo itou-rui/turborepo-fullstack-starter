@@ -7,6 +7,7 @@ import { DiscordModule } from 'discord-bot';
 import { UsersModule } from 'modules/users';
 import { AuthModule } from 'modules/auth';
 import { SessionModule } from 'modules/session';
+import { GuildsModule } from 'modules/guilds';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -39,6 +40,7 @@ import { AppService } from './app.service';
     UsersModule,
     AuthModule,
     SessionModule,
+    GuildsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
