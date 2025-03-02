@@ -6,6 +6,7 @@ export enum RESTAPIErrorJSONCodes {
 
   // 10000-10999: Account Related
   UnknownAccount = 10001,
+  UnknownGuild,
 
   // 20000-20999: Registration Related
   AlreadyAccount = 20001,
