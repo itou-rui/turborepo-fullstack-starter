@@ -2,15 +2,21 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { UsersModule } from 'modules/users';
-import { AuthController } from './controllers/jwt.controller';
-import { AuthJwtService } from './services/jwt.service';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { type EnvironmentVariables } from 'config/env-varidation';
+import { UsersModule } from 'modules/users';
+import { SessionModule } from 'modules/session';
+import * as Controllers from './controllers';
+import * as Services from './services';
+import * as Strategies from './strategies';
+
+const services = Object.values(Services).flat();
+const controllers = Object.values(Controllers).flat();
+const strategies = Object.values(Strategies).flat();
 
 @Module({
   imports: [
     UsersModule,
+    SessionModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -21,8 +27,8 @@ import { type EnvironmentVariables } from 'config/env-varidation';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthJwtService, JwtStrategy],
-  exports: [AuthJwtService],
+  controllers: [...controllers],
+  providers: [...services, ...strategies],
+  exports: [...services],
 })
 export class AuthModule {}

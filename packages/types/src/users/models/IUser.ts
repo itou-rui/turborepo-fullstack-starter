@@ -1,8 +1,11 @@
 import type { BaseModel } from '../../common';
 
+export interface IUserProviders {
+  local?: { email: string; password: string };
+}
+
 export interface IUser extends BaseModel {
-  email: string;
-  password: string;
-  discordId?: string;
-  twitterId?: string;
+  uuid: string;
+  username: string;
+  providers?: IUserProviders;
 }

@@ -3,4 +3,6 @@ export enum RESTAPIErrorJSONCodes {
 
   UnknownAccount = 10_001,
   UnknownUser,
+
+  AlreadyUser = 20_001,
 }

@@ -1,6 +1,7 @@
 import { IsString, IsNotEmpty } from 'class-validator';
+import { type RESTPostAPIAuthLocalLoginJSONBody } from '@workspace/types';
 
-export class LoginUserDto {
+export class LoginLocalDto implements RESTPostAPIAuthLocalLoginJSONBody {
   @IsString()
   @IsNotEmpty()
   email!: string;

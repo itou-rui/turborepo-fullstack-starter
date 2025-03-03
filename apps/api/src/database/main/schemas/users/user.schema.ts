@@ -1,19 +1,27 @@
-import { type Model, type HydratedDocument } from 'mongoose';
+import { type Model, type HydratedDocument, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { type APIUser, type OmmitedBaseModelFields } from '@workspace/types';
+import { type IUser, type OmmitedBaseModelFields } from '@workspace/types';
 import { BaseDocument, BaseDocumentSchema } from '../../../common';
-
-export type UserDocument = HydratedDocument<User>;
-export type UserModel = Model<UserDocument>;
+import { type UserProviders, UserProvidersSchema } from './providers';
 
 @Schema()
-export class User extends BaseDocument implements Omit<APIUser, OmmitedBaseModelFields> {
+export class User extends BaseDocument implements Omit<IUser, OmmitedBaseModelFields> {
   @Prop({ required: true, unique: true })
-  email!: string;
+  uuid!: string;
 
   @Prop({ required: true })
-  password!: string;
+  username!: string;
+
+  @Prop({ type: UserProvidersSchema })
+  providers?: UserProviders;
 }
+
+export type UserDocumentOverride = {
+  providers?: Types.Subdocument<Types.ObjectId> & UserProviders;
+};
+
+export type UserDocument = HydratedDocument<User, UserDocumentOverride>;
+export type UserModel = Model<UserDocument>;
 
 export const UserSchema = SchemaFactory.createForClass(User);
 

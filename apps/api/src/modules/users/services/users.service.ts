@@ -14,9 +14,11 @@ export class UsersService {
    * @param user - The APIUser object to convert.
    */
   toAPIUser(user: User): APIUser {
-    const plainUser = user.toObject();
-    const { password, ...rest } = plainUser;
-    return rest;
+    const plainUser = user.toObject() as IUser;
+    const { providers, ...rest } = plainUser;
+    const { local, ...otherProviders } = providers ?? {};
+    const { password, ...localWithoutPassword } = local ?? {};
+    return { ...rest, providers: { ...otherProviders, local: localWithoutPassword } };
   }
 
   toIUser(user: User): IUser {
@@ -38,8 +40,10 @@ export class UsersService {
     return await this.userModel.findById(new Types.ObjectId(id));
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return await this.userModel.findOne({ email });
+  async findByLocalProviderEmail(email: string): Promise<User | null> {
+    return await this.userModel.findOne({
+      'providers.local.email': email,
+    });
   }
 
   /**

@@ -1,5 +1,7 @@
-import type { IUser } from './IUser';
+import type { IUser, IUserProviders } from './IUser';
 
-export type APIUserGuardFields = 'password';
-
-export interface APIUser extends Omit<IUser, APIUserGuardFields> {}
+export interface APIUser extends Omit<IUser, 'providers'> {
+  providers?: Omit<IUserProviders, 'local'> & {
+    local: { email?: string };
+  };
+}
