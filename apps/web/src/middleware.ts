@@ -1,4 +1,4 @@
-import { chain } from './middlewares';
+import { chain, auth } from './middlewares';
 
 /**
  * Configuration object for middleware.
@@ -25,4 +25,4 @@ export const config = {
   ],
 };
 
-export default chain([]);
+export default chain([auth]);
