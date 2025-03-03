@@ -3,17 +3,12 @@
 import { login } from '@/lib';
 import { redirect } from 'next/navigation';
 
-/* eslint typescript-eslint/no-explicit-any: off */
-export async function handleSubmit(prev: any, formData: FormData) {
+export async function handleSubmit(_: string, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const result = await login.local(email, password);
   if (result.ok === false) {
-    return {
-      message: result.message,
-      status: result.status,
-    };
+    return result.message;
   }
   redirect('/dashboard');
-  return {};
 }

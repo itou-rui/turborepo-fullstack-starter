@@ -7,10 +7,10 @@ import { useActionState } from 'react';
 import { handleSubmit } from '../actions';
 
 export function LocalLoginForm() {
-  const [state, action] = useActionState(handleSubmit, {});
+  const [message, signIn] = useActionState(handleSubmit, '');
 
   return (
-    <form action={action}>
+    <form action={signIn}>
       <div className='grid gap-6'>
         <div className='grid gap-6'>
           <div className='grid gap-2'>
@@ -26,7 +26,7 @@ export function LocalLoginForm() {
             </div>
             <Input id='password' type='password' name='password' required />
           </div>
-          <p className='text-red-500'>{state.message}</p>
+          <p className='text-sm text-red-500'>{message}</p>
           <LocalLoginButton />
         </div>
         <div className='text-center text-sm'>
