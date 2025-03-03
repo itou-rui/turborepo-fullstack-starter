@@ -15,7 +15,10 @@ export async function patch<T, U = null, V = object>(path: string, body: T, opti
   return http<U>(path, {
     method: 'PATCH',
     body: buildRequestBody(body),
-    headers: buildHeaders({ ...options?.headers, 'Content-Type': 'application/json' }),
+    headers: {
+      'Content-Type': 'application/json',
+      ...buildHeaders(options?.headers),
+    },
     credentials: buildCredentials(options?.credentials),
   });
 }

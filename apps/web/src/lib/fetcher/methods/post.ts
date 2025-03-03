@@ -20,7 +20,10 @@ export interface PostOptions<T> {
 export async function post<T, U = null, V = object>(path: string, body: T, options?: PostOptions<V>): Promise<FetchResult<U>> {
   return http<U>(path, {
     method: 'POST',
-    headers: buildHeaders({ ...options?.headers, 'Content-Type': 'application/json' }),
+    headers: {
+      'Content-Type': 'application/json',
+      ...buildHeaders(options?.headers),
+    },
     body: buildRequestBody(body),
     credentials: buildCredentials(options?.credentials),
   });

@@ -15,7 +15,10 @@ export async function put<T, U = object>(path: string, body: T, options?: PostOp
   return http<U>(path, {
     method: 'PUT',
     body: buildRequestBody(body),
-    headers: buildHeaders({ ...options?.headers, 'Content-Type': 'application/json' }),
+    headers: {
+      'Content-Type': 'application/json',
+      ...buildHeaders(options?.headers),
+    },
     credentials: buildCredentials(options?.credentials),
   });
 }
