@@ -1,1 +1,1 @@
-export * from './fetcher';
+export * as fetcher from './fetcher';
