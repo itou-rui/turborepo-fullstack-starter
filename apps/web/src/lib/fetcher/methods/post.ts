@@ -1,6 +1,11 @@
-import type { FetchErrorResult, FetchSuccessResult, Options } from './types';
-import { buildCredentials, buildHeaders, buildRequestBody } from './utils';
-import { http } from './http';
+import { buildCredentials, buildHeaders, buildRequestBody } from '../utils';
+import { http, type FetchResult } from '../http';
+
+export interface PostOptions<T> {
+  params?: T;
+  headers?: HeadersInit;
+  credentials?: RequestCredentials;
+}
 
 /**
  * Sends a POST request to the specified path with the given body.
@@ -11,13 +16,8 @@ import { http } from './http';
  * @param {string} path - The API endpoint path.
  * @param {T} body - The request body.
  * @param {Options<V>} [options] - The request options.
- * @returns {Promise<FetchSuccessResult<U> | FetchErrorResult>} - The result of the fetch operation.
  */
-export async function post<T, U, V = object>(
-  path: string,
-  body: T,
-  options?: Options<V>,
-): Promise<U extends void ? FetchSuccessResult<void> : FetchSuccessResult<U> | FetchErrorResult> {
+export async function post<T, U = null, V = object>(path: string, body: T, options?: PostOptions<V>): Promise<FetchResult<U>> {
   return http<U>(path, {
     method: 'POST',
     headers: buildHeaders({ ...options?.headers, 'Content-Type': 'application/json' }),

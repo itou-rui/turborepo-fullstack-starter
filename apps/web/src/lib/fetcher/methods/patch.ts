@@ -1,6 +1,6 @@
-import type { FetchErrorResult, FetchSuccessResult, Options } from './types';
-import { buildCredentials, buildHeaders, buildRequestBody } from './utils';
-import { http } from './http';
+import { buildCredentials, buildHeaders, buildRequestBody } from '../utils';
+import { http, type FetchResult } from '../http';
+import { type PostOptions } from './post';
 
 /**
  * Sends a PATCH request to the specified path with the given body.
@@ -10,13 +10,8 @@ import { http } from './http';
  * @param {string} path - The API endpoint path.
  * @param {T} body - The request body.
  * @param {Options<U>} [options] - The request options.
- * @returns {Promise<FetchSuccessResult<U> | FetchErrorResult>} - The result of the fetch operation.
  */
-export async function patch<T, U = object>(
-  path: string,
-  body: T,
-  options?: Options<U>,
-): Promise<U extends void ? FetchSuccessResult<void> : FetchSuccessResult<U> | FetchErrorResult> {
+export async function patch<T, U = null, V = object>(path: string, body: T, options?: PostOptions<V>): Promise<FetchResult<U>> {
   return http<U>(path, {
     method: 'PATCH',
     body: buildRequestBody(body),
