@@ -7,6 +7,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { type LogFormat } from '@workspace/logger';
 import { ResponseInterceptor } from 'utils/interceptors';
 import { StructuredLogger } from 'utils/logger';
@@ -45,6 +46,8 @@ async function bootstrap() {
     }),
   );
 
+  app.use(cookieParser());
+
   /**
    * 3. Set up global validation pipes to handle request validation.
    */
@@ -63,7 +66,7 @@ async function bootstrap() {
    * 4. Enable Cross-Origin Resource Sharing (CORS) with specified options.
    */
   app.enableCors({
-    origin: process.env.BASE_URL as string,
+    origin: [process.env.BASE_URL as string],
     credentials: true,
   });
 

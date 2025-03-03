@@ -5,6 +5,7 @@ import { CONFIG_DATABASE, DatabaseConfig, databaseConfig } from 'config/database
 import { validationSchemaForEnv } from 'config/env-varidation';
 import { UsersModule } from 'modules/users';
 import { AuthModule } from 'modules/auth';
+import { SessionModule } from 'modules/session';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -26,6 +27,7 @@ import { AppService } from './app.service';
     }),
     UsersModule,
     AuthModule,
+    SessionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
