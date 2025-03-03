@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['host.docker.internal:3000', 'localhost'],
+    },
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);
