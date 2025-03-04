@@ -206,13 +206,13 @@ jobs:
 
           ## Common
           if [ "${{ inputs.environment }}" == "prod" ]; then
-            export BASE_URL="https://${{ inputs.app }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+            export BASE_URL="https://${{ inputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
           else
             if [ "${{ inputs.environment }}" == "prev" ]; then
-              export BASE_URL="https://${{ inputs.ref_name }}.${{ inputs.app }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+              export BASE_URL="https://${{ inputs.ref_name }}.${{ inputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
             else
               ## dev or stage
-              export BASE_URL="https://${{ inputs.environment }}.${{ inputs.app }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
+              export BASE_URL="https://${{ inputs.environment }}.${{ inputs.app_name }}.${{ vars.DOMAIN }}" >> $GITHUB_OUTPUT
             fi
           fi
           export LOG_FORMAT="json"
