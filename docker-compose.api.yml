@@ -8,10 +8,16 @@ services:
     env_file:
       - ./apps/api/.env
     environment:
-      - BASE_URL=http://localhost
+      - BASE_URL=http://nginx
       - LOF_FORMAT=text
     stop_signal: SIGINT
     ports:
       - 5002:5002
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true
