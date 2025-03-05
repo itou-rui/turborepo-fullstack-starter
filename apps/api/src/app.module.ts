@@ -6,7 +6,7 @@ import { CONFIG_DATABASE, DatabaseConfig, databaseConfig } from 'config/database
 import { validationSchemaForEnv } from 'config/env-varidation';
 import { UsersModule, AuthModule } from './modules/internal';
 import { DiscordModule } from 'discord-bot';
-import { GuildsModule } from 'modules/guilds';
+import { GuildsModule } from './modules/guilds';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 

@@ -1,3 +1,3 @@
-export * from './dto';
-export * from './services';
+export * from './dtos';
+export * from './guilds.service';
 export * from './guilds.module';

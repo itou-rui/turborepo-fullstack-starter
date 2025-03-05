@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { type RESTGetAPIGuildResult } from '@workspace/types';
 import { GuildNotFoundException } from 'utils/exceptions';
-import { GuilldsService } from '../services';
-import { CreateGuildDto } from '../dto';
+import { CreateGuildDto } from './dtos';
+import { GuildsService } from './guilds.service';
 
 @Controller('guilds')
-export class GuildssController {
-  constructor(private readonly guildsService: GuilldsService) {}
+export class GuildsController {
+  constructor(private readonly guildsService: GuildsService) {}
 
   @Get()
   async findAll(): Promise<RESTGetAPIGuildResult[]> {
