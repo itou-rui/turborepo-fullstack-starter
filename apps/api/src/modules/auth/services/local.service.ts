@@ -3,9 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidV4 } from 'uuid';
 import bcryptjs from 'bcryptjs';
 import { ProviderType } from '@workspace/constants';
-import { Session, User } from 'database/main';
+import { Session } from 'database/main';
 import { ResourceAlreadyExistsException } from 'utils/exceptions';
-import { UsersService } from '../../users';
+import { UsersService, User } from '../../users';
 import { SessionService } from '../../session';
 import { RegisterLocalUserDto } from '../dto';
 

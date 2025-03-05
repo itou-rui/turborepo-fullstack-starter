@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { type RESTGetAPIUserResult } from '@workspace/types';
-import { UsersService } from '../services';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {

@@ -1,8 +1,8 @@
 import { type Model, type HydratedDocument, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { type IUser, type OmmitedBaseModelFields } from '@workspace/types';
-import { BaseDocument, BaseDocumentSchema } from '../../../common';
-import { type UserProviders, UserProvidersSchema } from './providers';
+import { BaseDocument, BaseDocumentSchema } from 'database/common';
+import { type UserProviders, UserProvidersSchema } from './providers.schema';
 
 @Schema()
 export class User extends BaseDocument implements Omit<IUser, OmmitedBaseModelFields> {

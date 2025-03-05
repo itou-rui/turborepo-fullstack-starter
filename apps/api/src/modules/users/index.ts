@@ -1,3 +1,4 @@
-export * from './dto';
-export * from './services';
+export * from './dtos';
+export * from './schemas';
 export * from './users.module';
+export * from './users.service';
