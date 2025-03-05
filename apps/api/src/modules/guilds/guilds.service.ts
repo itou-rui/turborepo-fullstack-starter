@@ -1,0 +1,51 @@
+import { Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
+import { type APIGuild, type RESTPostAPIGuildJSONBody } from '@workspace/types';
+import { Guild } from './schemas';
+import { GuildsRepository } from './guilds.repository';
+
+@Injectable()
+export class GuildsService {
+  constructor(private guildRepository: GuildsRepository) {}
+
+  /**
+   * Converts a Guild instance to an APIGuild object.
+   * @param guild - The Guild instance to convert.
+   * @returns The converted APIGuild object.
+   */
+  toAPIGuild(guild: Guild): APIGuild {
+    return guild.toObject();
+  }
+
+  /**
+   * Retrieves all guilds from the database.
+   */
+  findAll(): Promise<Guild[]> {
+    return this.guildRepository.findAll();
+  }
+
+  /**
+   * Retrieves a guild by their ID.
+   * @param id - The ID of the guild to retrieve.
+   */
+  findOneById(id: string): Promise<Guild | null> {
+    const _id = new Types.ObjectId(id);
+    return this.guildRepository.findOneById(_id);
+  }
+
+  /**
+   * Finds a guild by its unique identifier (UID).
+   * @param uid - The unique identifier of the guild.
+   */
+  findByUid(uid: string): Promise<Guild | null> {
+    return this.guildRepository.findByUid(uid);
+  }
+
+  /**
+   * Creates a new user in the database.
+   * @param data - The data to create the guild with.
+   */
+  create(data: RESTPostAPIGuildJSONBody): Promise<Guild> {
+    return this.guildRepository.create(data);
+  }
+}
