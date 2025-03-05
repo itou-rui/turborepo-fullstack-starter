@@ -1,7 +1,7 @@
 import { type Model, type HydratedDocument } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { type OmmitedBaseModelFields, type ICommand, OmmitedICommandFields } from '@workspace/types';
-import { BaseDocument, BaseDocumentSchema } from 'database/common';
+import { BaseDocument, BaseDocumentSchema } from 'database/base.schema';
 import { type Guild, GuildSchema } from '../../guilds/schemas';
 
 interface ICommandDocument extends Omit<ICommand, OmmitedBaseModelFields | OmmitedICommandFields> {
