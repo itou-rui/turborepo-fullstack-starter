@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Guild, GuildSchema } from 'database/discord';
-import * as Services from './services';
-import * as Controllers from './controllers';
-
-const services = Object.values(Services).flat();
-const controllers = Object.values(Controllers).flat();
+import { Guild, GuildSchema } from './schemas';
+import { GuildsService } from './guilds.service';
+import { GuildsRepository } from './guilds.repository';
+import { GuildsController } from './guilds.controller';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: Guild.name, schema: GuildSchema }], 'discord')],
-  providers: [...services],
-  controllers: [...controllers],
-  exports: [...services],
+  providers: [GuildsService, GuildsRepository],
+  controllers: [GuildsController],
+  exports: [GuildsService],
 })
 export class GuildsModule {}

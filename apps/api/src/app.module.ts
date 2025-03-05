@@ -6,7 +6,7 @@ import { validationSchemaForEnv } from 'config/env-varidation';
 import { UsersModule } from './modules/users';
 import { AuthModule } from './modules/auth';
 import { DiscordModule } from 'discord-bot';
-import { GuildsModule } from 'modules/guilds';
+import { GuildsModule } from './modules/guilds';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
