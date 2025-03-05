@@ -1,13 +1,15 @@
 'use client';
 
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { LocalLoginButton } from './LocalLoginButton';
-import { useActionState } from 'react';
-import { handleSubmit } from '../actions';
+import { handleSubmit } from './action';
 
 export function LocalLoginForm() {
   const [message, signIn] = useActionState(handleSubmit, '');
+  const { pending } = useFormStatus();
 
   return (
     <form action={signIn}>
@@ -27,7 +29,9 @@ export function LocalLoginForm() {
             <Input id='password' type='password' name='password' required />
           </div>
           <p className='text-sm text-red-500'>{message}</p>
-          <LocalLoginButton />
+          <Button type='submit' disabled={pending} className='w-full'>
+            {pending ? 'in process...' : 'Login'}
+          </Button>
         </div>
         <div className='text-center text-sm'>
           Don&apos;t have an account?{' '}
