@@ -1,7 +1,12 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { CommandsService, ExplorerService, SlashCommandDiscovery, SlashCommandsService, SlashCommand } from 'necord';
-import { Command, type CommandModel } from 'database/discord';
+import {
+  CommandsService as NecordCommandsService,
+  ExplorerService,
+  SlashCommandDiscovery,
+  SlashCommandsService,
+  SlashCommand,
+} from 'necord';
+import { CommandsService, Command } from 'modules/commands';
 
 @Injectable()
 export class CommandService implements OnApplicationBootstrap {
@@ -10,8 +15,7 @@ export class CommandService implements OnApplicationBootstrap {
   private readonly logger = new Logger(CommandService.name);
 
   constructor(
-    @InjectModel(Command.name, 'discord')
-    private commandModel: CommandModel,
+    private readonly commandsService: CommandsService,
 
     /**
      * Service for handling slash commands.
@@ -26,7 +30,7 @@ export class CommandService implements OnApplicationBootstrap {
     /**
      * Service for handling general commands.
      */
-    private readonly commandService: CommandsService,
+    private readonly commandService: NecordCommandsService,
   ) {}
 
   /**
@@ -56,7 +60,7 @@ export class CommandService implements OnApplicationBootstrap {
    */
   async fetchDynamicCommands(): Promise<Command[]> {
     try {
-      return await this.commandModel.find({ active: true }).populate('guilds').exec();
+      return this.commandsService.findActiveCommands();
     } catch (e: unknown) {
       this.logger.error('Failed to fetch dynamic commands', {
         error: e,

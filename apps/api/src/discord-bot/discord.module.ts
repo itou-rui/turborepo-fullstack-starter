@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NecordModule } from 'necord';
 import { IntentsBitField } from 'discord.js';
 import { EnvironmentVariables } from 'config/env-varidation';
-import { User, UserSchema } from 'database/main';
-import { Command, CommandSchema, Guild, GuildSchema } from 'database/discord';
+import { UsersModule } from 'modules/users';
+import { GuildsModule } from 'modules/guilds';
+import { CommandsModule } from 'modules/commands';
 import * as Events from './events';
 import * as PublicCommands from './commands/publics';
 import * as DynamicCommands from './commands/dynamics';
@@ -13,17 +13,6 @@ import * as Services from './services';
 
 @Module({
   imports: [
-    /** Mongoose */
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }], 'main'),
-    MongooseModule.forFeature(
-      [
-        { name: Guild.name, schema: GuildSchema },
-        { name: Command.name, schema: CommandSchema },
-      ],
-      'discord',
-    ),
-
-    /** DiscordBot */
     NecordModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService<EnvironmentVariables>) => ({
@@ -38,6 +27,9 @@ import * as Services from './services';
       }),
       inject: [ConfigService],
     }),
+    UsersModule,
+    GuildsModule,
+    CommandsModule,
   ],
   providers: [Services, PublicCommands, DynamicCommands, Events].map((e) => Object.values(e)).flat(),
 })
