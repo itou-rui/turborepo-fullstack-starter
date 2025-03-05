@@ -1,7 +1,7 @@
 import { type Model, type HydratedDocument, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { type IUser, type OmmitedBaseModelFields } from '@workspace/types';
-import { BaseDocument, BaseDocumentSchema } from 'database/common';
+import { BaseDocument, BaseDocumentSchema } from 'database/base.schema';
 import { type UserProviders, UserProvidersSchema } from './providers.schema';
 
 @Schema()
