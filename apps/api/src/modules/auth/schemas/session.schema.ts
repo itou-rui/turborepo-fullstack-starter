@@ -2,7 +2,7 @@ import { type Model, type HydratedDocument } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { type APISession, type OmmitedBaseModelFields } from '@workspace/types';
 import { ProviderType } from '@workspace/constants';
-import { BaseDocument, BaseDocumentSchema } from '../../../common';
+import { BaseDocument, BaseDocumentSchema } from 'database/common';
 
 @Schema()
 export class Session extends BaseDocument implements Omit<APISession, OmmitedBaseModelFields> {
