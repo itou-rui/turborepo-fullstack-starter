@@ -37,9 +37,7 @@ export class UsersRepository implements IUsersRepository {
    * @param email - The email of the user to find.
    */
   findOneByLocalProviderEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({
-      'providers.local.email': email,
-    });
+    return this.userModel.findOne({ email });
   }
 
   /**
