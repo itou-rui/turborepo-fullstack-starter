@@ -1,15 +1,46 @@
 import type { Types } from 'mongoose';
 
+/**
+ * Interface representing the base model with common fields.
+ */
 export interface IBaseModel {
+  /**
+   * The unique identifier for the model.
+   */
   _id: Types.ObjectId;
+
+  /**
+   * The date when the model was created.
+   */
   createdAt: Date;
+
+  /**
+   * The date when the model was last updated.
+   */
   updatedAt: Date;
 }
 
+/**
+ * Type representing the fields to omit from the base model.
+ */
 export type OmitBaseModelFields = '_id' | 'createdAt' | 'updatedAt';
 
+/**
+ * Interface representing the base model for API responses, with string types for certain fields.
+ */
 export interface APIBase extends Omit<IBaseModel, OmitBaseModelFields> {
+  /**
+   * The unique identifier for the model as a string.
+   */
   _id: string;
+
+  /**
+   * The creation date as a string.
+   */
   createdAt: string;
+
+  /**
+   * The last update date as a string.
+   */
   updatedAt: string;
 }
