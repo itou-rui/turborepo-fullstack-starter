@@ -1,14 +1,14 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import { type ISessionModel, type OmitBaseModelFields } from '@workspace/types';
 import { Session, type SessionModel } from '../schemas';
-import { ISession, OmmitedBaseModelFields } from '@workspace/types';
 
 export interface ILocalAuthRepository {
   findByObjectId(id: string): Promise<Session | null>;
   findByUserObjectId(id: string): Promise<Session | null>;
   findByAccessToken(accessToken: string): Promise<Session | null>;
-  findAndUpdate(data: Omit<ISession, OmmitedBaseModelFields>): Promise<Session>;
-  create(data: Omit<ISession, OmmitedBaseModelFields>): Promise<Session>;
+  findAndUpdate(data: Omit<ISessionModel, OmitBaseModelFields>): Promise<Session>;
+  create(data: Omit<ISessionModel, OmitBaseModelFields>): Promise<Session>;
 }
 
 export class LocalAuthRepository implements ILocalAuthRepository {
@@ -22,8 +22,8 @@ export class LocalAuthRepository implements ILocalAuthRepository {
    * @param id - The ObjectId of the session to find.
    * @returns The found session or null if not found.
    */
-  async findByObjectId(id: string): Promise<Session | null> {
-    return await this.sessionModel.findById(new Types.ObjectId(id));
+  findByObjectId(id: string): Promise<Session | null> {
+    return this.sessionModel.findById(new Types.ObjectId(id));
   }
 
   /**
@@ -31,8 +31,8 @@ export class LocalAuthRepository implements ILocalAuthRepository {
    * @param id - The ObjectId of the user whose session to find.
    * @returns The found session or null if not found.
    */
-  async findByUserObjectId(id: string): Promise<Session | null> {
-    return await this.sessionModel.findOne({ user: new Types.ObjectId(id) });
+  findByUserObjectId(id: string): Promise<Session | null> {
+    return this.sessionModel.findOne({ user: new Types.ObjectId(id) });
   }
 
   /**
@@ -40,8 +40,8 @@ export class LocalAuthRepository implements ILocalAuthRepository {
    * @param accessToken - The access token of the session to find.
    * @returns The found session or null if not found.
    */
-  async findByAccessToken(accessToken: string): Promise<Session | null> {
-    return await this.sessionModel.findOne({ accessToken });
+  findByAccessToken(accessToken: string): Promise<Session | null> {
+    return this.sessionModel.findOne({ accessToken });
   }
 
   /**
@@ -49,8 +49,8 @@ export class LocalAuthRepository implements ILocalAuthRepository {
    * @param data - The data to update the session with.
    * @returns The updated session.
    */
-  async findAndUpdate(data: Omit<ISession, OmmitedBaseModelFields>): Promise<Session> {
-    return await this.sessionModel.findOneAndUpdate(
+  findAndUpdate(data: Omit<ISessionModel, OmitBaseModelFields>): Promise<Session> {
+    return this.sessionModel.findOneAndUpdate(
       { userId: data.userId, provider: data.provider },
       { $set: data },
       { upsert: true, new: true },
@@ -62,7 +62,7 @@ export class LocalAuthRepository implements ILocalAuthRepository {
    * @param data - The data to create the session with.
    * @returns The created session.
    */
-  async create(data: Omit<ISession, OmmitedBaseModelFields>): Promise<Session> {
-    return await this.sessionModel.create(data);
+  create(data: Omit<ISessionModel, OmitBaseModelFields>): Promise<Session> {
+    return this.sessionModel.create(data);
   }
 }

@@ -1,7 +1,7 @@
-import { IsString, IsNotEmpty, IsOptional, IsObject } from 'class-validator';
-import type { IUserProviders, RESTPostAPIUserJSONBody } from '@workspace/types';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import type { RESTPostAPIUserJSON } from '@workspace/types';
 
-export class CreateUserDto implements RESTPostAPIUserJSONBody {
+export class CreateUserDto implements RESTPostAPIUserJSON {
   @IsString()
   @IsNotEmpty()
   uuid!: string;
@@ -10,7 +10,11 @@ export class CreateUserDto implements RESTPostAPIUserJSONBody {
   @IsNotEmpty()
   username!: string;
 
-  @IsObject()
+  @IsString()
   @IsOptional()
-  providers?: IUserProviders;
+  email?: string;
+
+  @IsString()
+  @IsOptional()
+  password?: string;
 }

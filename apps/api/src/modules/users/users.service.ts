@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { APIUser, type IUser, type RESTPostAPIUserJSONBody } from '@workspace/types';
+import { type APIUser, type IUserModel, type RESTPostAPIUserJSON } from '@workspace/types';
 import { User } from './schemas';
 import { UsersRepository } from './users.repository';
 
@@ -12,14 +12,16 @@ export class UsersService {
    * @param user - The APIUser object to convert.
    */
   toAPIUser(user: User): APIUser {
-    const plainUser = user.toObject() as IUser;
-    const { providers, ...rest } = plainUser;
-    const { local, ...otherProviders } = providers ?? {};
-    const { password, ...localWithoutPassword } = local ?? {};
-    return { ...rest, providers: { ...otherProviders, local: localWithoutPassword } };
+    const { password, ...rest } = user.toObject() as IUserModel;
+    return {
+      ...rest,
+      _id: rest._id.toString(),
+      createdAt: rest.createdAt.toISOString(),
+      updatedAt: rest.updatedAt.toISOString(),
+    };
   }
 
-  toIUser(user: User): IUser {
+  toIUser(user: User): IUserModel {
     return user.toObject();
   }
 
@@ -35,7 +37,7 @@ export class UsersService {
     return this.usersRepository.findOneByLocalProviderEmail(email);
   }
 
-  create(data: RESTPostAPIUserJSONBody): Promise<User> {
+  create(data: RESTPostAPIUserJSON & { password: string }): Promise<User> {
     return this.usersRepository.create(data);
   }
 }

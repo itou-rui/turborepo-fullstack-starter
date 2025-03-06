@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty } from 'class-validator';
-import type { RESTPostAPIAuthLocalRegisterJSONBody } from '@workspace/types';
+import { type RESTPostAPIAuthLocalRegisterJSON } from '@workspace/types';
 
-export class RegisterLocalUserDto implements RESTPostAPIAuthLocalRegisterJSONBody {
+export class RegisterLocalUserDto implements RESTPostAPIAuthLocalRegisterJSON {
   @IsString()
   @IsNotEmpty()
   username!: string;

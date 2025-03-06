@@ -1,18 +1,19 @@
-import { Document, Model, Types } from 'mongoose';
+import { Document, type Model, Types } from 'mongoose';
 import { Prop, SchemaFactory } from '@nestjs/mongoose';
+import type { IBaseModel } from '@workspace/types';
 
-export class BaseDocument extends Document {
+export class BaseDocument extends Document implements IBaseModel {
   @Prop({ type: Types.ObjectId, auto: true })
   declare _id: Types.ObjectId;
 
   @Prop({ type: Number, default: 1, index: true })
   index!: number;
 
-  @Prop({ type: String, default: () => new Date().toISOString() })
-  createdAt!: string;
+  @Prop({ type: Date, default: Date.now })
+  createdAt!: Date;
 
-  @Prop({ type: String, default: () => new Date().toISOString() })
-  updatedAt!: string;
+  @Prop({ type: Date })
+  updatedAt!: Date;
 }
 
 export const BaseDocumentSchema = SchemaFactory.createForClass(BaseDocument);

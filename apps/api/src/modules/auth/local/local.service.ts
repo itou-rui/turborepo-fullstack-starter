@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidV4 } from 'uuid';
 import bcryptjs from 'bcryptjs';
-import { type APISession, type ISession } from '@workspace/types';
+import { type APISession, type ISessionModel } from '@workspace/types';
 import { ProviderType } from '@workspace/constants';
 import { ResourceAlreadyExistsException } from 'utils/exceptions';
 import { UsersService, User } from '../../users';
@@ -24,8 +24,13 @@ export class LocalAuthService {
    * @returns The converted APISession object.
    */
   toAPISession(session: Session): APISession {
-    const { ...rest } = session.toObject() as ISession;
-    return rest;
+    const { ...rest } = session.toObject() as ISessionModel;
+    return {
+      ...rest,
+      _id: rest._id.toString(),
+      createdAt: rest.createdAt.toISOString(),
+      updatedAt: rest.updatedAt.toISOString(),
+    };
   }
 
   /**
@@ -49,10 +54,10 @@ export class LocalAuthService {
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersService.findByLocalProviderEmail(email);
-    if (user?.providers?.local?.password == null) {
+    if (user?.password == null) {
       return null;
     }
-    if (await bcryptjs.compare(password, user.providers.local.password)) {
+    if (await bcryptjs.compare(password, user.password)) {
       return user;
     }
     return null;
@@ -81,12 +86,11 @@ export class LocalAuthService {
     }
 
     const hashedPassword = await this.hashPassword(data.password);
-    return await this.usersService.create({
+    return this.usersService.create({
       uuid: uuidV4(),
       username: data.username,
-      providers: {
-        local: { email: data.email, password: hashedPassword },
-      },
+      email: data.email,
+      password: hashedPassword,
     });
   }
 
@@ -96,17 +100,12 @@ export class LocalAuthService {
    * @returns The created/updated session.
    */
   async login(user: User): Promise<Session> {
-    const payload = { uuid: user.uuid, username: user.username, email: user.providers?.local?.email };
+    const payload = { uuid: user.uuid, username: user.username, email: user.email };
     const accessToken = this.jwtService.sign(payload);
     return await this.localAuthRepository.findAndUpdate({
       userId: user.uuid,
       provider: ProviderType.Local,
       accessToken,
-      profile: new Map<string, any>([
-        ['uuid', user.uuid],
-        ['username', user.username],
-        ['email', user.providers?.local?.email],
-      ]),
     });
   }
 }
