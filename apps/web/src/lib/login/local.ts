@@ -2,10 +2,13 @@
 
 import { cookies } from 'next/headers';
 import * as fetcher from '../fetcher';
-import type { APISession, RESTPostAPIAuthLocalLoginJSON } from '@workspace/types';
+import type { RESTPostAPIAuthLocalLoginJSON } from '@workspace/types';
 
 export async function local(email: string, password: string) {
-  const result = await fetcher.post<RESTPostAPIAuthLocalLoginJSON, APISession>('/api/auth/login', { email, password });
+  const result = await fetcher.post<RESTPostAPIAuthLocalLoginJSON>('/api/auth/login', {
+    email,
+    password,
+  });
 
   if (result.ok === true) {
     const setCookie = result.headers.getSetCookie();

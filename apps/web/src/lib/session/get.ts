@@ -1,13 +1,13 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { type APISession } from '@workspace/types';
+import { type RESTGetAPISessionResult } from '@workspace/types';
 import * as fetcher from '../fetcher';
 
-export async function get(): Promise<APISession | null> {
+export async function get<T>() {
   const headerList = await headers();
 
-  const result = await fetcher.get<APISession>('/api/auth/session', {
+  const result = await fetcher.get<RESTGetAPISessionResult<T> | null>('/api/auth/session', {
     headers: new Headers(headerList),
     credentials: 'include',
   });

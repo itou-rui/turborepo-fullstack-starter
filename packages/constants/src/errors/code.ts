@@ -5,4 +5,6 @@ export enum RESTAPIErrorJSONCodes {
   UnknownUser,
 
   AlreadyUser = 20_001,
+
+  InvalidCredentials = 30_001,
 }

@@ -1,7 +1,6 @@
 import { Controller, Post, Body, Get, Req, Res } from '@nestjs/common';
 import { Response, type Request } from 'express';
-import { type APISession } from '@workspace/types';
-import { UserNotFoundException } from 'utils/exceptions';
+import { LocalAuthProfile, RESTGetAPISessionResult } from '@workspace/types';
 import { LoginLocalDto, RegisterLocalUserDto } from './dtos';
 import { LocalAuthService } from './local.service';
 
@@ -10,9 +9,8 @@ export class LocalAuthController {
   constructor(private readonly localAuthService: LocalAuthService) {}
 
   @Post('register')
-  async register(@Body() data: RegisterLocalUserDto, @Res({ passthrough: true }) response: Response): Promise<APISession> {
-    const user = await this.localAuthService.register(data);
-    const session = await this.localAuthService.login(user);
+  async register(@Body() data: RegisterLocalUserDto, @Res({ passthrough: true }) response: Response) {
+    const session = await this.localAuthService.register(data);
 
     response.cookie('session_token', session.accessToken, {
       httpOnly: true,
@@ -21,16 +19,12 @@ export class LocalAuthController {
       maxAge: 3600 * 1000,
     });
 
-    return this.localAuthService.toAPISession(session);
+    return null;
   }
 
   @Post('login')
-  async login(@Body() loginUserDto: LoginLocalDto, @Res({ passthrough: true }) response: Response) {
-    const user = await this.localAuthService.validateUser(loginUserDto.email, loginUserDto.password);
-    if (user === null) {
-      throw new UserNotFoundException('Email address or password is incorrect.');
-    }
-    const session = await this.localAuthService.login(user);
+  async login(@Body() { email, password }: LoginLocalDto, @Res({ passthrough: true }) response: Response) {
+    const session = await this.localAuthService.login(email, password);
 
     response.cookie('session_token', session.accessToken, {
       httpOnly: true,
@@ -39,17 +33,20 @@ export class LocalAuthController {
       maxAge: 3600 * 1000,
     });
 
-    return this.localAuthService.toAPISession(session);
+    return null;
   }
 
   @Get('session')
-  async getSession(@Req() request: Request): Promise<APISession | null> {
+  async getSession(@Req() request: Request): Promise<RESTGetAPISessionResult<LocalAuthProfile> | null> {
     const accessToken = request.cookies['session_token'];
     if (!accessToken) return null;
 
-    const session = await this.localAuthService.validateSession(accessToken as string);
+    const session = await this.localAuthService.getSessionByToken(accessToken as string);
     if (session === null) return null;
 
-    return this.localAuthService.toAPISession(session);
+    const { _id, index, createdAt, updatedAt, _version, ...rest } = this.localAuthService.toAPISession(session);
+    const profile = this.localAuthService.getProfileFromToken(accessToken as string);
+
+    return { ...rest, profile };
   }
 }

@@ -35,3 +35,10 @@ export interface ISessionModel extends IBaseModel {
  * Type representing a session in the API, omitting certain fields.
  */
 export type APISession = Omit<ISessionModel, OmitBaseModelFields> & APIBase;
+
+/**
+ * Type representing the JSON structure for a POST request to create a session.
+ */
+export interface RESTGetAPISessionResult<T> extends Omit<APISession, OmitBaseModelFields> {
+  profile: T;
+}

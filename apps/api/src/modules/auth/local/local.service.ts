@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidV4 } from 'uuid';
 import bcryptjs from 'bcryptjs';
-import { type APISession, type ISessionModel } from '@workspace/types';
+import { LocalAuthProfile, type APISession, type ISessionModel } from '@workspace/types';
 import { ProviderType } from '@workspace/constants';
-import { ResourceAlreadyExistsException } from 'utils/exceptions';
+import { ResourceAlreadyExistsException, InvalidCredentialsException } from 'utils/exceptions';
 import { UsersService, User } from '../../users';
 import { Session } from '../schemas';
 import { RegisterLocalUserDto } from './dtos';
@@ -34,78 +34,102 @@ export class LocalAuthService {
   }
 
   /**
-   * Validates a session token and returns the associated session.
-   * @param token - The session token to validate.
-   * @returns The validated session or null if invalid.
-   */
-  async validateSession(token: string): Promise<Session | null> {
-    const session = await this.localAuthRepository.findByAccessToken(token);
-
-    if (!session) {
-      return null;
-    }
-
-    if (session.tokenExpires && new Date(session.tokenExpires) < new Date()) {
-      return null;
-    }
-
-    return session;
-  }
-
-  async validateUser(email: string, password: string): Promise<User | null> {
-    const user = await this.usersService.findByLocalProviderEmail(email);
-    if (user?.password == null) {
-      return null;
-    }
-    if (await bcryptjs.compare(password, user.password)) {
-      return user;
-    }
-    return null;
-  }
-
-  /**
    * Hashes a password using bcrypt.
    * @param password - The password to hash.
    * @returns The hashed password.
    */
   async hashPassword(password: string): Promise<string> {
     const salt = await bcryptjs.genSalt();
-    return await bcryptjs.hash(password, salt);
+    return bcryptjs.hash(password, salt);
+  }
+
+  /**
+   * Signs a JWT token with the given payload.
+   *
+   * @param payload - The payload to sign the token with.
+   */
+  signToken(payload: LocalAuthProfile): string {
+    return this.jwtService.sign(payload);
+  }
+
+  /**
+   * Validates if a user with the given email can be registered.
+   *
+   * @param email - The email address to check.
+   */
+  async validateRegisterUser(email: string) {
+    const isExists = await this.usersService.exists({ email });
+    if (isExists) {
+      throw new ResourceAlreadyExistsException(0, 'User with this email already exists');
+    }
   }
 
   /**
    * Registers a new user with the provided data.
    * @param data - The data for the new user.
-   * @returns The created user.
-   * @throws ResourceAlreadyExistsException if a user with the given email already exists.
    */
-  async register(data: RegisterLocalUserDto): Promise<User> {
-    const user = await this.usersService.findByLocalProviderEmail(data.email);
-    if (user) {
-      throw new ResourceAlreadyExistsException(0, 'User with this email already exists');
-    }
+  async register(data: RegisterLocalUserDto): Promise<Session> {
+    await this.validateRegisterUser(data.email);
 
+    const { password, ...rest } = data;
+    const uuid = uuidV4();
     const hashedPassword = await this.hashPassword(data.password);
-    return this.usersService.create({
-      uuid: uuidV4(),
-      username: data.username,
-      email: data.email,
-      password: hashedPassword,
-    });
+    await this.usersService.create({ uid: uuid, ...rest, password: hashedPassword });
+
+    const accessToken = this.signToken({ uid: uuid, username: data.username, email: data.email });
+    return this.localAuthRepository.create({ userId: uuid, provider: ProviderType.Local, accessToken });
+  }
+
+  /**
+   * Validates the login credentials of a user.
+   *
+   * @param email - The email address of the user.
+   * @param password - The password of the user.
+   */
+  async validateLoginUser(email: string, password: string): Promise<User> {
+    const user = await this.usersService.findByEmail(email);
+    if (user === null) {
+      throw new InvalidCredentialsException('Invalid email or password');
+    }
+    if (user.password == null) {
+      throw new InvalidCredentialsException('Password is not set for this account');
+    }
+    if (!(await bcryptjs.compare(password, user.password))) {
+      throw new InvalidCredentialsException('Invalid email or password');
+    }
+    return user;
   }
 
   /**
    * Logs in a user and creates/updates a session.
    * @param user - The user to log in.
-   * @returns The created/updated session.
    */
-  login(user: User): Promise<Session> {
-    const payload = { uuid: user.uuid, username: user.username, email: user.email };
-    const accessToken = this.jwtService.sign(payload);
+  async login(email: string, password: string): Promise<Session> {
+    const user = await this.validateLoginUser(email, password);
+    const accessToken = this.signToken({ uid: user.uid, username: user.username, email: email });
     return this.localAuthRepository.findAndUpdate({
-      userId: user.uuid,
+      userId: user.uid,
       provider: ProviderType.Local,
       accessToken,
     });
+  }
+
+  validateSessionExpire(tokenExpires: string): boolean {
+    return new Date(tokenExpires) >= new Date();
+  }
+
+  async getSessionByToken(token: string): Promise<Session | null> {
+    const session = await this.localAuthRepository.findByAccessToken(token);
+    if (session === null) {
+      return null;
+    }
+    if (session.tokenExpires && !this.validateSessionExpire(session.tokenExpires)) {
+      return null;
+    }
+    return session;
+  }
+
+  getProfileFromToken(token: string): LocalAuthProfile {
+    return this.jwtService.decode(token) as LocalAuthProfile;
   }
 }
