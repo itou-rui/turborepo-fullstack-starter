@@ -10,6 +10,8 @@ export interface ICommandsRepository {
 }
 
 export class CommandsRepository implements ICommandsRepository {
+  private populateFields = 'guilds';
+
   constructor(
     @InjectModel(Command.name, 'discord')
     private commandModel: CommandModel,
@@ -19,7 +21,7 @@ export class CommandsRepository implements ICommandsRepository {
    * Retrieves all guilds from the database.
    */
   async findAll(filter: Partial<ICommand> = {}): Promise<Command[]> {
-    return this.commandModel.find(filter).populate('guilds').exec();
+    return this.commandModel.find(filter).populate(this.populateFields).exec();
   }
 
   /**
@@ -27,7 +29,7 @@ export class CommandsRepository implements ICommandsRepository {
    * @param id - The ID of the guild to retrieve.
    */
   findOneById(id: Types.ObjectId): Promise<Command | null> {
-    return this.commandModel.findById(id);
+    return this.commandModel.findById(id).populate(this.populateFields).exec();
   }
 
   /**
@@ -35,6 +37,6 @@ export class CommandsRepository implements ICommandsRepository {
    * @param uid - The unique identifier of the guild.
    */
   findByUid(uid: string): Promise<Command | null> {
-    return this.commandModel.findOne({ uid });
+    return this.commandModel.findOne({ uid }).populate(this.populateFields).exec();
   }
 }
