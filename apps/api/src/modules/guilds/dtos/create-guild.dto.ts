@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty } from 'class-validator';
-import type { RESTPostAPIGuildJSONBody } from '@workspace/types';
+import type { RESTPostAPIGuildJSON } from '@workspace/types';
 
-export class CreateGuildDto implements RESTPostAPIGuildJSONBody {
+export class CreateGuildDto implements RESTPostAPIGuildJSON {
   @IsString()
   @IsNotEmpty()
   uid!: string;
