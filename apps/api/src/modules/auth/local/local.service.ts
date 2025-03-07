@@ -99,10 +99,10 @@ export class LocalAuthService {
    * @param user - The user to log in.
    * @returns The created/updated session.
    */
-  async login(user: User): Promise<Session> {
+  login(user: User): Promise<Session> {
     const payload = { uuid: user.uuid, username: user.username, email: user.email };
     const accessToken = this.jwtService.sign(payload);
-    return await this.localAuthRepository.findAndUpdate({
+    return this.localAuthRepository.findAndUpdate({
       userId: user.uuid,
       provider: ProviderType.Local,
       accessToken,
