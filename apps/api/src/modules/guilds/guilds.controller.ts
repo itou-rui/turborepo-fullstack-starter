@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { type RESTGetAPIGuildResult } from '@workspace/types';
+import { type APIGuild } from '@workspace/types';
 import { GuildNotFoundException } from 'utils/exceptions';
 import { CreateGuildDto } from './dtos';
 import { GuildsService } from './guilds.service';
@@ -9,13 +9,13 @@ export class GuildsController {
   constructor(private readonly guildsService: GuildsService) {}
 
   @Get()
-  async findAll(): Promise<RESTGetAPIGuildResult[]> {
+  async findAll(): Promise<APIGuild[]> {
     const guilds = await this.guildsService.findAll();
     return guilds.map((guild) => this.guildsService.toAPIGuild(guild));
   }
 
   @Get(':guildId')
-  async findOne(@Param('guildId') guildId: string): Promise<RESTGetAPIGuildResult> {
+  async findOne(@Param('guildId') guildId: string): Promise<APIGuild> {
     const guild = await this.guildsService.findByUid(guildId);
     if (guild === null) {
       throw new GuildNotFoundException(guildId);
@@ -24,7 +24,7 @@ export class GuildsController {
   }
 
   @Post()
-  async create(@Body() data: CreateGuildDto): Promise<RESTGetAPIGuildResult> {
+  async create(@Body() data: CreateGuildDto): Promise<APIGuild> {
     const guild = await this.guildsService.create(data);
     return this.guildsService.toAPIGuild(guild);
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { type APIGuild, type RESTPostAPIGuildJSONBody } from '@workspace/types';
+import { type APIGuild, type RESTPostAPIGuildJSON } from '@workspace/types';
 import { Guild } from './schemas';
 import { GuildsRepository } from './guilds.repository';
 
@@ -45,7 +45,7 @@ export class GuildsService {
    * Creates a new user in the database.
    * @param data - The data to create the guild with.
    */
-  create(data: RESTPostAPIGuildJSONBody): Promise<Guild> {
+  create(data: RESTPostAPIGuildJSON): Promise<Guild> {
     return this.guildRepository.create(data);
   }
 }

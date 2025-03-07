@@ -1,7 +1,7 @@
-import type { BaseModel } from '../../common';
-import type { IGuild } from '../../guilds';
+import type { APIBase, IBaseModel, OmitBaseModelFields } from './IBase';
+import { APIGuild, type IGuild } from './IGuild';
 
-export interface ICommand extends BaseModel {
+export interface ICommand extends IBaseModel {
   /**
    * Unique identifier for the guild.
    */
@@ -28,4 +28,7 @@ export interface ICommand extends BaseModel {
   active: boolean;
 }
 
-export type OmmitedICommandFields = 'guilds';
+export type APICommand = Omit<IGuild, OmitBaseModelFields | 'guilds'> &
+  APIBase & {
+    guilds: APIGuild[];
+  };
