@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { type Types } from 'mongoose';
 import { type APIUser, type IUserModel, type RESTPostAPIUserJSON } from '@workspace/types';
 import { User } from './schemas';
 import { UsersRepository } from './users.repository';
@@ -25,6 +26,10 @@ export class UsersService {
     return user.toObject();
   }
 
+  exists(filter: Partial<IUserModel>): Promise<Types.ObjectId | undefined> {
+    return this.usersRepository.exists(filter);
+  }
+
   findAll(): Promise<User[]> {
     return this.usersRepository.findAll();
   }
@@ -33,8 +38,8 @@ export class UsersService {
     return this.usersRepository.findOneById(id);
   }
 
-  findByLocalProviderEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOneByLocalProviderEmail(email);
+  findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOneByEmail(email);
   }
 
   create(data: RESTPostAPIUserJSON & { password: string }): Promise<User> {
