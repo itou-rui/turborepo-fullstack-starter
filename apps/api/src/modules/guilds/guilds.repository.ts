@@ -1,13 +1,13 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { Guild, type GuildModel } from './schemas';
-import { type RESTPostAPIGuildJSONBody } from '@workspace/types';
+import { type RESTPostAPIGuildJSON } from '@workspace/types';
 
 export interface IGuildsRepository {
   findAll(): Promise<Guild[]>;
   findOneById(id: Types.ObjectId): Promise<Guild | null>;
   findByUid(uid: string): Promise<Guild | null>;
-  create(data: RESTPostAPIGuildJSONBody): Promise<Guild>;
+  create(data: RESTPostAPIGuildJSON): Promise<Guild>;
 }
 
 export class GuildsRepository implements IGuildsRepository {
@@ -43,7 +43,7 @@ export class GuildsRepository implements IGuildsRepository {
    * Creates a new user in the database.
    * @param data - The data to create the guild with.
    */
-  create(data: RESTPostAPIGuildJSONBody): Promise<Guild> {
+  create(data: RESTPostAPIGuildJSON): Promise<Guild> {
     return this.guildModel.create(data);
   }
 }
