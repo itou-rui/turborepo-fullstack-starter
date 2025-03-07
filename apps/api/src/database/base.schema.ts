@@ -1,9 +1,10 @@
-import { Document, type Model, Types } from 'mongoose';
-import { Prop, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import type { IBaseModel } from '@workspace/types';
+import { autoIncrementPlugin, timestampsPlugin } from './plugins';
 
+@Schema({ versionKey: '_version' })
 export class BaseDocument extends Document implements IBaseModel {
-  @Prop({ type: Types.ObjectId, auto: true })
   declare _id: Types.ObjectId;
 
   @Prop({ type: Number, default: 1, index: true })
@@ -14,15 +15,11 @@ export class BaseDocument extends Document implements IBaseModel {
 
   @Prop({ type: Date })
   updatedAt!: Date;
+
+  declare _version: number;
 }
 
 export const BaseDocumentSchema = SchemaFactory.createForClass(BaseDocument);
 
-BaseDocumentSchema.pre<BaseDocument>('save', async function (next) {
-  if (this.isNew) {
-    const Model = this.constructor as Model<BaseDocument>;
-    const lastDoc = await Model.findOne({}, {}, { sort: { index: -1 } });
-    this.index = lastDoc ? lastDoc.index + 1 : 1;
-  }
-  next();
-});
+BaseDocumentSchema.plugin(autoIncrementPlugin, { field: 'index', startAt: 1 });
+BaseDocumentSchema.plugin(timestampsPlugin);

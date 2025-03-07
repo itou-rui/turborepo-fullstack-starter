@@ -18,12 +18,18 @@ export interface IBaseModel {
    * The date when the model was last updated.
    */
   updatedAt: Date;
+
+  /**
+   * The version number of the document.
+   * This is used for internal versioning by the database.
+   */
+  _version: number;
 }
 
 /**
  * Type representing the fields to omit from the base model.
  */
-export type OmitBaseModelFields = '_id' | 'createdAt' | 'updatedAt';
+export type OmitBaseModelFields = '_id' | 'createdAt' | 'updatedAt' | '_version';
 
 /**
  * Interface representing the base model for API responses, with string types for certain fields.
