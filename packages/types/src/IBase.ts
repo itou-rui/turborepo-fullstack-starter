@@ -9,6 +9,8 @@ export interface IBaseModel {
    */
   _id: Types.ObjectId;
 
+  index: number;
+
   /**
    * The date when the model was created.
    */
@@ -29,7 +31,7 @@ export interface IBaseModel {
 /**
  * Type representing the fields to omit from the base model.
  */
-export type OmitBaseModelFields = '_id' | 'createdAt' | 'updatedAt' | '_version';
+export type OmitBaseModelFields = '_id' | 'index' | 'createdAt' | 'updatedAt' | '_version';
 
 /**
  * Interface representing the base model for API responses, with string types for certain fields.
@@ -40,6 +42,8 @@ export interface APIBase extends Omit<IBaseModel, OmitBaseModelFields> {
    */
   _id: string;
 
+  index: number;
+
   /**
    * The creation date as a string.
    */
@@ -49,4 +53,10 @@ export interface APIBase extends Omit<IBaseModel, OmitBaseModelFields> {
    * The last update date as a string.
    */
   updatedAt: string;
+
+  /**
+   * The version number of the entity.
+   * This is used for version control and concurrency management.
+   */
+  _version: number;
 }
