@@ -6,7 +6,7 @@ import { BaseDocument, BaseDocumentSchema } from 'database/base.schema';
 @Schema()
 export class User extends BaseDocument implements IUserModel {
   @Prop({ required: true, unique: true })
-  uuid!: string;
+  uid!: string;
 
   @Prop({ required: true })
   username!: string;

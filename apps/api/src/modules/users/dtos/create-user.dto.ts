@@ -4,7 +4,7 @@ import type { RESTPostAPIUserJSON } from '@workspace/types';
 export class CreateUserDto implements RESTPostAPIUserJSON {
   @IsString()
   @IsNotEmpty()
-  uuid!: string;
+  uid!: string;
 
   @IsString()
   @IsNotEmpty()

@@ -19,7 +19,7 @@ export interface RESTPostAPIAuthLocalLoginJSON {
  * Interface representing the JSON structure for a local registration request.
  * Extends the user JSON structure, omitting the 'uuid' field.
  */
-export interface RESTPostAPIAuthLocalRegisterJSON extends Omit<RESTPostAPIUserJSON, 'uuid'> {
+export interface RESTPostAPIAuthLocalRegisterJSON extends Omit<RESTPostAPIUserJSON, 'uid'> {
   /**
    * The email of the user.
    */
@@ -29,4 +29,10 @@ export interface RESTPostAPIAuthLocalRegisterJSON extends Omit<RESTPostAPIUserJS
    * The password of the user.
    */
   password: string;
+}
+
+export interface LocalAuthProfile {
+  uid: string;
+  username: string;
+  email: string;
 }

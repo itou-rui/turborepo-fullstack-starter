@@ -7,7 +7,7 @@ export interface IUserModel extends IBaseModel {
   /**
    * The unique identifier for the user.
    */
-  uuid: string;
+  uid: string;
 
   /**
    * The username of the user.
