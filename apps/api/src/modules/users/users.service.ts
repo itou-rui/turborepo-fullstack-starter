@@ -42,6 +42,10 @@ export class UsersService {
     return this.usersRepository.findOneByEmail(email);
   }
 
+  findByDiscordId(discordId: string): Promise<User | null> {
+    return this.usersRepository.findByDiscordId(discordId);
+  }
+
   create(data: CreateUserDatails): Promise<User> {
     return this.usersRepository.create(data);
   }
