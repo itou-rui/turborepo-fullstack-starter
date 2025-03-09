@@ -13,6 +13,8 @@ export interface IDiscordAuthRepository {
 }
 
 export class DiscordAuthRepository {
+  private populateFields = 'user';
+
   constructor(
     @InjectModel(Session.name, 'main')
     private sessionModel: SessionModel,
@@ -24,7 +26,7 @@ export class DiscordAuthRepository {
    * @returns A promise that resolves to the session or null if not found.
    */
   findByObjectId(_id: Types.ObjectId): Promise<Session | null> {
-    return this.sessionModel.findOne({ _id, provider: ProviderType.Discord });
+    return this.sessionModel.findOne({ _id, provider: ProviderType.Discord }).populate(this.populateFields).exec();
   }
 
   /**
@@ -33,7 +35,7 @@ export class DiscordAuthRepository {
    * @returns A promise that resolves to the session if found, otherwise null.
    */
   findByUid(uid: string): Promise<Session | null> {
-    return this.sessionModel.findOne({ uid, provider: ProviderType.Discord });
+    return this.sessionModel.findOne({ uid, provider: ProviderType.Discord }).populate(this.populateFields).exec();
   }
 
   /**
@@ -42,7 +44,7 @@ export class DiscordAuthRepository {
    * @returns A promise that resolves to the session or null if not found.
    */
   findByAccessToken(accessToken: string): Promise<Session | null> {
-    return this.sessionModel.findOne({ accessToken, provider: ProviderType.Discord });
+    return this.sessionModel.findOne({ accessToken, provider: ProviderType.Discord }).populate(this.populateFields).exec();
   }
 
   /**
@@ -50,10 +52,11 @@ export class DiscordAuthRepository {
    * @param data - The details required to create a new session, including the Discord profile.
    * @returns A promise that resolves to the created session.
    */
-  create(data: CreateSessionDetails<DiscordProfile>): Promise<Session> {
-    return this.sessionModel.create({
+  async create(data: CreateSessionDetails<DiscordProfile>): Promise<Session> {
+    const session = await this.sessionModel.create({
       ...data,
       provider: ProviderType.Discord,
     });
+    return session.populate(this.populateFields);
   }
 }
