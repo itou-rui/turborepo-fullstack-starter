@@ -49,6 +49,16 @@ export interface EnvironmentVariables {
    * The token for Discord authentication.
    */
   DISCORD_BOT_TOKEN: string;
+
+  /**
+   * The client ID for Discord authentication.
+   */
+  DISCORD_CLIENT_ID: string;
+
+  /**
+   * The client secret for Discord authentication.
+   */
+  DISCORD_CLIENT_SECRET: string;
 }
 
 /**
@@ -114,6 +124,20 @@ export class EnvironmentVariablesDto {
   @IsString()
   @IsNotEmpty()
   DISCORD_BOT_TOKEN!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  /**
+   * The client ID for Discord authentication.
+   */
+  DISCORD_CLIENT_ID!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  /**
+   * The client secret for Discord authentication.
+   */
+  DISCORD_CLIENT_SECRET!: string;
 }
 
 /**
@@ -136,4 +160,6 @@ export const validationSchemaForEnv = Joi.object<EnvironmentVariables, true>({
   MONGODB_HOST_NAME: Joi.string().required(),
   JWT_SECRET: Joi.string().required(),
   DISCORD_BOT_TOKEN: Joi.string().required(),
+  DISCORD_CLIENT_ID: Joi.string().required(),
+  DISCORD_CLIENT_SECRET: Joi.string().required(),
 });
