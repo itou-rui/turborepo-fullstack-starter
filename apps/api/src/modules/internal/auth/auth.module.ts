@@ -8,8 +8,15 @@ import { LocalStrategy } from './strategies/';
 
 @Module({
   imports: [UsersModule, PassportModule],
-  controllers: [LocalAuthController],
-  providers: [LocalAuthService, LocalStrategy, LocalAuthSessionSerializer],
-  exports: [LocalAuthService],
+  controllers: [LocalAuthController, DiscordAuthController],
+  providers: [
+    LocalAuthService,
+    LocalStrategy,
+    LocalAuthSessionSerializer,
+    DiscordAuthService,
+    DiscordStrategy,
+    DiscordAuthRepository,
+  ],
+  exports: [LocalAuthService, DiscordAuthService],
 })
 export class AuthModule {}
