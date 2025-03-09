@@ -1,14 +1,15 @@
 import { Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { type Profile as DiscordProfile } from 'passport-discord';
 import { ProviderType } from '@workspace/constants';
 import { Session, type SessionModel } from '../schemas';
-import { ISessionModel, OmitBaseModelFields } from '@workspace/types';
+import { type CreateSessionDetails } from '@workspace/types';
 
 export interface IDiscordAuthRepository {
   findByObjectId(_id: Types.ObjectId): Promise<Session | null>;
-  findByUserId(uid: string): Promise<Session | null>;
+  findByUid(uid: string): Promise<Session | null>;
   findByAccessToken(accessToken: string): Promise<Session | null>;
-  create(data: Omit<ISessionModel, OmitBaseModelFields>): Promise<Session>;
+  create(data: CreateSessionDetails<DiscordProfile>): Promise<Session>;
 }
 
 export class DiscordAuthRepository {
@@ -27,12 +28,12 @@ export class DiscordAuthRepository {
   }
 
   /**
-   * Finds a session by the user ID.
-   * @param uid - The user ID associated with the session.
-   * @returns A promise that resolves to the session or null if not found.
+   * Finds a session by user ID.
+   * @param uid - The unique identifier of the user.
+   * @returns A promise that resolves to the session if found, otherwise null.
    */
-  findByUserId(uid: string): Promise<Session | null> {
-    return this.sessionModel.findOne({ userId: uid, provider: ProviderType.Discord });
+  findByUid(uid: string): Promise<Session | null> {
+    return this.sessionModel.findOne({ uid, provider: ProviderType.Discord });
   }
 
   /**
@@ -45,14 +46,14 @@ export class DiscordAuthRepository {
   }
 
   /**
-   * Creates a new session.
-   * @param data - The session data to create.
+   * Creates a new session for a Discord user.
+   * @param data - The details required to create a new session, including the Discord profile.
    * @returns A promise that resolves to the created session.
    */
-  create(data: { uuid: string; discordId: string; username: string }): Promise<Session> {
+  create(data: CreateSessionDetails<DiscordProfile>): Promise<Session> {
     return this.sessionModel.create({
-      provider: ProviderType.Discord,
       ...data,
+      provider: ProviderType.Discord,
     });
   }
 }
