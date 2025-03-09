@@ -7,6 +7,7 @@ import { type EnvironmentVariables } from 'config/env-varidation';
 import { UsersModule } from '../users';
 import { Session, SessionSchema } from './schemas';
 import { LocalAuthService, LocalAuthController, LocalStrategy, LocalAuthRepository } from './local';
+import { DiscordAuthRepository, DiscordAuthController, DiscordAuthService, DiscordStrategy } from './discord';
 
 @Module({
   imports: [
@@ -22,8 +23,8 @@ import { LocalAuthService, LocalAuthController, LocalStrategy, LocalAuthReposito
       inject: [ConfigService],
     }),
   ],
-  controllers: [LocalAuthController],
-  providers: [LocalAuthService, LocalStrategy, LocalAuthRepository],
-  exports: [LocalAuthService],
+  controllers: [LocalAuthController, DiscordAuthController],
+  providers: [LocalAuthService, LocalStrategy, LocalAuthRepository, DiscordAuthService, DiscordStrategy, DiscordAuthRepository],
+  exports: [LocalAuthService, DiscordAuthService],
 })
 export class AuthModule {}
