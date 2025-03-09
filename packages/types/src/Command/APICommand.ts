@@ -1,8 +1,8 @@
 import type { APIBase, OmitBaseModelFields } from '../Base';
 import type { APIGuild } from '../Guild';
-import { type ICommandModel } from './ICommand';
+import { ICommandModelDocumentFields, type ICommandModel } from './ICommand';
 
-export type APICommand = Omit<ICommandModel, OmitBaseModelFields> &
+export type APICommand = Omit<ICommandModel, OmitBaseModelFields | ICommandModelDocumentFields> &
   APIBase & {
     guilds: APIGuild[];
   };
