@@ -1,4 +1,4 @@
-import type { IBaseModel, OmitBaseModelFields } from '../IBase';
+import type { IBaseModel, OmitBaseModelFields } from '../Base';
 
 /**
  * Interface representing a user model.

@@ -1,4 +1,4 @@
-import type { APIBase, OmitBaseModelFields } from '../IBase';
+import type { APIBase, OmitBaseModelFields } from '../Base';
 import type { IUserModel, CreateUserDatails, UpdateUserDetails } from './IUser';
 
 export type OmitAPIUserResponseFields = 'password';

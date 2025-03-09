@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 import type { ProviderType } from '@workspace/constants';
-import type { IBaseModel, OmitBaseModelFields } from '../IBase';
+import type { IBaseModel, OmitBaseModelFields } from '../Base';
 import type { IUserModel } from '../User';
 
 /**

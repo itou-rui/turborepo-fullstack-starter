@@ -1,4 +1,4 @@
-import type { OmitBaseModelFields } from '../IBase';
+import type { OmitBaseModelFields } from '../Base';
 import type { ISessionModel, ISessionModelDocumentFields } from './ISession';
 
 /**

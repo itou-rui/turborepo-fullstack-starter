@@ -1,40 +1,5 @@
 import type { RESTAPIErrorJSONCodes } from '@workspace/constants';
-
-/**
- * Interface representing the base result of a REST API response.
- */
-export interface RESTAPIBaseResult {
-  /**
-   * The HTTP status code of the response.
-   */
-  status: number;
-
-  /**
-   * The message associated with the response.
-   */
-  message: string;
-
-  /**
-   * The timestamp when the response was generated.
-   */
-  timestamp: string;
-
-  /**
-   * The path of the API endpoint that generated the response.
-   */
-  path: string;
-}
-
-/**
- * Interface representing a successful REST API response.
- * @template T - The type of the data in the response.
- */
-export interface RESTAPISuccessResult<T> extends RESTAPIBaseResult {
-  /**
-   * The data returned in the response.
-   */
-  data: T;
-}
+import type { RESTAPIBaseResult } from './APIBase';
 
 /**
  * Type representing fields to omit from the REST API error result.
