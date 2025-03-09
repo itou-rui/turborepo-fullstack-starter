@@ -47,7 +47,7 @@ export class CommandsService {
    */
   findOneById(id: string): Promise<Command | null> {
     const _id = new Types.ObjectId(id);
-    return this.commandsRepository.findOneById(_id);
+    return this.commandsRepository.findOneByObjectId(_id);
   }
 
   /**
