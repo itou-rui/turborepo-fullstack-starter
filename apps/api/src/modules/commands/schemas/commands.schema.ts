@@ -1,8 +1,8 @@
-import { type Model, type HydratedDocument, type Types } from 'mongoose';
+import { type Model, type HydratedDocument, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { type OmitBaseModelFields, type ICommand } from '@workspace/types';
 import { BaseDocument, BaseDocumentSchema } from 'database/base.schema';
-import { type Guild, GuildSchema } from '../../guilds/schemas';
+import { type Guild } from '../../guilds/schemas';
 
 @Schema()
 export class Command extends BaseDocument implements Omit<ICommand, OmitBaseModelFields> {
@@ -15,7 +15,7 @@ export class Command extends BaseDocument implements Omit<ICommand, OmitBaseMode
   @Prop()
   description?: string;
 
-  @Prop({ type: GuildSchema, default: [] })
+  @Prop({ type: Types.ObjectId, ref: 'Guild', default: [] })
   guilds!: Guild[];
 
   @Prop({ required: true, default: true })
