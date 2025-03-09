@@ -1,11 +1,11 @@
 import { type Model, type HydratedDocument, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { type OmitBaseModelFields, type ICommand } from '@workspace/types';
+import { type ICommandModel } from '@workspace/types';
 import { BaseDocument, BaseDocumentSchema } from 'database/base.schema';
 import { type Guild } from '../../guilds/schemas';
 
 @Schema()
-export class Command extends BaseDocument implements Omit<ICommand, OmitBaseModelFields> {
+export class Command extends BaseDocument implements ICommandModel {
   @Prop({ required: true, unique: true })
   uid!: string;
 

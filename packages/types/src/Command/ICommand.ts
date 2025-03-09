@@ -1,7 +1,7 @@
 import type { IBaseModel } from '../Base';
 import type { IGuildModel } from '../Guild';
 
-export interface ICommand extends IBaseModel {
+export interface ICommandModel extends IBaseModel {
   /**
    * Unique identifier for the guild.
    */
