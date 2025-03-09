@@ -20,7 +20,7 @@ export class CommandsRepository implements ICommandsRepository {
   /**
    * Retrieves all guilds from the database.
    */
-  async findAll(filter: Partial<ICommand> = {}): Promise<Command[]> {
+  findAll(filter: Partial<ICommand> = {}): Promise<Command[]> {
     return this.commandModel.find(filter).populate(this.populateFields).exec();
   }
 
