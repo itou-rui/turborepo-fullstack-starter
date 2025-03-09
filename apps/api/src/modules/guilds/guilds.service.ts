@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { IGuild, type APIGuild, type RESTPostAPIGuildJSON } from '@workspace/types';
+import { IGuildModel, type APIGuild, type RESTPostAPIGuildJSON } from '@workspace/types';
 import { Guild } from './schemas';
 import { GuildsRepository } from './guilds.repository';
 
@@ -14,7 +14,7 @@ export class GuildsService {
    * @returns The converted APIGuild object.
    */
   toAPIGuild(guild: Guild): APIGuild {
-    const { _id, createdAt, updatedAt, ...rest } = guild.toObject() as IGuild;
+    const { _id, createdAt, updatedAt, ...rest } = guild.toObject() as IGuildModel;
     return {
       ...rest,
       _id: _id.toString(),

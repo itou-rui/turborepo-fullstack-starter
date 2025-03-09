@@ -1,5 +1,5 @@
-import type { APIBase, IBaseModel, OmitBaseModelFields } from './IBase';
-import { APIGuild, type IGuild } from './IGuild';
+import type { IBaseModel } from '../Base';
+import type { IGuildModel } from '../Guild';
 
 export interface ICommand extends IBaseModel {
   /**
@@ -20,7 +20,7 @@ export interface ICommand extends IBaseModel {
   /**
    * List of guilds that the command is available in.
    */
-  guilds: IGuild[];
+  guilds: IGuildModel[];
 
   /**
    * Whether the command is active or not.
@@ -28,7 +28,4 @@ export interface ICommand extends IBaseModel {
   active: boolean;
 }
 
-export type APICommand = Omit<IGuild, OmitBaseModelFields | 'guilds'> &
-  APIBase & {
-    guilds: APIGuild[];
-  };
+export type ICommandModelDocumentFields = 'guilds';
