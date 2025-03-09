@@ -8,6 +8,7 @@ export interface IUsersRepository {
   findAll(): Promise<User[]>;
   findOneById(id: string): Promise<User | null>;
   findOneByEmail(email: string): Promise<User | null>;
+  findByDiscordId(discordId: string): Promise<User | null>;
   create(data: CreateUserDatails): Promise<User>;
 }
 
@@ -48,6 +49,14 @@ export class UsersRepository implements IUsersRepository {
    */
   findOneByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
+  }
+
+  /**
+   * Finds a user by their Discord ID.
+   * @param discordId - The Discord ID of the user to find.
+   */
+  findByDiscordId(discordId: string): Promise<User | null> {
+    return this.userModel.findOne({ discordId }).exec();
   }
 
   /**
