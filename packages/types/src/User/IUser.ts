@@ -23,6 +23,11 @@ export interface IUserModel extends IBaseModel {
    * The password of the user (optional).
    */
   password?: string;
+
+  /**
+   * Optional Discord ID of the user.
+   */
+  discordId?: string;
 }
 
 /**
