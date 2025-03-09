@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Profile } from 'passport-discord';
+import { type Profile as DiscordProfile } from 'passport-discord';
 import { v4 as uuidV4 } from 'uuid';
+import { type APISession, type ISessionModel } from '@workspace/types';
 import { User, UsersService } from '../../users';
+import { Session } from '../schemas';
 import { DiscordAuthRepository } from './discord.repository';
 
 @Injectable()
@@ -11,7 +13,17 @@ export class DiscordAuthService {
     private readonly discordAuthRepository: DiscordAuthRepository,
   ) {}
 
-  async validateUser(profile: Profile): Promise<User> {
+  /**
+   * Converts a Session object to an APISession object.
+   * @param session - The session object to convert.
+   * @returns The converted APISession object.
+   */
+  toAPISession(session: Session): APISession<DiscordProfile> {
+    const { _id, _version, index, createdAt, updatedAt, user, ...rest } = session.toObject() as ISessionModel<DiscordProfile>;
+    return rest;
+  }
+
+  async validateUser(profile: DiscordProfile): Promise<User> {
     const user = await this.usersService.findByDiscordId(profile.id);
 
     if (user === null) {
