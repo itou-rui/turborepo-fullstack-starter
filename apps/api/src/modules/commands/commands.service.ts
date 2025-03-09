@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { type ICommand, type APICommand } from '@workspace/types';
+import { type APICommand } from '@workspace/types';
 import { GuildsService } from '../guilds';
-import { Command } from './schemas';
+import { type Command } from './schemas';
 import { CommandsRepository } from './commands.repository';
 
 @Injectable()
@@ -17,9 +17,7 @@ export class CommandsService {
    * @param {Command} command - The command object to convert.
    */
   async toAPICommnad(command: Command): Promise<APICommand> {
-    const { _id, createdAt, updatedAt, ...rest } = command.toObject() as ICommand;
-    const { guilds } = await command.populate('guilds');
-
+    const { _id, createdAt, updatedAt, guilds, ...rest } = command.toObject() as Command;
     return {
       ...rest,
       _id: _id.toString(),
