@@ -1,14 +1,14 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { User, type UserModel } from './schemas';
-import { IUserModel, type RESTPostAPIUserJSON } from '@workspace/types';
+import { type CreateUserDatails, type IUserModel } from '@workspace/types';
 
 export interface IUsersRepository {
   exists(filter: Partial<IUserModel>): Promise<Types.ObjectId | undefined>;
   findAll(): Promise<User[]>;
   findOneById(id: string): Promise<User | null>;
   findOneByEmail(email: string): Promise<User | null>;
-  create(data: RESTPostAPIUserJSON): Promise<User>;
+  create(data: CreateUserDatails): Promise<User>;
 }
 
 export class UsersRepository implements IUsersRepository {
@@ -54,7 +54,7 @@ export class UsersRepository implements IUsersRepository {
    * Creates a new user in the database.
    * @param data - The data to create the user with.
    */
-  create(data: RESTPostAPIUserJSON): Promise<User> {
+  create(data: CreateUserDatails): Promise<User> {
     return this.userModel.create(data);
   }
 }

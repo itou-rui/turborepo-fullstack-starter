@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type Types } from 'mongoose';
-import { type APIUser, type IUserModel, type RESTPostAPIUserJSON } from '@workspace/types';
+import { type CreateUserDatails, type APIUser, type IUserModel } from '@workspace/types';
 import { User } from './schemas';
 import { UsersRepository } from './users.repository';
 
@@ -42,7 +42,7 @@ export class UsersService {
     return this.usersRepository.findOneByEmail(email);
   }
 
-  create(data: RESTPostAPIUserJSON & { password: string }): Promise<User> {
+  create(data: CreateUserDatails): Promise<User> {
     return this.usersRepository.create(data);
   }
 }

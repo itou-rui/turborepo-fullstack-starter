@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 import type { RESTPostAPIUserJSON } from '@workspace/types';
 
 export class CreateUserDto implements RESTPostAPIUserJSON {
@@ -11,10 +11,8 @@ export class CreateUserDto implements RESTPostAPIUserJSON {
   username!: string;
 
   @IsString()
-  @IsOptional()
-  email?: string;
+  email!: string;
 
   @IsString()
-  @IsOptional()
-  password?: string;
+  password!: string;
 }
