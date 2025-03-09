@@ -1,11 +1,11 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { Command, type CommandModel } from './schemas';
-import { ICommand } from '@workspace/types';
+import type { ICommandModel } from '@workspace/types';
 
 export interface ICommandsRepository {
-  findAll(filter: Partial<ICommand>): Promise<Command[]>;
-  findOneById(id: Types.ObjectId): Promise<Command | null>;
+  findAll(filter: Partial<ICommandModel>): Promise<Command[]>;
+  findOneByObjectId(id: Types.ObjectId): Promise<Command | null>;
   findByUid(uid: string): Promise<Command | null>;
 }
 
@@ -20,7 +20,7 @@ export class CommandsRepository implements ICommandsRepository {
   /**
    * Retrieves all guilds from the database.
    */
-  findAll(filter: Partial<ICommand> = {}): Promise<Command[]> {
+  findAll(filter: Partial<ICommandModel> = {}): Promise<Command[]> {
     return this.commandModel.find(filter).populate(this.populateFields).exec();
   }
 
@@ -28,7 +28,7 @@ export class CommandsRepository implements ICommandsRepository {
    * Retrieves a guild by their ID.
    * @param id - The ID of the guild to retrieve.
    */
-  findOneById(id: Types.ObjectId): Promise<Command | null> {
+  findOneByObjectId(id: Types.ObjectId): Promise<Command | null> {
     return this.commandModel.findById(id).populate(this.populateFields).exec();
   }
 
