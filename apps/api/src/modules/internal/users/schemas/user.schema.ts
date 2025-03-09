@@ -16,6 +16,9 @@ export class User extends BaseDocument implements IUserModel {
 
   @Prop()
   password?: string;
+
+  @Prop()
+  discordId?: string;
 }
 
 export type UserDocument = HydratedDocument<User>;

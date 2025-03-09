@@ -59,4 +59,8 @@ export class UsersService {
     await this.validateCreate(data.email!);
     return this.usersRepository.create(data);
   }
+
+  findByDiscordId(discordId: string): Promise<User | null> {
+    return this.usersRepository.findByDiscordId(discordId);
+  }
 }
