@@ -23,14 +23,9 @@ export class LocalAuthService {
    * @param session - The session object to convert.
    * @returns The converted APISession object.
    */
-  toAPISession(session: Session): APISession {
-    const { ...rest } = session.toObject() as ISessionModel;
-    return {
-      ...rest,
-      _id: rest._id.toString(),
-      createdAt: rest.createdAt.toISOString(),
-      updatedAt: rest.updatedAt.toISOString(),
-    };
+  toAPISession(session: Session): APISession<LocalAuthProfile> {
+    const { _id, _version, index, createdAt, updatedAt, user, ...rest } = session.toObject() as ISessionModel<LocalAuthProfile>;
+    return rest;
   }
 
   /**
@@ -72,12 +67,13 @@ export class LocalAuthService {
     await this.validateRegisterUser(data.email);
 
     const { password, ...rest } = data;
-    const uuid = uuidV4();
+    const uid = uuidV4();
     const hashedPassword = await this.hashPassword(data.password);
-    await this.usersService.create({ uid: uuid, ...rest, password: hashedPassword });
+    const user = await this.usersService.create({ uid, ...rest, password: hashedPassword });
 
-    const accessToken = this.signToken({ uid: uuid, username: data.username, email: data.email });
-    return this.localAuthRepository.create({ userId: uuid, provider: ProviderType.Local, accessToken });
+    const profile: LocalAuthProfile = { uid, username: data.username, email: data.email };
+    const accessToken = this.signToken(profile);
+    return this.localAuthRepository.create({ uid: uuidV4(), user: user._id, provider: ProviderType.Local, accessToken, profile });
   }
 
   /**
@@ -107,8 +103,8 @@ export class LocalAuthService {
   async login(email: string, password: string): Promise<Session> {
     const user = await this.validateLoginUser(email, password);
     const accessToken = this.signToken({ uid: user.uid, username: user.username, email: email });
-    return this.localAuthRepository.findAndUpdate({
-      userId: user.uid,
+    return this.localAuthRepository.findByUidAndUpdate(user.uid, {
+      user: user._id,
       provider: ProviderType.Local,
       accessToken,
     });

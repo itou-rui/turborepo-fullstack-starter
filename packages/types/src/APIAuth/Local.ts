@@ -1,4 +1,4 @@
-import type { RESTPostAPIUserJSON } from '../IUser';
+import type { RESTPostAPIUserJSON } from '../User';
 
 /**
  * Interface representing the JSON structure for a local login request.
