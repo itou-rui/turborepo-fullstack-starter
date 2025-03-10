@@ -5,6 +5,13 @@ import { LocalAuthController } from './controllers';
 import { LocalAuthService } from './services';
 import { LocalAuthSessionSerializer } from './session-serializers/';
 import { LocalStrategy } from './strategies/';
+import {
+  DiscordAuthRepository,
+  DiscordAuthController,
+  DiscordAuthService,
+  DiscordStrategy,
+  DiscordSessionSerializer,
+} from './discord';
 
 @Module({
   imports: [UsersModule, PassportModule],
@@ -16,6 +23,7 @@ import { LocalStrategy } from './strategies/';
     DiscordAuthService,
     DiscordStrategy,
     DiscordAuthRepository,
+    DiscordSessionSerializer,
   ],
   exports: [LocalAuthService, DiscordAuthService],
 })

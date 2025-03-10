@@ -2,13 +2,14 @@ import { Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { type Profile as DiscordProfile } from 'passport-discord';
 import { ProviderType } from '@workspace/constants';
+import { type UpdateSessionDetails, type CreateSessionDetails } from '@workspace/types';
 import { Session, type SessionModel } from '../schemas';
-import { type CreateSessionDetails } from '@workspace/types';
 
 export interface IDiscordAuthRepository {
   findByObjectId(_id: Types.ObjectId): Promise<Session | null>;
   findByUid(uid: string): Promise<Session | null>;
   findByAccessToken(accessToken: string): Promise<Session | null>;
+  findOneAndUpdate(accessToken: string, data: UpdateSessionDetails<DiscordProfile>): Promise<Session | null>;
   create(data: CreateSessionDetails<DiscordProfile>): Promise<Session>;
 }
 
@@ -45,6 +46,20 @@ export class DiscordAuthRepository {
    */
   findByAccessToken(accessToken: string): Promise<Session | null> {
     return this.sessionModel.findOne({ accessToken, provider: ProviderType.Discord }).populate(this.populateFields).exec();
+  }
+
+  /**
+   * Finds a session by access token and updates it with the provided data.
+   * @param accessToken - The access token of the session to find.
+   * @param data - The data to update the session with.
+   * @returns A promise that resolves to the updated session or null if no session was found.
+   */
+  findOneAndUpdate(data: UpdateSessionDetails<DiscordProfile>): Promise<Session | null> {
+    return this.sessionModel.findOneAndUpdate(
+      { provider: ProviderType.Discord, 'profile.id': data.profile?.id },
+      { $set: data },
+      { new: true },
+    );
   }
 
   /**

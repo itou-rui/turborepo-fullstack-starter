@@ -1,13 +1,18 @@
-import { type Request } from 'express';
-import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Response, type Request } from 'express';
+import { Controller, Get, InternalServerErrorException, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { type Profile as DiscordProfile } from 'passport-discord';
+import { APISession } from '@workspace/types';
 import { AuthenticatedGuard, DiscordAuthGuard } from './discord.guards';
+import { DiscordAuthService } from './discord.service';
 
-@Controller('auth')
+@Controller('auth/discord')
 export class DiscordAuthController {
-  @Get('discord/callback')
+  constructor(private readonly discordAuthService: DiscordAuthService) {}
+
+  @Get('callback')
   @UseGuards(DiscordAuthGuard)
-  callback() {
-    return { msg: 'Redirect' };
+  callback(@Res() response: Response) {
+    return response.redirect('/auth/signin');
   }
 
   @Get('login')
@@ -18,12 +23,19 @@ export class DiscordAuthController {
 
   @Get('status')
   @UseGuards(AuthenticatedGuard)
-  status(@Req() req: Request) {
-    return req.user;
+  async status(@Req() request: Request): Promise<APISession<DiscordProfile> | null> {
+    const profile = request.user as DiscordProfile & { accessToken: string };
+    const session = await this.discordAuthService.findSessionByAccessToken(profile.accessToken);
+    if (session === null) {
+      throw new InternalServerErrorException('Session not found');
+    }
+    return this.discordAuthService.toAPISession(session!);
   }
 
   @Post('logout')
-  logout() {
-    return {};
+  logout(@Req() request: Request) {
+    request.session.destroy((error) => {
+      console.log(error);
+    });
   }
 }
