@@ -27,14 +27,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   /**
-   * 1. Use structured logging with specified options.
+   * Use structured logging with specified options.
    */
   app.useLogger(new StructuredLogger({ level: 'info', format: process.env.LOG_FORMAT as LogFormat }));
 
   const logger = new Logger('EntryPoint');
 
   /**
-   * 2. Security middleware
+   * Security middleware
    */
   app.use(
     helmet({
@@ -50,8 +50,14 @@ async function bootstrap() {
     }),
   );
 
+  /**
+   * Cookie middleware
+   */
   app.use(cookieParser());
 
+  /**
+   * Session middleware
+   */
   app.use(
     session({
       secret: process.env.JWT_SECRET as string,
@@ -72,7 +78,7 @@ async function bootstrap() {
   app.use(passport.session());
 
   /**
-   * 3. Set up global validation pipes to handle request validation.
+   * Set up global validation pipes to handle request validation.
    */
   app.useGlobalPipes(
     new ValidationPipe({
@@ -86,7 +92,7 @@ async function bootstrap() {
   );
 
   /**
-   * 4. Enable Cross-Origin Resource Sharing (CORS) with specified options.
+   * Enable Cross-Origin Resource Sharing (CORS) with specified options.
    */
   app.enableCors({
     origin: [process.env.BASE_URL as string],
@@ -94,12 +100,12 @@ async function bootstrap() {
   });
 
   /**
-   * 5. Global interceptors for handling success and error responses
+   * Global interceptors for handling success and error responses
    */
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   /**
-   * 6. Global filter for handling unhandled exceptions
+   * Global filter for handling unhandled exceptions
    */
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(
