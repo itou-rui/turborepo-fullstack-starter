@@ -7,11 +7,15 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import passport from 'passport';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import { type LogFormat } from '@workspace/logger';
 import { ResponseInterceptor } from 'utils/interceptors';
 import { StructuredLogger } from 'utils/logger';
 import { AllExceptionsFilter, HttpExceptionFilter } from 'utils/filters';
+import { databaseConfig } from 'config/database.config';
 import { AppModule } from './app.module';
 
 declare const module: any;
@@ -47,6 +51,25 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
+
+  app.use(
+    session({
+      secret: process.env.JWT_SECRET as string,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 3600000 * 24,
+      },
+      store: MongoStore.create({
+        mongoUrl: databaseConfig().main.uri,
+        dbName: 'sessions',
+        mongoOptions: databaseConfig().main.options,
+      }),
+    }),
+  );
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   /**
    * 3. Set up global validation pipes to handle request validation.
