@@ -2,7 +2,7 @@
 
 import { Button } from '@workspace/ui/components/button';
 import { ProviderType } from '@workspace/constants';
-import { handleAuth } from './action';
+import { login } from '@/lib';
 
 interface BaseProviderButtonProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ interface BaseProviderButtonProps {
 }
 
 export const BaseSNSLoginButton = ({ children, provider }: BaseProviderButtonProps) => {
-  const handleClick = async () => handleAuth(provider);
+  const handleClick = async () => login.social(provider);
   return (
     <Button variant='outline' className='w-full' onClick={handleClick}>
       {children}
