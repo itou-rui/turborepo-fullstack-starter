@@ -5,7 +5,6 @@ import { RESTAPIErrorJSONCodes } from '@workspace/constants';
 import { type LogFormat } from '@workspace/logger';
 import { type RESTAPIErrorResult } from '@workspace/types';
 import { StructuredLogger } from '../logger';
-import { formatUserAgent } from '../formats';
 
 /**
  * Exception filter to handle all uncaught exceptions and format error responses.
@@ -31,17 +30,16 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const shortUserAgent = formatUserAgent(request.headers['user-agent']);
 
     if (exception instanceof Error) {
-      this.logger.error(`${request.method} ${HttpStatus.INTERNAL_SERVER_ERROR} ${shortUserAgent} ${request.url}`, {
+      this.logger.error(`${request.method} ${HttpStatus.INTERNAL_SERVER_ERROR}  ${request.url}`, {
         error: exception,
         body: request.body,
         query: request.query,
         params: request.params,
       });
     } else {
-      this.logger.error(`${request.method} ${HttpStatus.INTERNAL_SERVER_ERROR} ${shortUserAgent} ${request.url}`, {
+      this.logger.error(`${request.method} ${HttpStatus.INTERNAL_SERVER_ERROR}  ${request.url}`, {
         error: String(exception),
       });
     }

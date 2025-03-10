@@ -2,6 +2,12 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { type RESTErrorData } from '@workspace/types';
 import { RESTAPIErrorJSONCodes } from '@workspace/constants';
 
+export type APIExceptionDetails = {
+  code: RESTAPIErrorJSONCodes;
+  message: string;
+  errors?: RESTErrorData;
+};
+
 /**
  * Custom exception class for API errors.
  */

@@ -14,7 +14,7 @@ import MongoStore from 'connect-mongo';
 import { type LogFormat } from '@workspace/logger';
 import { ResponseInterceptor } from 'utils/interceptors';
 import { StructuredLogger } from 'utils/logger';
-import { AllExceptionsFilter, HttpExceptionFilter } from 'utils/filters';
+import { AllExceptionsFilter } from 'utils/filters';
 import { databaseConfig } from 'config/database.config';
 import { AppModule } from './app.module';
 
@@ -108,13 +108,7 @@ async function bootstrap() {
    * Global filter for handling unhandled exceptions
    */
   const { httpAdapter } = app.get(HttpAdapterHost);
-  app.useGlobalFilters(
-    // AllExceptionsFilter handles all uncaught exceptions
-    new AllExceptionsFilter(httpAdapter),
-
-    // HttpExceptionFilter handles HTTP exceptions
-    new HttpExceptionFilter(),
-  );
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 
   /**
    * Swagger documentation setup
