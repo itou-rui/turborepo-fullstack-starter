@@ -27,7 +27,7 @@ export class Session extends BaseDocument implements ISessionModel {
 
   @Prop(
     raw({
-      uid: { type: String },
+      id: { type: String },
       username: { type: String },
       email: { type: String },
     }),
