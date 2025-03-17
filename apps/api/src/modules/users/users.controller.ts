@@ -12,9 +12,9 @@ export class UsersController {
     return users.map((user) => this.usersService.toAPIUser(user));
   }
 
-  @Get(':userId')
-  async findOne(@Param('userId') userId: string): Promise<APIUser | null> {
-    const user = await this.usersService.findOneById(userId);
+  @Get(':uid')
+  async findOne(@Param('uid') uid: string): Promise<APIUser | null> {
+    const user = await this.usersService.findOneByUid(uid);
     return user ? this.usersService.toAPIUser(user) : null;
   }
 }

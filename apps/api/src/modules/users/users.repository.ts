@@ -8,6 +8,7 @@ export interface IUsersRepository {
   find(filter: RootFilterQuery<IUserModel>): Promise<User[]>;
   findAll(): Promise<User[]>;
   findOneByObjectId(_id: Types.ObjectId): Promise<User | null>;
+  findOneByUid(uid: string): Promise<User | null>;
   findOneByEmail(email: string): Promise<User | null>;
   create(data: CreateUserDatails): Promise<User>;
 }
@@ -56,6 +57,14 @@ export class UsersRepository implements IUsersRepository {
    */
   findOneByObjectId(_id: Types.ObjectId): Promise<User | null> {
     return this.findOne({ _id });
+  }
+
+  /**
+   * Finds a user by their UID.
+   * @param {string} uid - The UID of the user to find.
+   */
+  findOneByUid(uid: string): Promise<User | null> {
+    return this.findOne({ uid });
   }
 
   /**

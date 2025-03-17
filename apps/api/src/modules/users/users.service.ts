@@ -34,6 +34,10 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
+  findOneByUid(uid: string): Promise<User | null> {
+    return this.usersRepository.findOneByUid(uid);
+  }
+
   findOneByObjectId(_id: string): Promise<User | null> {
     const objectId = new Types.ObjectId(_id);
     return this.usersRepository.findOneByObjectId(objectId);
