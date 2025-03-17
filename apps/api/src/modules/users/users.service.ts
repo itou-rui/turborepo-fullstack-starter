@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { type Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { type CreateUserDatails, type APIUser, type IUserModel } from '@workspace/types';
 import { User } from './schemas';
 import { UsersRepository } from './users.repository';
@@ -34,11 +34,12 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
-  findOneById(id: string): Promise<User | null> {
-    return this.usersRepository.findOneById(id);
+  findOneByObjectId(_id: string): Promise<User | null> {
+    const objectId = new Types.ObjectId(_id);
+    return this.usersRepository.findOneByObjectId(objectId);
   }
 
-  findByEmail(email: string): Promise<User | null> {
+  findOneByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOneByEmail(email);
   }
 

@@ -83,7 +83,7 @@ export class LocalAuthService {
    * @param password - The password of the user.
    */
   async validateLoginUser(email: string, password: string): Promise<User> {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findOneByEmail(email);
     if (user === null) {
       throw new InvalidCredentialsException('Invalid email or password');
     }

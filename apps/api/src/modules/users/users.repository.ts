@@ -1,12 +1,13 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
+import { RootFilterQuery, type Types } from 'mongoose';
 import { User, type UserModel } from './schemas';
 import { type CreateUserDatails, type IUserModel } from '@workspace/types';
 
 export interface IUsersRepository {
-  exists(filter: Partial<IUserModel>): Promise<Types.ObjectId | undefined>;
+  exists(filter: RootFilterQuery<IUserModel>): Promise<Types.ObjectId | undefined>;
+  find(filter: RootFilterQuery<IUserModel>): Promise<User[]>;
   findAll(): Promise<User[]>;
-  findOneById(id: string): Promise<User | null>;
+  findOneByObjectId(_id: Types.ObjectId): Promise<User | null>;
   findOneByEmail(email: string): Promise<User | null>;
   create(data: CreateUserDatails): Promise<User>;
 }
@@ -21,25 +22,40 @@ export class UsersRepository implements IUsersRepository {
    * Checks if a user exists based on the provided filter.
    * @param filter - Partial filter object to search for the user.
    */
-  async exists(filter: Partial<IUserModel>): Promise<Types.ObjectId | undefined> {
+  async exists(filter: RootFilterQuery<Partial<IUserModel>> = {}): Promise<Types.ObjectId | undefined> {
     const result = await this.userModel.exists(filter).exec();
     return result?._id;
+  }
+
+  /**
+   * Finds users based on the provided filter.
+   * @param {RootFilterQuery<IUserModel>} filter - The filter criteria for finding users.
+   */
+  find(filter: RootFilterQuery<IUserModel> = {}): Promise<User[]> {
+    return this.userModel.find(filter).exec();
+  }
+
+  /**
+   * Finds a single user based on the provided filter.
+   * @param {RootFilterQuery<IUserModel>} filter - The filter criteria for finding a user.
+   */
+  findOne(filter: RootFilterQuery<IUserModel>): Promise<User | null> {
+    return this.userModel.findOne(filter).exec();
   }
 
   /**
    * Retrieves all users from the database.
    */
   findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+    return this.find({});
   }
 
   /**
-   * Retrieves a user by their ID.
-   * @param id - The ID of the user to retrieve.
+   * Finds a user by their ID.
+   * @param {Types.ObjectId} _id - The ID of the user to find.
    */
-  findOneById(id: string): Promise<User | null> {
-    const _id = new Types.ObjectId(id);
-    return this.userModel.findById(_id).exec();
+  findOneByObjectId(_id: Types.ObjectId): Promise<User | null> {
+    return this.findOne({ _id });
   }
 
   /**
@@ -47,7 +63,7 @@ export class UsersRepository implements IUsersRepository {
    * @param email - The email of the user to find.
    */
   findOneByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).exec();
+    return this.findOne({ email });
   }
 
   /**
