@@ -1,5 +1,6 @@
 export enum RESTAPIErrorJSONCodes {
   GeneralError,
+  BadRequest,
 
   UnknownAccount = 10_001,
   UnknownUser,

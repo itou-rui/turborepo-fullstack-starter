@@ -22,24 +22,43 @@ export interface RESTAPIErrorFieldInformation {
 }
 
 /**
+ * Interface representing detailed information about a validation error field in a REST API.
+ * @template T - The type of the value associated with the error field.
+ */
+export interface RESTAPIValidationErrorFieldInfomation<T> extends RESTAPIErrorFieldInformation {
+  /** The name of the property that caused the validation error. */
+  property: string;
+
+  /** The value of the property that caused the validation error. */
+  value: T;
+
+  /** The error message associated with the validation error. */
+  message: string;
+}
+
+/**
  * Type representing the structure of error data in a REST API response.
  */
-export type RESTErrorData = APIErrorGroupWrapper | RESTAPIErrorFieldInformation | { [k: string]: RESTErrorData };
+export type RESTErrorData<T = any> =
+  | APIErrorGroupWrapper
+  | RESTAPIErrorFieldInformation
+  | RESTAPIValidationErrorFieldInfomation<T>
+  | { [k: string]: RESTErrorData<T> };
 
 /**
  * Interface representing a group of error data.
  */
-export interface APIErrorGroupWrapper {
+export interface APIErrorGroupWrapper<T = string> {
   /**
    * An array of error data.
    */
-  _errors: RESTErrorData[];
+  _errors: RESTErrorData<T>[];
 }
 
 /**
  * Interface representing an error result of a REST API response.
  */
-export interface RESTAPIErrorResult extends RESTAPIBaseResult {
+export interface RESTAPIErrorResult<T = string> extends RESTAPIBaseResult {
   /**
    * The error code associated with the response.
    */
@@ -48,5 +67,5 @@ export interface RESTAPIErrorResult extends RESTAPIBaseResult {
   /**
    * Additional error data (optional).
    */
-  errors?: RESTErrorData;
+  errors?: RESTErrorData<T>;
 }

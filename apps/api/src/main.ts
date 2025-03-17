@@ -3,7 +3,7 @@
  * This file sets up the application, including middleware, CORS, validation, logging, and Swagger documentation.
  */
 
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe, type ValidationError } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -15,6 +15,7 @@ import { type LogFormat } from '@workspace/logger';
 import { ResponseInterceptor } from 'utils/interceptors';
 import { StructuredLogger } from 'utils/logger';
 import { AllExceptionsFilter } from 'utils/filters';
+import { GlobalValidationException } from 'utils/exceptions';
 import { databaseConfig } from 'config/database.config';
 import { AppModule } from './app.module';
 
@@ -85,8 +86,25 @@ async function bootstrap() {
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
-      transformOptions: {
-        enableImplicitConversion: true,
+      /**
+       * Factory function to create a GlobalValidationException based on validation errors.
+       * @throws GlobalValidationException - Throws an exception with detailed error information.
+       */
+      exceptionFactory(errors) {
+        const formatError = (error: ValidationError) => ({
+          code: `${error.property.toUpperCase()}_VALIDATION_ERROR`,
+          message: Object.values(error.constraints!).join(', '),
+          property: error.property,
+          value: error.value,
+        });
+
+        if (errors.length === 1) {
+          throw new GlobalValidationException(formatError(errors[0]));
+        }
+
+        throw new GlobalValidationException({
+          _errors: errors.map(formatError),
+        });
       },
     }),
   );
