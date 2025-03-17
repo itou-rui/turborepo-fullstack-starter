@@ -43,10 +43,23 @@ import { AppService } from './app.service';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       connectionName: 'discord',
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<DatabaseConfig>(CONFIG_DATABASE)!.discord.uri,
-        ...configService.get<DatabaseConfig>(CONFIG_DATABASE)!.discord.options,
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const baseConfig = configService.get<DatabaseConfig>(CONFIG_DATABASE)!.discord;
+        const logger = new Logger(AppModule.name);
+        const formatMesssge = (operation: string) => `${operation} to discord database (${baseConfig.connectionName})`;
+        return {
+          uri: baseConfig.uri,
+          ...baseConfig.options,
+          onConnectionCreate: (connection: Connection) => {
+            connection.on('connected', () => logger.log(formatMesssge('Connected')));
+            connection.on('open', () => logger.log(formatMesssge('Opened')));
+            connection.on('disconnected', () => logger.warn(formatMesssge('Disconnected')));
+            connection.on('reconnected', () => logger.log(formatMesssge('Reconnected')));
+            connection.on('disconnecting', () => logger.warn(formatMesssge('Disconnecting')));
+            return connection;
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     DiscordModule,
