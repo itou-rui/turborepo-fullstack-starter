@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { type Connection } from 'mongoose';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CONFIG_DATABASE, DatabaseConfig, databaseConfig } from 'config/database.config';
@@ -18,10 +19,23 @@ import { AppService } from './app.service';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       connectionName: 'main',
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<DatabaseConfig>(CONFIG_DATABASE)!.main.uri,
-        ...configService.get<DatabaseConfig>(CONFIG_DATABASE)!.main.options,
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const baseConfig = configService.get<DatabaseConfig>(CONFIG_DATABASE)!.main;
+        const logger = new Logger(AppModule.name);
+        const formatMesssge = (operation: string) => `${operation} to main database (${baseConfig.connectionName})`;
+        return {
+          uri: baseConfig.uri,
+          ...baseConfig.options,
+          onConnectionCreate: (connection: Connection) => {
+            connection.on('connected', () => logger.log(formatMesssge('Connected')));
+            connection.on('open', () => logger.log(formatMesssge('Opened')));
+            connection.on('disconnected', () => logger.warn(formatMesssge('Disconnected')));
+            connection.on('reconnected', () => logger.log(formatMesssge('Reconnected')));
+            connection.on('disconnecting', () => logger.warn(formatMesssge('Disconnecting')));
+            return connection;
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     UsersModule,
