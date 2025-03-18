@@ -26,6 +26,6 @@ export function auth(middleware: NextMiddleware): NextMiddleware {
       return middleware(request, event);
     }
 
-    return NextResponse.redirect(new URL('/auth/singin', request.url));
+    return NextResponse.redirect(new URL('/auth/signin', request.url));
   };
 }
