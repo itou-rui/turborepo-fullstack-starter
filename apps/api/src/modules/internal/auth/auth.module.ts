@@ -22,8 +22,7 @@ import {
     LocalAuthSessionSerializer,
     DiscordAuthService,
     DiscordStrategy,
-    DiscordAuthRepository,
-    DiscordSessionSerializer,
+    DiscordAuthSessionSerializer,
   ],
   exports: [LocalAuthService, DiscordAuthService],
 })
