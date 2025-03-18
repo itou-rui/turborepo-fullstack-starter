@@ -16,7 +16,14 @@ import { chain, auth } from './middlewares';
 export const config = {
   matcher: [
     {
-      source: '/:path*',
+      source: '/dashboard/:path*',
+      missing: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
+    {
+      source: '/auth/:path*',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

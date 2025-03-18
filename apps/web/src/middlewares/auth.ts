@@ -1,4 +1,5 @@
 import { type NextFetchEvent, type NextMiddleware, NextRequest, NextResponse } from 'next/server';
+import { session } from '@/lib';
 
 /**
  * Middleware to add custom headers to the request.
@@ -8,19 +9,23 @@ import { type NextFetchEvent, type NextMiddleware, NextRequest, NextResponse } f
  */
 export function auth(middleware: NextMiddleware): NextMiddleware {
   return async (request: NextRequest, event: NextFetchEvent) => {
-    const accessToken = request.cookies.get('session_token');
-    if (accessToken) return middleware(request, event);
+    const sessionUser = await session.get();
 
     if (request.nextUrl.pathname.startsWith('/auth/signin')) {
-      return middleware(request, event);
+      if (!sessionUser) return middleware(request, event);
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     if (request.nextUrl.pathname.startsWith('/auth/signup')) {
-      return middleware(request, event);
+      if (!sessionUser) return middleware(request, event);
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     if (request.nextUrl.pathname.startsWith('/dashboard')) {
-      return NextResponse.redirect(new URL('/auth/signin', request.url));
+      if (!sessionUser) return NextResponse.redirect(new URL('/auth/signin', request.url));
+      return middleware(request, event);
     }
+
+    return NextResponse.redirect(new URL('/auth/singin', request.url));
   };
 }
