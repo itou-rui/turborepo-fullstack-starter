@@ -66,11 +66,11 @@ async function bootstrap() {
       saveUninitialized: false,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 3600000 * 24,
+        maxAge: 3600000,
       },
       store: MongoStore.create({
         mongoUrl: databaseConfig().main.uri,
-        dbName: 'sessions',
+        dbName: 'store',
         mongoOptions: databaseConfig().main.options,
       }),
     }),
