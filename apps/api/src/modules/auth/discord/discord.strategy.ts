@@ -5,7 +5,7 @@ import { type Profile as DiscordProfile, Strategy } from 'passport-discord';
 import { EnvironmentVariables } from 'config/env-varidation';
 import { DiscordAuthService } from './discord.service';
 
-type Done = (error: Error | null, profile: DiscordProfile) => void;
+type Done = (error: Error | null, profile: DiscordProfile | null) => void;
 
 @Injectable()
 export class DiscordStrategy extends PassportStrategy(Strategy) {
@@ -21,9 +21,8 @@ export class DiscordStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: DiscordProfile, done: Done) {
-    const user = await this.discordAuthService.validateUser(profile);
-    await this.discordAuthService.validateOAuth2(user, profile, accessToken, refreshToken);
+  async validate(_accessToken: string, _refreshToken: string, profile: DiscordProfile, done: Done) {
+    await this.discordAuthService.validateUser(profile);
     done(null, profile);
   }
 }
