@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { type CreateUserDatails, type APIUser, type IUserModel } from '@workspace/types';
+import { UserAlreadyExistsException } from 'utils/exceptions';
 import { User } from './schemas';
 import { UsersRepository } from './users.repository';
 
@@ -47,7 +48,18 @@ export class UsersService {
     return this.usersRepository.findOneByEmail(email);
   }
 
-  create(data: CreateUserDatails): Promise<User> {
+  async validateCreate(email: string) {
+    const isExists = await this.exists({ email });
+    if (isExists) {
+      throw new UserAlreadyExistsException('Email address already in use.', {
+        code: 'USER_ALREADY_EXISTS',
+        message: 'The user associated with the specified email address already exists.',
+      });
+    }
+  }
+
+  async create(data: CreateUserDatails): Promise<User> {
+    await this.validateCreate(data.email!);
     return this.usersRepository.create(data);
   }
 }

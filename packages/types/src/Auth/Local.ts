@@ -1,3 +1,4 @@
+import type { ProviderType } from '@workspace/constants';
 import type { RESTPostAPIUserJSON } from '../User';
 
 /**
@@ -35,4 +36,5 @@ export interface LocalAuthProfile {
   uid: string;
   username: string;
   email: string;
+  provider: ProviderType;
 }

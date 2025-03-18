@@ -1,24 +1,29 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { type Request } from 'express';
-import { Strategy, ExtractJwt } from 'passport-jwt';
+import { Strategy } from 'passport-local';
+import { ProviderType } from '@workspace/constants';
+import { type LocalAuthProfile } from '@workspace/types';
+import { LocalAuthService } from './local.service';
+
+type Done = (error: Error | null, profile: LocalAuthProfile | null) => void;
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private readonly localAuthService: LocalAuthService) {
     super({
-      // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => {
-          return request?.cookies['session-token'];
-        },
-      ]),
-      ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET as string,
+      usernameField: 'email',
+      passwordField: 'password',
     });
   }
 
-  async validate(payload: { uuid: string; username: string; email: string }) {
-    return { uuid: payload.uuid, username: payload.username, email: payload.email };
+  async validate(email: string, password: string, done: Done): Promise<void> {
+    const user = await this.localAuthService.validateLoginUser(email, password);
+    const profile: LocalAuthProfile = {
+      uid: user.uid,
+      username: user.username,
+      email: user.email!,
+      provider: ProviderType.Local,
+    };
+    done(null, profile);
   }
 }

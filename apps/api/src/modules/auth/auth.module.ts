@@ -1,25 +1,12 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { type EnvironmentVariables } from 'config/env-varidation';
 import { UsersModule } from '../users';
-import { LocalAuthService, LocalAuthController, LocalStrategy, LocalAuthRepository } from './local';
+import { LocalAuthService, LocalAuthController, LocalStrategy, LocalAuthSessionSerializer } from './local';
 
 @Module({
-  imports: [
-    UsersModule,
-    PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService<EnvironmentVariables>) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '60m' },
-      }),
-      inject: [ConfigService],
-    }),
-  ],
+  imports: [UsersModule, PassportModule],
   controllers: [LocalAuthController],
-  providers: [LocalAuthService, LocalStrategy, LocalAuthRepository],
+  providers: [LocalAuthService, LocalStrategy, LocalAuthSessionSerializer],
   exports: [LocalAuthService],
 })
 export class AuthModule {}

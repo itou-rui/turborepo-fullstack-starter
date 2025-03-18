@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Get, Req, Res, UseFilters } from '@nestjs/common';
-import { Response, type Request } from 'express';
-import { APISession, LocalAuthProfile } from '@workspace/types';
+import { Controller, Post, Body, Get, Req, UseFilters, UseGuards } from '@nestjs/common';
+import { type Request } from 'express';
+import { ProviderType } from '@workspace/constants';
+import { LocalAuthProfile } from '@workspace/types';
 import { HttpExceptionFilter } from 'utils/filters';
 import { LoginLocalDto, RegisterLocalUserDto } from './dtos';
+import { LocalAuthenticatedGuard, LocalAuthGuard } from './local.guard';
 import { LocalAuthService } from './local.service';
 
 @UseFilters(HttpExceptionFilter)
@@ -11,41 +13,25 @@ export class LocalAuthController {
   constructor(private readonly localAuthService: LocalAuthService) {}
 
   @Post('register')
-  async register(@Body() data: RegisterLocalUserDto, @Res({ passthrough: true }) response: Response) {
-    const session = await this.localAuthService.register(data);
-
-    response.cookie('session_token', session.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 3600 * 1000,
-    });
-
-    return null;
+  async register(@Body() data: RegisterLocalUserDto): Promise<LocalAuthProfile> {
+    const user = await this.localAuthService.createUser(data.username, data.email, data.password);
+    return { uid: user.uid, email: data.email, username: data.username, provider: ProviderType.Local };
   }
 
   @Post('login')
-  async login(@Body() { email, password }: LoginLocalDto, @Res({ passthrough: true }) response: Response) {
-    const session = await this.localAuthService.login(email, password);
-
-    response.cookie('session_token', session.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 3600 * 1000,
-    });
-
-    return null;
+  @UseGuards(LocalAuthGuard)
+  async login(@Req() request: Request, @Body() _data: LoginLocalDto): Promise<LocalAuthProfile> {
+    return request.user as LocalAuthProfile;
   }
 
-  @Get('session')
-  async getSession(@Req() request: Request): Promise<APISession<LocalAuthProfile> | null> {
-    const accessToken = request.cookies['session_token'];
-    if (!accessToken) return null;
+  @Get('me')
+  @UseGuards(LocalAuthenticatedGuard)
+  async me(@Req() request: Request): Promise<LocalAuthProfile | null> {
+    return request.user as LocalAuthProfile;
+  }
 
-    const session = await this.localAuthService.getSessionByToken(accessToken as string);
-    if (session === null) return null;
-
-    return this.localAuthService.toAPISession(session);
+  @Post('logout')
+  async logout(@Req() request: Request): Promise<void> {
+    request.session.destroy(() => {});
   }
 }
