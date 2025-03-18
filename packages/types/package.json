@@ -8,6 +8,7 @@
     "@workspace/eslint": "*",
     "@workspace/prettier": "*",
     "@workspace/tsconfig": "*",
+    "@types/passport-discord": "^0.1.14",
     "mongoose": "^8.8.1"
   }
 }
