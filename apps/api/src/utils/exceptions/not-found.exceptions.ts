@@ -10,6 +10,6 @@ export class UserNotFoundException extends NotFoundAPIException {
 
 export class GuildNotFoundException extends NotFoundAPIException {
   constructor(guildId: string, errors?: RESTErrorData) {
-    super(RESTAPIErrorJSONCodes.NotFound, `Guild with ID ${guildId} not found.`, errors);
+    super(RESTAPIErrorJSONCodes.UnknownGuild, `Guild with ID ${guildId} not found.`, errors);
   }
 }
