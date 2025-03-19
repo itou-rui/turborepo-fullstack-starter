@@ -7,3 +7,9 @@ export class UserNotFoundException extends NotFoundAPIException {
     super(RESTAPIErrorJSONCodes.UnknownAccount, `User with ID ${uid} not found.`, errors);
   }
 }
+
+export class GuildNotFoundException extends NotFoundAPIException {
+  constructor(guildId: string, errors?: RESTErrorData) {
+    super(RESTAPIErrorJSONCodes.NotFound, `Guild with ID ${guildId} not found.`, errors);
+  }
+}
