@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidV4 } from 'uuid';
 import bcryptjs from 'bcryptjs';
-import { InvalidCredentialsException } from 'utils/exceptions';
+import { AlreadyUserExistsException, InvalidLocalAuthCredentialsException, MissingUserPasswordException } from 'utils/exceptions';
 import { UsersService, User } from '../../users';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class LocalAuthService {
    */
   async validateCreateUser(email: string): Promise<void> {
     const user = await this.usersService.findOneByEmail(email);
-    if (user) throw new InvalidCredentialsException('Email is already in use');
+    if (user) throw new AlreadyUserExistsException('email');
 
     // TODO: Checking Password Strength
   }
@@ -53,13 +53,13 @@ export class LocalAuthService {
     const user = await this.usersService.findOneByEmail(email);
 
     if (!user) {
-      throw new InvalidCredentialsException('Invalid email or password');
+      throw new InvalidLocalAuthCredentialsException();
     }
     if (!user.password) {
-      throw new InvalidCredentialsException('Password is not set for this account');
+      throw new MissingUserPasswordException();
     }
     if (!(await bcryptjs.compare(password, user.password))) {
-      throw new InvalidCredentialsException('Invalid email or password');
+      throw new InvalidLocalAuthCredentialsException();
     }
 
     return user;
