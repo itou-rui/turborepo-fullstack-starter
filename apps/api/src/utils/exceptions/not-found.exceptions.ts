@@ -4,6 +4,6 @@ import { NotFoundAPIException } from './http-exceptions';
 
 export class UserNotFoundException extends NotFoundAPIException {
   constructor(uid: string, errors?: RESTErrorData) {
-    super(RESTAPIErrorJSONCodes.NotFound, `User with ID ${uid} not found.`, errors);
+    super(RESTAPIErrorJSONCodes.UnknownAccount, `User with ID ${uid} not found.`, errors);
   }
 }

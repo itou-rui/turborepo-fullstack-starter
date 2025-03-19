@@ -45,7 +45,7 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     }
 
     const errorResponse: RESTAPIErrorResult = {
-      code: RESTAPIErrorJSONCodes.GeneralError,
+      code: RESTAPIErrorJSONCodes.General,
       message: 'An internal server error occurred',
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       timestamp: new Date().toISOString(),

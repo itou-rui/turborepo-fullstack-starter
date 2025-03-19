@@ -4,12 +4,13 @@ import { BadRequestAPIException } from './http-exceptions';
 
 export class GlobalValidationException extends BadRequestAPIException {
   constructor(errors?: RESTErrorData) {
-    super(RESTAPIErrorJSONCodes.BadRequest, 'Validation error.', errors);
+    super(RESTAPIErrorJSONCodes.InvalidBody, 'Validation error.', errors);
   }
 }
 
 export class InvalidLocalAuthCredentialsException extends BadRequestAPIException {
-  constructor(errors?: RESTErrorData) {
-    super(RESTAPIErrorJSONCodes.InvalidCredentials, `Invalid value for email or password.`, errors);
+  constructor(property: 'email' | 'password', errors?: RESTErrorData) {
+    const errorCode = property === 'email' ? RESTAPIErrorJSONCodes.InvalidEmail : RESTAPIErrorJSONCodes.InvalidPassword;
+    super(errorCode, `Invalid value for email or password.`, errors);
   }
 }

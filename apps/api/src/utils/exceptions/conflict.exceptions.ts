@@ -4,6 +4,6 @@ import { ConflictAPIException } from './http-exceptions';
 
 export class AlreadyUserExistsException extends ConflictAPIException {
   constructor(property: string, errors?: RESTErrorData) {
-    super(RESTAPIErrorJSONCodes.AlreadyUser, `User with ${property} already exists.`, errors);
+    super(RESTAPIErrorJSONCodes.AlreadyAccount, `User with ${property} already exists.`, errors);
   }
 }

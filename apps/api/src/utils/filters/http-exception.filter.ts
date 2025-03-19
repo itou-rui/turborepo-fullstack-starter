@@ -152,9 +152,9 @@ export class HttpExceptionFilter implements ExceptionFilter<APIException> {
       exception instanceof APIException
         ? (exceptionResponse as APIExceptionDetails)
         : typeof exceptionResponse === 'string'
-          ? { code: RESTAPIErrorJSONCodes.GeneralError, message: exceptionResponse }
+          ? { code: RESTAPIErrorJSONCodes.General, message: exceptionResponse }
           : {
-              code: RESTAPIErrorJSONCodes.GeneralError,
+              code: RESTAPIErrorJSONCodes.General,
               message: 'An error occurred.',
               errors: this.convertToRESTAPIErrorData(exceptionResponse as HttpExceptionGetResponse),
             };

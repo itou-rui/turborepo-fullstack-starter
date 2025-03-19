@@ -53,13 +53,13 @@ export class LocalAuthService {
     const user = await this.usersService.findOneByEmail(email);
 
     if (!user) {
-      throw new InvalidLocalAuthCredentialsException();
+      throw new InvalidLocalAuthCredentialsException('email');
     }
     if (!user.password) {
       throw new MissingUserPasswordException();
     }
     if (!(await bcryptjs.compare(password, user.password))) {
-      throw new InvalidLocalAuthCredentialsException();
+      throw new InvalidLocalAuthCredentialsException('password');
     }
 
     return user;
