@@ -24,7 +24,14 @@ module.exports = {
     { value: "WIP", name: "WIP:      Work in progress" },
   ],
 
-  scopes: [{ name: "web" }, { name: "api" }, { name: "workflows" }],
+  scopes: [
+    { name: "web" },
+    { name: "api" },
+    { name: "workflows" },
+    { name: "packages" },
+    { name: "scripts" },
+    { name: "docs" },
+  ],
 
   allowTicketNumber: false,
   isTicketNumberRequired: false,
