@@ -1,160 +1,92 @@
 # Turborepo Fullstack Starter
 
-This is a starter project for a full-stack application using Turborepo.
+A full-stack starter kit for modern web application development.
 
-The following applications are included:
+## Overview of Features
 
-## Included in this project
+### Web Application (Next.js)
 
-| Web (Next.js)   | Description                                       | Support |
-| --------------- | ------------------------------------------------- | ------- |
-| ServerComponent | Rendering on the server                           | ✅      |
-| ClientComponent | Client on the server                              | ✅      |
-| ServerAction    | New ability to omit redundant HTTP methods        | ✅      |
-| AppRoute        | Latest routing methods                            | ✅      |
-| TailwindCSS     | CSS Library                                       | ✅      |
-| Embedded CSS    | Embed CSS in the head tag to maximize performance | ✅      |
-| ReduxStore      | State controlled library                          | ✅      |
-| PWA             | Functions to be enabled on the terminal           | 🚫      |
+| Feature         | Description               | Status |
+| --------------- | ------------------------- | ------ |
+| ServerComponent | Server-side rendering     | ✅     |
+| ClientComponent | Client-side components    | ✅     |
+| ServerAction    | Efficient server actions  | ✅     |
+| AppRoute        | Latest routing system     | ✅     |
+| TailwindCSS     | Utility-first CSS         | ✅     |
+| Embedded CSS    | Performance-optimized CSS | ✅     |
+| ReduxStore      | State management          | ✅     |
+| PWA             | Progressive Web App       | 🚫     |
 
-| API (Nest.js)      | Description                             | Support |
-| ------------------ | --------------------------------------- | ------- |
-| Multiple databases | Connect to multiple Mongodb databases   | ✅      |
-| REST               | API that follows REST design principles | ✅      |
-| DiscordBot         | Discord App Use Cases                   | 🚫      |
+### API Server (Nest.js)
 
-| Packages | Description                                                    |
-| -------- | -------------------------------------------------------------- |
-| critters | A plugin to inline critical CSS and lazy-load the rest         |
-| esbuild  | An extremely fast JavaScript bundler and minifier              |
-| eslint   | A tool for identifying and reporting on patterns in JavaScript |
-| jest     | A delightful JavaScript testing framework                      |
-| prettier | An opinionated code formatter                                  |
-| tailwind | A utility-first CSS framework for rapid UI development         |
-| tsconfig | Shared TypeScript configurations                               |
-| ui       | A collection of reusable UI components                         |
+| Feature     | Description                  | Status |
+| ----------- | ---------------------------- | ------ |
+| Multiple DB | Multiple MongoDB connections | ✅     |
+| REST API    | RESTful API implementation   | ✅     |
+| DiscordBot  | Discord integration          | 🚫     |
 
-## Requirements
+## Quick Start
 
-1. [Yarn](https://classic.yarnpkg.com/en/)
+### Prerequisites
+
+- [Yarn](https://classic.yarnpkg.com/en/)
+- [Nps](https://github.com/sezna/nps)
+- [Docker](https://www.docker.com)
+- [gcloud CLI](https://cloud.google.com/sdk)
+
+Refer to the official documentation of each tool for detailed installation instructions.
+
+### Starting the Development Environment
 
 ```sh
-npm install --global yarn
+# Prepare the API and start the development server
+nps prepare.web && nps dev
 ```
 
-2. [Nps](https://github.com/sezna/nps)
+### Starting the Production Environment
 
 ```sh
-npm install --global nps
-```
-
-3. [Docker](https://www.docker.com)
-
-You can [install](https://docs.docker.com/desktop/) it any way you like.
-
-4. [gcloud](https://cloud.google.com/sdk?hl=en)
-
-You can [install](https://cloud.google.com/sdk/docs/install?hl=en) it any way you like.
-
-```sh
-gcloud auth login
-```
-
-## Run Project
-
-1. Develop Mode
-
-```sh
-nps prepare.api && nps dev
-```
-
-2. Production Mode
-
-> [!WARNING]
-> Run it in a separate terminal.
-
-```sh
+# Start the web application
 nps start.web
-```
 
-```sh
+# Start the API server in a separate terminal
 nps start.api
 ```
 
-## Branch Strategy
+## Detailed Documentation
 
-### Main Branch (`main`)
+- [Deployment Guide](./docs/deployment.md)
+- [Testing Workflows Guide](./docs/testing-workflows.md)
 
-- Production environment
+## Development Guidelines
 
-- Merging requires Pull Request.
+### Branch Strategy
 
-- Merging requires confirmation of operation in a **stage environment**.
+- `main`: Production environment (PR review required)
+- `feat/{username}-*`: Feature development branches
 
-### Feature Branches (`feat/{username}-*`)
-
-- Frequent rebasing of the main branch for consistency.
-
-- Confirm that the pull request works in the **stage environment** before submitting it.
-
-- If the environment cannot be checked locally, deploy manually to the **develop environment** to check the operation.
-
-## Commit
-
-The following is incorporated
-
-The recommended commit method is `yarn commit` or `npm run commit`.
-You can create commits interactively
-
-| Commit     | Description                                    |
-| ---------- | ---------------------------------------------- |
-| Commitizen | Standard for consistent commitments            |
-| Commitlint | Inspect for commitments according to the rules |
-| husky      | Automatically inspect when `git commit` is run |
-
-## Deploy (Google Cloud Run)
-
-1. Edit `name` in [package.json](./package.json)
-
-> [!WARNING]
-> Please respect GoogleCloudRun's naming conventions.
-> Only `-` special symbols are allowed and names exceeding 32 characters cannot be set.
-> Prefixes are handled internally in the system and must be set to 20 characters.
-
-2. Copy [.env.example](./.env.example) to `.env` and fill in the values
-
-3. Run Scripts
-
-> [!NOTE]
-> Please grant the authority to execute shell scripts in advance!
+### Commit Rules
 
 ```sh
-yarn setup-google-cloud
+# Recommended: Interactive commit creation
+yarn commit
 ```
 
-## Testing Github Workflow
+Supports creating consistent and high-quality commit messages using Commitizen, Commitlint, and husky.
 
-1. Install [act](https://github.com/nektos/act)
+## Package Structure
 
-```sh
-brew install act
-```
+| Package  | Description                     |
+| -------- | ------------------------------- |
+| critters | Optimization of critical CSS    |
+| esbuild  | Fast JavaScript bundler         |
+| eslint   | Code quality management         |
+| jest     | Testing framework               |
+| prettier | Code formatter                  |
+| tailwind | CSS framework                   |
+| tsconfig | Shared TypeScript configuration |
+| ui       | Reusable UI components          |
 
-2. Copy [.variables.example](./.variables.example) to `.variables` and fill in the values
+## License
 
-> [!NOTE]
-> The values in this file are called out in `vars.xxx`!
-
-3. Copy [.env.example](./.env.example) to `.env` and fill in the values
-
-> [!NOTE]
-> The values in this file are called out in `secrets.xxx`!
-
-4. Run test
-
-```sh
-yarn act --job=job_name
-```
-
-> [!NOTE]
-> Run `act:list` to see the list of jobs
+This project is released under the MIT License.
