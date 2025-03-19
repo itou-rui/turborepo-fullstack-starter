@@ -1,6 +1,6 @@
 'use client';
 
-import { useHelloQuery } from '@/store/services/api';
+import { useHelloQuery } from '@/store';
 
 export const ClientHello = () => {
   const { data } = useHelloQuery();
