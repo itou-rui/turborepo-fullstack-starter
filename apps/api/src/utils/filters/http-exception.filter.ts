@@ -101,7 +101,7 @@ export class HttpExceptionFilter implements ExceptionFilter<APIException> {
         _errors: exceptionResponse.map((item) => {
           const [code, message] = Object.values(item);
           return {
-            code: String(code) || '0',
+            code: String(code) || 'UNKNOWN_ERROR',
             message: String(message) || 'Unknown error',
           };
         }),
@@ -117,7 +117,7 @@ export class HttpExceptionFilter implements ExceptionFilter<APIException> {
           _errors: response.message.map((item) => {
             const [code, message] = Object.values(item);
             return {
-              code: String(code) || '0',
+              code: String(code) || 'UNKNOWN_ERROR',
               message: String(message) || 'Unknown error',
             };
           }),
@@ -125,13 +125,13 @@ export class HttpExceptionFilter implements ExceptionFilter<APIException> {
       }
 
       return {
-        code: '0',
+        code: 'UNKNOWN_ERROR',
         message: String(response.message || 'Unknown error'),
       };
     }
     // fallback
     return {
-      code: '0',
+      code: 'UNKNOWN_ERROR',
       message: String(exceptionResponse),
     };
   }
