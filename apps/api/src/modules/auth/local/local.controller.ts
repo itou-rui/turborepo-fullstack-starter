@@ -1,13 +1,15 @@
-import { Controller, Post, Body, Get, Req, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { type Request } from 'express';
 import { ProviderType } from '@workspace/constants';
 import { LocalAuthProfile } from '@workspace/types';
 import { HttpExceptionFilter } from 'utils/filters';
+import { HttpResponseInterceptor } from 'utils/interceptors';
 import { LoginLocalDto, RegisterLocalUserDto } from './dtos';
 import { LocalAuthenticatedGuard, LocalAuthGuard } from './local.guard';
 import { LocalAuthService } from './local.service';
 
 @UseFilters(HttpExceptionFilter)
+@UseInterceptors(HttpResponseInterceptor)
 @Controller('auth')
 export class LocalAuthController {
   constructor(private readonly localAuthService: LocalAuthService) {}

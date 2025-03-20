@@ -12,7 +12,6 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import { type LogFormat } from '@workspace/logger';
-import { ResponseInterceptor } from 'utils/interceptors';
 import { StructuredLogger } from 'utils/logger';
 import { AllExceptionsFilter } from 'utils/filters';
 import { GlobalValidationException } from 'utils/exceptions';
@@ -116,11 +115,6 @@ async function bootstrap() {
     origin: [process.env.BASE_URL as string],
     credentials: true,
   });
-
-  /**
-   * Global interceptors for handling success and error responses
-   */
-  app.useGlobalInterceptors(new ResponseInterceptor());
 
   /**
    * Global filter for handling unhandled exceptions

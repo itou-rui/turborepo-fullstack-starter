@@ -7,9 +7,9 @@ import { type LogFormat } from '@workspace/logger';
 import { StructuredLogger } from 'utils/logger';
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, RESTAPISuccessResult<T>> {
+export class HttpResponseInterceptor<T> implements NestInterceptor<T, RESTAPISuccessResult<T>> {
   private readonly logger = new StructuredLogger({
-    name: ResponseInterceptor.name,
+    name: HttpResponseInterceptor.name,
     level: 'info',
     format: process.env.LOG_FORMAT as LogFormat,
   });
@@ -36,7 +36,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, RESTAPISuccess
     if (userAgent === undefined) {
       return 'Unknown';
     }
-    for (const agent of ResponseInterceptor.agents) {
+    for (const agent of HttpResponseInterceptor.agents) {
       const match = userAgent.match(new RegExp(`${agent}/(\\d+)`));
       if (match) {
         return `${agent} ${match[1]}`;
