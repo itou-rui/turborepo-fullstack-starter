@@ -9,7 +9,6 @@ import { CommandsModule } from 'modules/commands';
 import * as Events from './events';
 import * as PublicCommands from './commands/publics';
 import * as DynamicCommands from './commands/dynamics';
-import * as Services from './services';
 
 @Module({
   imports: [
@@ -31,6 +30,6 @@ import * as Services from './services';
     GuildsModule,
     CommandsModule,
   ],
-  providers: [Services, PublicCommands, DynamicCommands, Events].map((e) => Object.values(e)).flat(),
+  providers: [PublicCommands, DynamicCommands, Events].map((e) => Object.values(e)).flat(),
 })
 export class DiscordModule {}
