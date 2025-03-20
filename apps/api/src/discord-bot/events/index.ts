@@ -1,3 +1,3 @@
-export * from './ready.event';
+export * from './ready';
 export * from './warn.event';
 export * from './message.event';
