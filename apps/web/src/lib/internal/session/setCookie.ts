@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 
-export async function set(setCookieString: string) {
+export async function setCookie(setCookieString: string) {
   const match = setCookieString.match(/^([^=]+)=([^;]+)/);
   if (!match) throw new Error('Invalid Set-Cookie header');
 

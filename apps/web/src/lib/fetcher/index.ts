@@ -1,4 +1,4 @@
 export * from './http';
-export * from './methods';
+export * as fetcher from './methods';
 export * from './utils';
 export * from './errors';
