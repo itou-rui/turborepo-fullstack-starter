@@ -1,7 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { RootFilterQuery, type Types } from 'mongoose';
-import { User, type UserModel } from './schemas';
 import { type CreateUserDatails, type IUserModel } from '@workspace/types';
+import { User, type UserModel } from '../schemas';
 
 export interface IUsersRepository {
   exists(filter: RootFilterQuery<IUserModel>): Promise<Types.ObjectId | undefined>;

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportSerializer } from '@nestjs/passport';
 import { ProviderType } from '@workspace/constants';
 import { type LocalAuthProfile } from '@workspace/types';
-import { LocalAuthService } from './local.service';
+import { LocalAuthService } from '../services';
 
 type DoneUserSerializer = (error: Error | null, profile: LocalAuthProfile | null) => void;
 

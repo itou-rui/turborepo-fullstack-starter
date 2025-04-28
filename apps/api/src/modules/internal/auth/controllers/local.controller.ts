@@ -4,13 +4,13 @@ import { ProviderType } from '@workspace/constants';
 import { LocalAuthProfile } from '@workspace/types';
 import { HttpExceptionFilter } from 'utils/filters';
 import { HttpResponseInterceptor } from 'utils/interceptors';
-import { LoginLocalDto, RegisterLocalUserDto } from './dtos';
-import { LocalAuthenticatedGuard, LocalAuthGuard } from './local.guard';
-import { LocalAuthService } from './local.service';
+import { LoginLocalDto, RegisterLocalUserDto } from '../dtos';
+import { LocalAuthenticatedGuard, LocalAuthGuard } from '../guards';
+import { LocalAuthService } from '../services';
 
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(HttpResponseInterceptor)
-@Controller('auth')
+@Controller('internal/auth/local')
 export class LocalAuthController {
   constructor(private readonly localAuthService: LocalAuthService) {}
 

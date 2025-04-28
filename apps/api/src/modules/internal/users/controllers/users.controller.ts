@@ -1,13 +1,13 @@
 import { Controller, Get, Param, UseFilters, UseInterceptors } from '@nestjs/common';
 import { type APIUser } from '@workspace/types';
 import { HttpExceptionFilter } from 'utils/filters';
-import { UsersService } from './users.service';
 import { HttpResponseInterceptor } from 'utils/interceptors';
 import { UserNotFoundException } from 'utils/exceptions';
+import { UsersService } from '../services';
 
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(HttpResponseInterceptor)
-@Controller('users')
+@Controller('internal/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

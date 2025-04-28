@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Strategy } from 'passport-local';
 import { ProviderType } from '@workspace/constants';
 import { type LocalAuthProfile } from '@workspace/types';
-import { LocalAuthService } from './local.service';
+import { LocalAuthService } from '../services';
 
 type Done = (error: Error | null, profile: LocalAuthProfile | null) => void;
 

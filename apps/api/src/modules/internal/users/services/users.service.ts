@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { type CreateUserDatails, type APIUser, type IUserModel } from '@workspace/types';
 import { AlreadyUserExistsException } from 'utils/exceptions';
-import { User } from './schemas';
-import { UsersRepository } from './users.repository';
+import { User } from '../schemas';
+import { UsersRepository } from '../repositories';
 
 @Injectable()
 export class UsersService {
