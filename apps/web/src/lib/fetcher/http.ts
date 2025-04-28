@@ -1,5 +1,6 @@
 import { type RESTAPISuccessResult, type RESTAPIErrorResult } from '@workspace/types';
 import { buildFullPath } from './utils';
+import { FetcherError } from './errors';
 
 /**
  * Interface representing a successful fetch result.
@@ -42,34 +43,52 @@ export interface HttpOptions {
 export async function http<T>(path: string, config: RequestInit, options?: HttpOptions): Promise<FetchResult<T>> {
   const baseUrl = process.env.BASE_URL as string;
 
-  if (baseUrl === undefined) {
-    throw new Error('BASE_URL is not defined');
+  if (!baseUrl) {
+    throw new FetcherError('MISSING_BASE_URL', 'BASE_URL is not defined.', {
+      baseUrl: baseUrl,
+    });
   }
+
   if (typeof baseUrl !== 'string') {
-    throw new TypeError('BASE_URL is not a string');
+    throw new FetcherError('BASE_URL_NOT_STRING', 'BASE_URL is not a string.', {
+      baseUrl: baseUrl,
+    });
   }
 
   const fullPath = buildFullPath(baseUrl, path);
 
   const url = new URL(fullPath);
   if (url.origin !== new URL(baseUrl).origin) {
-    throw new Error('Absolute URLs with different origins are not allowed.');
+    throw new FetcherError('INVALID_URL', 'Absolute URLs with different origins are not allowed.', {
+      baseUrl: baseUrl,
+      fullPath: fullPath,
+      origin: url.origin,
+    });
   }
 
-  const response = await fetch(new Request(fullPath, config), options);
-  const data = await response.json().catch(() => null);
+  try {
+    const response = await fetch(new Request(fullPath, config), options);
+    const data = await response.json().catch(() => null);
 
-  if (response.ok) {
-    return {
-      ...data,
-      ok: true,
-      headers: response.headers,
-    } as FetchResult<T>;
+    // 2xx
+    if (response.ok) {
+      return { ...data, ok: true, headers: response.headers } as FetchResult<T>;
+    }
+
+    // 4xx, 5xx
+    else {
+      return { ...data, ok: false, headers: response.headers } as FetchResult<T>;
+    }
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      throw new FetcherError('FETCH_ERROR', e.message, {
+        baseUrl: baseUrl,
+        fullPath: fullPath,
+      });
+    }
+    throw new FetcherError('FETCH_ERROR', 'Unknown error occurred.', {
+      baseUrl: baseUrl,
+      fullPath: fullPath,
+    });
   }
-
-  return {
-    ...data,
-    ok: false,
-    headers: response.headers,
-  } as FetchResult<T>;
 }
