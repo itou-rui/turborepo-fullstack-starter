@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { type Profile as DiscordProfile, Strategy } from 'passport-discord';
 import { EnvironmentVariables } from 'config/env-varidation';
-import { DiscordAuthService } from './discord.service';
+import { DiscordAuthService } from '../services';
 
 type Done = (error: Error | null, profile: DiscordProfile | null) => void;
 

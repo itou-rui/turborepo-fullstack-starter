@@ -1,11 +1,13 @@
 import { Response, type Request } from 'express';
-import { Controller, Get, Post, Req, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req, Res, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { type Profile as DiscordProfile } from 'passport-discord';
 import { HttpExceptionFilter } from 'utils/filters';
-import { DiscordAuthenticatedGuard, DiscordAuthGuard } from './discord.guards';
+import { HttpResponseInterceptor } from 'utils/interceptors';
+import { DiscordAuthenticatedGuard, DiscordAuthGuard } from '../guards';
 
 @UseFilters(HttpExceptionFilter)
-@Controller('auth/discord')
+@UseInterceptors(HttpResponseInterceptor)
+@Controller('intenal/auth/discord')
 export class DiscordAuthController {
   constructor() {}
 
