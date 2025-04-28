@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { IGuildModel, type APIGuild, type RESTPostAPIGuildJSON } from '@workspace/types';
-import { Guild } from './schemas';
-import { GuildsRepository } from './guilds.repository';
+import { Guild } from '../schemas';
+import { GuildsRepository } from '../repositories';
 
 @Injectable()
 export class GuildsService {

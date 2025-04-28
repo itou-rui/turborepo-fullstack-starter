@@ -6,7 +6,7 @@ import {
   SlashCommandsService,
   SlashCommand,
 } from 'necord';
-import { CommandsService, Command } from 'modules/commands';
+import { CommandsService, Command } from 'modules/internal';
 
 @Injectable()
 export class ReadyService implements OnApplicationBootstrap {

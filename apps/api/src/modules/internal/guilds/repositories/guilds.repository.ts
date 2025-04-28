@@ -1,7 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { Guild, type GuildModel } from './schemas';
 import { type RESTPostAPIGuildJSON } from '@workspace/types';
+import { Guild, type GuildModel } from '../schemas';
 
 export interface IGuildsRepository {
   findAll(): Promise<Guild[]>;

@@ -2,7 +2,7 @@ import { type Model, type HydratedDocument, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { type ICommandModel } from '@workspace/types';
 import { BaseDocument, BaseDocumentSchema } from 'database/base.schema';
-import { type Guild } from '../../guilds/schemas';
+import { type Guild } from './guild.schema';
 
 @Schema()
 export class Command extends BaseDocument implements ICommandModel {

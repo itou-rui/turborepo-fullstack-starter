@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { type APIGuild } from '@workspace/types';
 import { GuildNotFoundException } from 'utils/exceptions';
-import { CreateGuildDto } from './dtos';
-import { GuildsService } from './guilds.service';
+import { CreateGuildDto } from '../dtos';
+import { GuildsService } from '../services';
 
 @Controller('guilds')
 export class GuildsController {

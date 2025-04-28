@@ -3,9 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NecordModule } from 'necord';
 import { IntentsBitField } from 'discord.js';
 import { EnvironmentVariables } from 'config/env-varidation';
-import { UsersModule } from 'modules/users';
-import { GuildsModule } from 'modules/guilds';
-import { CommandsModule } from 'modules/commands';
+import { UsersModule, GuildsModule } from 'modules/internal';
 import * as Events from './events';
 import * as PublicCommands from './commands/publics';
 import * as DynamicCommands from './commands/dynamics';
@@ -28,9 +26,7 @@ import * as DynamicCommands from './commands/dynamics';
     }),
     UsersModule,
     GuildsModule,
-    CommandsModule,
   ],
   providers: [PublicCommands, DynamicCommands, Events].map((e) => Object.values(e)).flat(),
 })
-export class DiscordModule {}
 export class DiscordBotModule {}

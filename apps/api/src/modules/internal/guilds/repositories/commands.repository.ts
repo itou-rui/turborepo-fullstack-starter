@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { Command, type CommandModel } from './schemas';
+import { Command, type CommandModel } from '../schemas';
 import type { ICommandModel } from '@workspace/types';
 
 export interface ICommandsRepository {
