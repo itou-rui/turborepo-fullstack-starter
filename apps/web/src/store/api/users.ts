@@ -23,14 +23,14 @@ export type PatchUserRequest = RESTPatchAPIUserJSON;
 const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getUser: builder.query<APIUser, string>({
-      query: (uid) => `/users/${uid}`,
+      query: (uid) => `/internal/users/${uid}`,
       providesTags: (_result, _error, uid) => [{ type: 'User', id: uid }],
       transformResponse: (response: RESTAPISuccessResult<APIUser>) => response.data,
     }),
 
     createUser: builder.mutation<APIUser, CreateUserRequest>({
       query: (body) => ({
-        url: '/users',
+        url: '/internal/users',
         method: 'POST',
         body,
       }),
@@ -40,7 +40,7 @@ const usersApi = baseApi.injectEndpoints({
 
     updateUser: builder.mutation<APIUser, { uid: string; body: UpdateUserRequest }>({
       query: ({ uid, body }) => ({
-        url: `/users/${uid}`,
+        url: `/internal/users/${uid}`,
         method: 'PUT',
         body,
       }),
@@ -50,7 +50,7 @@ const usersApi = baseApi.injectEndpoints({
 
     patchUser: builder.mutation<APIUser, { uid: string; body: PatchUserRequest }>({
       query: ({ uid, body }) => ({
-        url: `/users/${uid}`,
+        url: `/internal/users/${uid}`,
         method: 'PATCH',
         body,
       }),

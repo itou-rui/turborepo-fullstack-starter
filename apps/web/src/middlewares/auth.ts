@@ -1,5 +1,5 @@
 import { type NextFetchEvent, type NextMiddleware, NextRequest, NextResponse } from 'next/server';
-import { session } from '@/lib';
+import { getSession } from '@/lib/internal/session';
 
 /**
  * Middleware to add custom headers to the request.
@@ -9,7 +9,7 @@ import { session } from '@/lib';
  */
 export function auth(middleware: NextMiddleware): NextMiddleware {
   return async (request: NextRequest, event: NextFetchEvent) => {
-    const sessionUser = await session.get();
+    const sessionUser = await getSession({ enableLogging: false });
 
     if (request.nextUrl.pathname.startsWith('/auth/signin')) {
       if (!sessionUser) return middleware(request, event);

@@ -4,8 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CONFIG_DATABASE, DatabaseConfig, databaseConfig } from 'config/database.config';
 import { validationSchemaForEnv } from 'config/env-varidation';
-import { UsersModule } from './modules/users';
-import { AuthModule } from './modules/auth';
+import { UsersModule, AuthModule } from './modules/internal';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
