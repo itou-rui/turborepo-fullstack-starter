@@ -33,3 +33,4 @@ import * as DynamicCommands from './commands/dynamics';
   providers: [PublicCommands, DynamicCommands, Events].map((e) => Object.values(e)).flat(),
 })
 export class DiscordModule {}
+export class DiscordBotModule {}
