@@ -4,3 +4,4 @@ export * from './Base';
 export * from './User';
 export * from './Guild';
 export * from './Command';
+export * from './Discord';
