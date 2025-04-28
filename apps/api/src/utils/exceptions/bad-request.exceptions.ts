@@ -8,6 +8,12 @@ export class GlobalValidationException extends BadRequestAPIException {
   }
 }
 
+export class InvalidParameterException extends BadRequestAPIException {
+  constructor(param: string, errors?: RESTErrorData) {
+    super(RESTAPIErrorJSONCodes.InvalidParameter, `Invalid ${param}.`, errors);
+  }
+}
+
 export class InvalidLocalAuthCredentialsException extends BadRequestAPIException {
   constructor(property: 'email' | 'password', errors?: RESTErrorData) {
     const errorCode = property === 'email' ? RESTAPIErrorJSONCodes.InvalidEmail : RESTAPIErrorJSONCodes.InvalidPassword;
