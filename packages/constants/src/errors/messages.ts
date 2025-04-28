@@ -35,6 +35,11 @@ const AlreadyAccount = {
   notice: 'The specified account already exists.',
 } as const;
 
+const UnknownGuild = {
+  log: 'An unspecified DiscordServer that does not exist in `GuildDocument` was provided.',
+  notice: 'The specified Discord server could not be found.',
+} as const;
+
 const InvalidEmail = {
   log: 'The specified email address is invalid.',
   notice: 'The specified email address is invalid.',
@@ -56,6 +61,7 @@ export const ERROR_MESSAGES: Record<RESTAPIErrorJSONCodes, ErrorMessages> = {
   [RESTAPIErrorJSONCodes.InvalidParameter]: InvalidParameter,
   [RESTAPIErrorJSONCodes.MaximumRetryAttemptsExceeded]: MaximumRetryAttemptsExceeded,
   [RESTAPIErrorJSONCodes.UnknownAccount]: UnknownAccount,
+  [RESTAPIErrorJSONCodes.UnknownGuild]: UnknownGuild,
   [RESTAPIErrorJSONCodes.AlreadyAccount]: AlreadyAccount,
   [RESTAPIErrorJSONCodes.InvalidEmail]: InvalidEmail,
   [RESTAPIErrorJSONCodes.InvalidPassword]: InvalidPassword,
